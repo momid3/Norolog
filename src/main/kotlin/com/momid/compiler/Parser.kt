@@ -4,7 +4,7 @@ import com.momid.parser.expression.*
 import com.momid.parser.isOf
 import com.momid.parser.not
 
-val dotInTheMiddleOfNumber = CustomExpression() { tokens, startIndex ->
+val dotInTheMiddleOfNumber = CustomExpression() { tokens, startIndex, endIndex ->
     if (tokens[startIndex] == '.' && startIndex > 0 && tokens[startIndex - 1].isDigit() && startIndex < tokens.lastIndex && tokens[startIndex + 1].isDigit()) {
         return@CustomExpression startIndex + 1
     } else {
