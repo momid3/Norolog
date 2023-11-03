@@ -63,20 +63,56 @@ private fun handleExpressionResults(expressionFinder: ExpressionFinder, expressi
     }
 }
 
-fun ExpressionResultsHandlerContext.handleComplexExpression() {
+fun ExpressionResultsHandlerContext<String>.resolveVariable(currentGeneration: CurrentGeneration): Result<String> {
+    val variableName = this.expressionResult.correspondingTokensText(this.tokens)
+    var scope = currentGeneration.currentScope
+    var foundVariable: VariableInformation? = null
+    while (true) {
+        scope.variables.forEach {
+            if (it.name == variableName) {
+                foundVariable = it
+                return Ok(it.outputName)
+            }
+        }
+        if (scope.upperScope != null) {
+            scope = scope.upperScope!!
+        } else {
+            break
+        }
+    }
+    return Error("could not resolve variable", this.expressionResult.range)
+}
+
+fun ExpressionResultsHandlerContext<String>.handleComplexExpression(currentGeneration: CurrentGeneration): Result<String> {
         this.expressionResult.isOf(complexExpression) {
+            var output = ""
             print("complex expression:", it)
             it.forEach {
+
                 it.isOf(simpleExpression) {
                     print("simple:", it)
                     it.forEach {
                         it.isOf("atomicExp") {
+
                             it.content.isOf(function) {
-                                continueWith(it, function) { handleFunction() }
+                                val evaluatedFunction = continueWithOne(it, function) { handleFunction(currentGeneration) }
+                                output += evaluatedFunction
+                            }
+
+                            it.content.isOf(variableName) {
+                                val outputVariable = resolveVariable(currentGeneration)
+                                if (outputVariable is Ok<*>) {
+                                    output += outputVariable.ok
+                                }
+                                if (outputVariable is Error<*>) {
+                                    currentGeneration.errors.add(outputVariable)
+                                    println(outputVariable.error)
+                                }
                             }
                         }
                     }
                 }
+
                 it.isOf(simpleExpressionInParentheses) {
                     print("simple in parentheses:", it)
                     continueWith(it["insideParentheses"], complexExpression)

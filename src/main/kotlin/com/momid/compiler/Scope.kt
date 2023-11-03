@@ -2,6 +2,7 @@ package com.momid.compiler
 
 class Scope(val scopes: ArrayList<Scope> = ArrayList()): List<Scope> by scopes {
 
+    var upperScope: Scope? = null
     val variables = ArrayList<VariableInformation>()
 }
 

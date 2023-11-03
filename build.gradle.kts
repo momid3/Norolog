@@ -16,7 +16,7 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation("com.github.momid3:Parser:0.858")
+    implementation("com.github.momid3:Parser:0.878")
 }
 
 tasks.test {

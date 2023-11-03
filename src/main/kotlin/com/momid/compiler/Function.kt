@@ -117,7 +117,7 @@ fun inlineToOne(multiExpression: Expression): CustomExpressionValueic {
     })
 }
 
-fun ExpressionResultsHandlerContext.handleFunction() {
+fun ExpressionResultsHandlerContext<String>.handleFunction(currentGeneration: CurrentGeneration): Result<String> {
     with(this.expressionResult) {
         isOf(function) {
             println("function: " + it.correspondingTokensText(tokens))
