@@ -118,19 +118,54 @@ fun inlineToOne(multiExpression: Expression): CustomExpressionValueic {
 }
 
 fun ExpressionResultsHandlerContext<String>.handleFunction(currentGeneration: CurrentGeneration): Result<String> {
+    var output = ""
     with(this.expressionResult) {
         isOf(function) {
             println("function: " + it.correspondingTokensText(tokens))
-            continueWith(it["parameters"], functionParameters)
-        }
-        isOf(functionParameters) {
-            print("function parameters:", it)
-            it.content.subs("parameter").forEach {
-                print("function parameter:", it)
-                continueWith(it, complexExpression) { handleComplexExpression() }
+            val parametersEvaluation = continueWithOne(it["parameters"], functionParameters) { handleFunctionCallParameters(currentGeneration) }
+
+            if (parametersEvaluation is Error<*>) {
+                currentGeneration.errors.add(parametersEvaluation)
+                println(parametersEvaluation.error)
+                return Error(parametersEvaluation.error, parametersEvaluation.range)
+            }
+            if (parametersEvaluation is Ok<List<String>>) {
+                val parameters = parametersEvaluation.ok
+
+                if (parameters.size > 1) {
+                    print("parameters of more than one are not currently supported for functions")
+                    return Error("parameters of more than one are not currently supported for functions", this.range)
+                } else {
+                    output += "printf" + "(" + "\"%d\\n\"" + ", " + parameters[0] + ")" + ";" + "\n"
+                    currentGeneration.generatedSource += output
+                    return Ok("")
+                }
             }
         }
+        return Error("is not a function", this.range)
     }
+}
+
+fun ExpressionResultsHandlerContext<String>.handleFunctionCallParameters(currentGeneration: CurrentGeneration): Result<List<String>> {
+    this.expressionResult.isOf(functionParameters) {
+        print("function parameters:", it)
+        val parameters = ArrayList<String>()
+        it.content.subs("parameter").forEach {
+            print("function parameter:", it)
+            val parameterEvaluation = continueWithOne(it, complexExpression) { handleComplexExpression(currentGeneration) }
+
+            if (parameterEvaluation is Error<*>) {
+                currentGeneration.errors.add(parameterEvaluation)
+                println(parameterEvaluation.error)
+                return Error(parameterEvaluation.error, parameterEvaluation.range)
+            }
+            if (parameterEvaluation is Ok<String>) {
+                parameters.add(parameterEvaluation.ok)
+            }
+        }
+        return Ok(parameters)
+    }
+    return Error("is not function parameters", this.expressionResult.range)
 }
 
 fun main() {
@@ -139,45 +174,46 @@ fun main() {
     finder.registerExpressions(listOf(function))
     val expressionResults = finder.start(text)
 
-    expressionResults.forEach {
-        handleExpressionResult(finder, it, text) {
-            with(this.expressionResult) {
-                isOf(function) {
-                    println("function: " + it.correspondingTokensText(tokens))
-//                println(it["parameters"].correspondingTokensText(text))
-                    continueWith(it["parameters"], functionParameters)
-                }
-                isOf(functionParameters) {
-                    print("function parameters:", it)
-                    it.content.subs("parameter").forEach {
-                            print("function parameter:", it)
-                            continueWith(it, complexExpression) { handleComplexExpression() }
-                    }
-                }
-//                isOf("parameters") {
-//                    print("function parameters:", it)
-////                    it.subs("parameter").forEach {
-////                        print("function parameter:", it)
-////                        continueWith(it, complexExpression)
-////                    }
-//                    println(it.expression.name)
-//                    it.forEach {
-//                        println(it.expression.name)
-//                        if (it is MultiExpressionResult) {
-//                            it.forEach {
-//                                println(it.expression.name)
-//                                if (it is MultiExpressionResult) {
-//                                    it.forEach {
-//                                        println(it.expression.name)
-//                                    }
-//                                }
-//                            }
-//                            println()
-//                        }
-//                    }
-//                    println()
+//    expressionResults.forEach {
+//        handleExpressionResult(finder, it, text) {
+//            with(this.expressionResult) {
+//                isOf(function) {
+//                    println("function: " + it.correspondingTokensText(tokens))
+////                println(it["parameters"].correspondingTokensText(text))
+//                    continueWith<String>(it["parameters"], functionParameters)
 //                }
-            }
-        }
-    }
+//                isOf(functionParameters) {
+//                    print("function parameters:", it)
+//                    it.content.subs("parameter").forEach {
+//                            print("function parameter:", it)
+//                            continueWith(it, complexExpression) { handleComplexExpression() }
+//                    }
+//                }
+////                isOf("parameters") {
+////                    print("function parameters:", it)
+//////                    it.subs("parameter").forEach {
+//////                        print("function parameter:", it)
+//////                        continueWith(it, complexExpression)
+//////                    }
+////                    println(it.expression.name)
+////                    it.forEach {
+////                        println(it.expression.name)
+////                        if (it is MultiExpressionResult) {
+////                            it.forEach {
+////                                println(it.expression.name)
+////                                if (it is MultiExpressionResult) {
+////                                    it.forEach {
+////                                        println(it.expression.name)
+////                                    }
+////                                }
+////                            }
+////                            println()
+////                        }
+////                    }
+////                    println()
+////                }
+//            }
+//            return@handleExpressionResult Ok("")
+//        }
+//    }
 }

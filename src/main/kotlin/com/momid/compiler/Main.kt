@@ -1,12 +1,18 @@
 package com.momid.compiler
 
-fun main() {
+fun main(args: Array<String>) {
 
-    println("")
+//    println("")
+//
+//    val generatedOutput = wholeProgram("printf(\"%d\\n\", 3 + 7 + 7);")
+//
+//    createSource(generatedOutput)
+//
+//    runGeneratedSource()
 
-    val generatedOutput = wholeProgram("printf(\"%d\\n\", 3 + 7 + 7);")
-
-    createSource(generatedOutput)
-
+    val codeText = readMomidFileContents(args[0])
+    val compiledCode = compile(codeText)
+    println(compiledCode)
+    createSource(compiledCode)
     runGeneratedSource()
 }

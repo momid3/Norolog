@@ -38,27 +38,10 @@ val complexExpression =
 
 
 private fun handleExpressionResults(expressionFinder: ExpressionFinder, expressionResults: List<ExpressionResult>, tokens: List<Char>) {
+    val currentGeneration = CurrentGeneration()
     expressionResults.forEach {
         handleExpressionResult(expressionFinder, it, tokens) {
-                this.expressionResult.isOf(complexExpression) {
-                    print("complex expression:", it)
-                    it.forEach {
-                        it.isOf(simpleExpression) {
-                            print("simple:", it)
-                            it.forEach {
-                                it.isOf("atomicExp") {
-                                    it.content.isOf(function) {
-                                        continueWith(it, function) { handleFunction() }
-                                    }
-                                }
-                            }
-                        }
-                        it.isOf(simpleExpressionInParentheses) {
-                            print("simple in parentheses:", it)
-                            continueWith(it["insideParentheses"], complexExpression)
-                        }
-                    }
-                }
+            handleComplexExpression(currentGeneration)
         }
     }
 }
@@ -80,7 +63,7 @@ fun ExpressionResultsHandlerContext<String>.resolveVariable(currentGeneration: C
             break
         }
     }
-    return Error("could not resolve variable", this.expressionResult.range)
+    return Error("could not resolve variable: " + this.expressionResult.tokens(), this.expressionResult.range)
 }
 
 fun ExpressionResultsHandlerContext<String>.handleComplexExpression(currentGeneration: CurrentGeneration): Result<String> {
@@ -96,12 +79,21 @@ fun ExpressionResultsHandlerContext<String>.handleComplexExpression(currentGener
 
                             it.content.isOf(function) {
                                 val evaluatedFunction = continueWithOne(it, function) { handleFunction(currentGeneration) }
-                                output += evaluatedFunction
+                                if (evaluatedFunction is Ok<String>) {
+                                    output += evaluatedFunction.ok
+                                }
+                                if (evaluatedFunction is Error<*>) {
+                                    currentGeneration.errors.add(evaluatedFunction)
+                                    println(evaluatedFunction.error)
+                                }
                             }
 
                             it.content.isOf(variableName) {
-                                val outputVariable = resolveVariable(currentGeneration)
-                                if (outputVariable is Ok<*>) {
+                                print("variable:", it)
+                                val outputVariable = continueStraight(it) {
+                                    resolveVariable (currentGeneration)
+                                }
+                                if (outputVariable is Ok<String>) {
                                     output += outputVariable.ok
                                 }
                                 if (outputVariable is Error<*>) {
@@ -109,16 +101,35 @@ fun ExpressionResultsHandlerContext<String>.handleComplexExpression(currentGener
                                     println(outputVariable.error)
                                 }
                             }
+
+                            it.content.isOf(number) {
+                                println("is number " + it.correspondingTokensText(tokens))
+                                output += it.correspondingTokensText(tokens)
+                            }
+                        }
+
+                        it.isOf("operator") {
+                            println("is operator " + it.correspondingTokensText(tokens))
+                            output += it.correspondingTokensText(tokens)
                         }
                     }
                 }
 
                 it.isOf(simpleExpressionInParentheses) {
                     print("simple in parentheses:", it)
-                    continueWith(it["insideParentheses"], complexExpression)
+                    val evaluation = continueWithOne(it["insideParentheses"], complexExpression) { handleComplexExpression(currentGeneration) }
+                    if (evaluation is Ok<*>) {
+                        output += evaluation.ok
+                    }
+                    if (evaluation is Error<*>) {
+                        currentGeneration.errors.add(evaluation)
+                        println(evaluation.error)
+                    }
                 }
             }
+            return Ok(output)
         }
+    return Error("", IntRange.EMPTY)
 }
 
 fun main() {

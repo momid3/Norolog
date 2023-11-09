@@ -16,7 +16,8 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation("com.github.momid3:Parser:0.878")
+//    implementation("com.github.momid3:Parser:0.878")
+    implementation(kotlin("reflect"))
 }
 
 tasks.test {
@@ -29,4 +30,14 @@ tasks.withType<KotlinCompile> {
 
 application {
     mainClass.set("MainKt")
+}
+
+tasks.jar {
+    manifest {
+        attributes("Main-Class" to "com.momid.compiler.MainKt") // Replace with your main class
+    }
+    from({
+        configurations.runtimeClasspath.get().filter { it.exists() }.map { if (it.isDirectory) it else zipTree(it) }
+    })
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
