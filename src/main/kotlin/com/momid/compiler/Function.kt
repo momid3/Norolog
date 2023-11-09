@@ -117,7 +117,7 @@ fun inlineToOne(multiExpression: Expression): CustomExpressionValueic {
     })
 }
 
-fun ExpressionResultsHandlerContext<String>.handleFunction(currentGeneration: CurrentGeneration): Result<String> {
+fun ExpressionResultsHandlerContext.handleFunction(currentGeneration: CurrentGeneration): Result<String> {
     var output = ""
     with(this.expressionResult) {
         isOf(function) {
@@ -146,7 +146,7 @@ fun ExpressionResultsHandlerContext<String>.handleFunction(currentGeneration: Cu
     }
 }
 
-fun ExpressionResultsHandlerContext<String>.handleFunctionCallParameters(currentGeneration: CurrentGeneration): Result<List<String>> {
+fun ExpressionResultsHandlerContext.handleFunctionCallParameters(currentGeneration: CurrentGeneration): Result<List<String>> {
     this.expressionResult.isOf(functionParameters) {
         print("function parameters:", it)
         val parameters = ArrayList<String>()

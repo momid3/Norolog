@@ -9,7 +9,7 @@ val statements = listOf(assignment, functionCall)
 val statementsExp =
     some(inlineToOne(spaces + anyOf(*statements.toTypedArray())["statement"] + spaces))
 
-fun ExpressionResultsHandlerContext<String>.handleStatements(currentGeneration: CurrentGeneration): Result<String> {
+fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentGeneration): Result<String> {
     this.expressionResult.isOf(statementsExp) {
         it.forEach {
             println("is statement: " + it.tokens())
@@ -30,7 +30,7 @@ fun ExpressionResultsHandlerContext<String>.handleStatements(currentGeneration: 
     return Ok("")
 }
 
-fun ExpressionResultsHandlerContext<String>.handleCodeBlock(currentGeneration: CurrentGeneration): Result<String> {
+fun ExpressionResultsHandlerContext.handleCodeBlock(currentGeneration: CurrentGeneration): Result<String> {
     currentGeneration.createScope()
     continueWith(this.expressionResult, *statements.toTypedArray()) {
         handleStatements(currentGeneration)

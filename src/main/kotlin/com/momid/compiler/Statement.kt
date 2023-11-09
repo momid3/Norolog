@@ -13,7 +13,7 @@ val functionCall =
     spaces + function["function"] + ";"
 
 
-fun ExpressionResultsHandlerContext<String>.handleAssignment(currentGeneration: CurrentGeneration): Result<String> {
+fun ExpressionResultsHandlerContext.handleAssignment(currentGeneration: CurrentGeneration): Result<String> {
     this.expressionResult.isOf(assignment) {
         println("is assignment statement")
         val output: String
@@ -46,7 +46,7 @@ fun ExpressionResultsHandlerContext<String>.handleAssignment(currentGeneration: 
     return Error("is not assignment", this.expressionResult.range)
 }
 
-fun ExpressionResultsHandlerContext<String>.handleFunctionCall(currentGeneration: CurrentGeneration): Result<String> {
+fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: CurrentGeneration): Result<String> {
     this.expressionResult.isOf(functionCall) {
         println("is function call")
 //        val evaluation = continueWithOne(it["function"], function) { handleFunction(currentGeneration) }

@@ -46,7 +46,7 @@ private fun handleExpressionResults(expressionFinder: ExpressionFinder, expressi
     }
 }
 
-fun ExpressionResultsHandlerContext<String>.resolveVariable(currentGeneration: CurrentGeneration): Result<String> {
+fun ExpressionResultsHandlerContext.resolveVariable(currentGeneration: CurrentGeneration): Result<String> {
     val variableName = this.expressionResult.correspondingTokensText(this.tokens)
     var scope = currentGeneration.currentScope
     var foundVariable: VariableInformation? = null
@@ -66,7 +66,7 @@ fun ExpressionResultsHandlerContext<String>.resolveVariable(currentGeneration: C
     return Error("could not resolve variable: " + this.expressionResult.tokens(), this.expressionResult.range)
 }
 
-fun ExpressionResultsHandlerContext<String>.handleComplexExpression(currentGeneration: CurrentGeneration): Result<String> {
+fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: CurrentGeneration): Result<String> {
         this.expressionResult.isOf(complexExpression) {
             var output = ""
             print("complex expression:", it)
