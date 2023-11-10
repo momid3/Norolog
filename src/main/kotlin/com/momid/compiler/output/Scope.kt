@@ -1,4 +1,4 @@
-package com.momid.compiler
+package com.momid.compiler.output
 
 var currentVariableNameNumber = 0
 
@@ -6,6 +6,7 @@ class Scope(val scopes: ArrayList<Scope> = ArrayList()): List<Scope> by scopes {
 
     var upperScope: Scope? = null
     val variables = ArrayList<VariableInformation>()
+    var generatedSource = ""
 }
 
 fun createVariableName(): String {

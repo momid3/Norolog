@@ -9,3 +9,9 @@ fun wholeProgram(programText: String): String {
             "return 0;\n" +
             "}"
 }
+
+fun forLoop(indexName: String, rangeStart: String, rangeEnd: String, codeBlock: String): String {
+    return "for (int " + indexName + " = " + rangeStart + "; " + indexName + " < " + rangeEnd + "; " + indexName + " += 1)" + " {" +
+            codeBlock +
+            "}"
+}

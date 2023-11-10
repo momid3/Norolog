@@ -1,5 +1,6 @@
 package com.momid.compiler
 
+import com.momid.compiler.output.Scope
 import com.momid.parser.expression.ExpressionFinder
 import com.momid.parser.expression.handleExpressionResult
 import java.nio.charset.StandardCharsets

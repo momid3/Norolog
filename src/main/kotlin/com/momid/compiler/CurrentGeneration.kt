@@ -1,5 +1,6 @@
 package com.momid.compiler
 
+import com.momid.compiler.output.Scope
 import com.momid.parser.expression.Error
 
 class CurrentGeneration {
@@ -11,6 +12,13 @@ class CurrentGeneration {
 
     fun createScope(): Scope {
         val scope = Scope()
+        scope.upperScope = currentScope
+        currentScope.scopes.add(scope)
+        currentScope = scope
+        return scope
+    }
+
+    fun createScope(scope: Scope): Scope {
         scope.upperScope = currentScope
         currentScope.scopes.add(scope)
         currentScope = scope

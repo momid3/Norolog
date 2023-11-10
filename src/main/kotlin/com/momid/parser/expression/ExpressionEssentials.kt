@@ -67,6 +67,27 @@ fun insideOfParentheses(parenthesesStart: Char, parenthesesEnd: Char): CustomExp
     }
 }
 
+fun insideOf(expression: Expression, parenthesesStart: Char, parenthesesEnd: Char): CustomExpressionValueic {
+    return CustomExpressionValueic() { tokens, startIndex, endIndex ->
+        if (tokens[startIndex] != parenthesesStart) {
+            return@CustomExpressionValueic null
+        }
+        var numberOfLefts = 1
+        for (tokenIndex in startIndex + 1 until endIndex) {
+            if (tokens[tokenIndex] == parenthesesStart) {
+                numberOfLefts += 1
+            }
+            if (tokens[tokenIndex] == parenthesesEnd) {
+                numberOfLefts -= 1
+            }
+            if (numberOfLefts == 0) {
+                return@CustomExpressionValueic ContentExpressionResult(ExpressionResult(expression, startIndex until endIndex), ExpressionResult(expression, startIndex + 1 until endIndex - 1))
+            }
+        }
+        return@CustomExpressionValueic null
+    }
+}
+
 fun insideParentheses(expression: Expression): Expression {
     return combineExpressions(insideParentheses, expression)
 }

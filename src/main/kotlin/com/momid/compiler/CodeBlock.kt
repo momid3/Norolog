@@ -1,5 +1,6 @@
 package com.momid.compiler
 
+import com.momid.compiler.output.Scope
 import com.momid.parser.expression.*
 
 val text = "print(3 + 7 + 37)".toList()
@@ -31,11 +32,21 @@ fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentG
 }
 
 fun ExpressionResultsHandlerContext.handleCodeBlock(currentGeneration: CurrentGeneration): Result<String> {
-    currentGeneration.createScope()
+    val scope = currentGeneration.createScope()
     continueWith(this.expressionResult, *statements.toTypedArray()) {
         handleStatements(currentGeneration)
     }
-    return Ok("")
+    currentGeneration.goOutOfScope()
+    return Ok(scope.generatedSource)
+}
+
+fun ExpressionResultsHandlerContext.handleCodeBlock(currentGeneration: CurrentGeneration, scope: Scope): Result<String> {
+    currentGeneration.createScope(scope)
+    continueWith(this.expressionResult, *statements.toTypedArray()) {
+        handleStatements(currentGeneration)
+    }
+    currentGeneration.goOutOfScope()
+    return Ok(scope.generatedSource)
 }
 
 fun main() {

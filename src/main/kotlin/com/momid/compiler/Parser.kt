@@ -1,5 +1,7 @@
 package com.momid.compiler
 
+import com.momid.compiler.output.OutputType
+import com.momid.compiler.output.VariableInformation
 import com.momid.parser.expression.*
 import com.momid.parser.isOf
 import com.momid.parser.not
