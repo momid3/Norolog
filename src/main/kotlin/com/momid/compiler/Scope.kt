@@ -13,10 +13,10 @@ fun createVariableName(): String {
     return "variable" + currentVariableNameNumber
 }
 
-class VariableInformation(var name: String, var type: Type, var value: Any, var outputName: String, outputType: OutputType)
+class VariableInformation(var name: String, var type: Type, var value: Any, var outputName: String, var outputType: OutputType)
 
-class Type(specifier: String)
+class OutputType(val specifier: String)
 
-enum class OutputType {
+enum class Type {
     Int, Boolean, CharArray
 }

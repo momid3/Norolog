@@ -24,20 +24,20 @@ fun ExpressionResultsHandlerContext.handleAssignment(currentGeneration: CurrentG
             println("assignment has error")
             currentGeneration.errors.add(evaluation)
             println(evaluation.error)
-            return evaluation
+            return Error(evaluation.error, evaluation.range)
         }
-        if (evaluation is Ok<String>) {
+        if (evaluation is Ok<Pair<String, OutputType>>) {
             val variableName = createVariableName()
             currentGeneration.currentScope.variables.add(
                 VariableInformation(
                     it["variableName"].correspondingTokensText(tokens),
-                    Type("int"),
-                    evaluation.ok.toInt(),
+                    Type.Int,
+                    evaluation.ok.first.toInt(),
                     variableName,
-                    OutputType.Int
+                    evaluation.ok.second
                 )
             )
-            output = "int " + variableName + " = " + evaluation.ok + ";" + "\n"
+            output = "int " + variableName + " = " + evaluation.ok.first + ";" + "\n"
             currentGeneration.generatedSource += output
             println("generated assignment: " + output)
             return Ok(output)

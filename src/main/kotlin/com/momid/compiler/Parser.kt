@@ -12,6 +12,19 @@ val dotInTheMiddleOfNumber = CustomExpression() { tokens, startIndex, endIndex -
     }
 }
 
+val stringLiteral =
+    CustomExpression() { tokens, startIndex, endIndex ->
+        if (tokens[startIndex] != '"') {
+            return@CustomExpression -1
+        }
+        for (index in startIndex + 1 until endIndex) {
+            if (tokens[index] == '"') {
+                return@CustomExpression index + 1
+            }
+        }
+        return@CustomExpression -1
+    }
+
 val variableName =
     condition { it.isLetter() } + some0(condition { it.isLetterOrDigit() }) + not(condition { it == '(' })
 
@@ -19,7 +32,7 @@ val number =
     condition { it.isDigit() } + some0(dotInTheMiddleOfNumber) + some0(condition { it.isDigit() })
 
 val atomicExp =
-    anyOf(variableName, number, function)
+    anyOf(variableName, number, function, stringLiteral)
 
 val operator =
     anyOf('+', '-', '*', '/')
@@ -46,7 +59,7 @@ private fun handleExpressionResults(expressionFinder: ExpressionFinder, expressi
     }
 }
 
-fun ExpressionResultsHandlerContext.resolveVariable(currentGeneration: CurrentGeneration): Result<String> {
+fun ExpressionResultsHandlerContext.resolveVariable(currentGeneration: CurrentGeneration): Result<VariableInformation> {
     val variableName = this.expressionResult.correspondingTokensText(this.tokens)
     var scope = currentGeneration.currentScope
     var foundVariable: VariableInformation? = null
@@ -54,7 +67,7 @@ fun ExpressionResultsHandlerContext.resolveVariable(currentGeneration: CurrentGe
         scope.variables.forEach {
             if (it.name == variableName) {
                 foundVariable = it
-                return Ok(it.outputName)
+                return Ok(it)
             }
         }
         if (scope.upperScope != null) {
@@ -66,8 +79,17 @@ fun ExpressionResultsHandlerContext.resolveVariable(currentGeneration: CurrentGe
     return Error("could not resolve variable: " + this.expressionResult.tokens(), this.expressionResult.range)
 }
 
-fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: CurrentGeneration): Result<String> {
+/***
+ * evaluates the value of the expression and returns the value of it that can be inserted to the output
+ * and the output type of the value of the expression
+ *
+ * @return Pair.first: the value that can be inserted to the output
+ *
+ * Pair.last: the type of the value of the expression
+ */
+fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
         this.expressionResult.isOf(complexExpression) {
+            var type: OutputType? = null
             var output = ""
             print("complex expression:", it)
             it.forEach {
@@ -75,7 +97,7 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                 it.isOf(simpleExpression) {
                     print("simple:", it)
                     it.forEach {
-                        it.isOf("atomicExp") {
+                        it.isOf(atomicExp) {
 
                             it.content.isOf(function) {
                                 val evaluatedFunction = continueWithOne(it, function) { handleFunction(currentGeneration) }
@@ -93,8 +115,9 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                                 val outputVariable = continueStraight(it) {
                                     resolveVariable (currentGeneration)
                                 }
-                                if (outputVariable is Ok<String>) {
-                                    output += outputVariable.ok
+                                if (outputVariable is Ok<VariableInformation>) {
+                                    type = outputVariable.ok.outputType
+                                    output += outputVariable.ok.outputName
                                 }
                                 if (outputVariable is Error<*>) {
                                     currentGeneration.errors.add(outputVariable)
@@ -104,7 +127,15 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
 
                             it.content.isOf(number) {
                                 println("is number " + it.correspondingTokensText(tokens))
+                                type = OutputType("Int")
                                 output += it.correspondingTokensText(tokens)
+                            }
+
+                            it.content.isOf(stringLiteral) {
+                                println("is string literal: " + it.tokens())
+                                val text = it.tokens()
+                                type = OutputType("String")
+                                output += text
                             }
                         }
 
@@ -118,8 +149,9 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                 it.isOf(simpleExpressionInParentheses) {
                     print("simple in parentheses:", it)
                     val evaluation = continueWithOne(it["insideParentheses"], complexExpression) { handleComplexExpression(currentGeneration) }
-                    if (evaluation is Ok<*>) {
-                        output += evaluation.ok
+                    if (evaluation is Ok<Pair<String, OutputType>>) {
+                        type = evaluation.ok.second
+                        output += "(" + evaluation.ok.first + ")"
                     }
                     if (evaluation is Error<*>) {
                         currentGeneration.errors.add(evaluation)
@@ -127,7 +159,11 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                     }
                 }
             }
-            return Ok(output)
+            if (type == null) {
+                return Error("could not determine type of this expression: " + it.tokens(), it.range)
+            } else {
+                return Ok(Pair(output, type!!))
+            }
         }
     return Error("", IntRange.EMPTY)
 }

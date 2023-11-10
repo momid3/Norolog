@@ -129,16 +129,26 @@ fun ExpressionResultsHandlerContext.handleFunction(currentGeneration: CurrentGen
                 println(parametersEvaluation.error)
                 return Error(parametersEvaluation.error, parametersEvaluation.range)
             }
-            if (parametersEvaluation is Ok<List<String>>) {
+            if (parametersEvaluation is Ok<List<Pair<String, OutputType>>>) {
                 val parameters = parametersEvaluation.ok
 
                 if (parameters.size > 1) {
                     print("parameters of more than one are not currently supported for functions")
                     return Error("parameters of more than one are not currently supported for functions", this.range)
                 } else {
-                    output += "printf" + "(" + "\"%d\\n\"" + ", " + parameters[0] + ")" + ";" + "\n"
-                    currentGeneration.generatedSource += output
-                    return Ok("")
+                    with(parameters[0]) {
+                        println("its type is: " + this.second.specifier)
+                        if (this.second.specifier == "String") {
+                            output += "printf" + "(" + this.first + ")" + ";" + "\n"
+                            currentGeneration.generatedSource += output
+                            return Ok("")
+                        }
+                        if (this.second.specifier == "Int") {
+                            output += "printf" + "(" + "\"%d\\n\"" + ", " + this.first + ")" + ";" + "\n"
+                            currentGeneration.generatedSource += output
+                            return Ok("")
+                        }
+                    }
                 }
             }
         }
@@ -146,10 +156,10 @@ fun ExpressionResultsHandlerContext.handleFunction(currentGeneration: CurrentGen
     }
 }
 
-fun ExpressionResultsHandlerContext.handleFunctionCallParameters(currentGeneration: CurrentGeneration): Result<List<String>> {
+fun ExpressionResultsHandlerContext.handleFunctionCallParameters(currentGeneration: CurrentGeneration): Result<List<Pair<String, OutputType>>> {
     this.expressionResult.isOf(functionParameters) {
         print("function parameters:", it)
-        val parameters = ArrayList<String>()
+        val parameters = ArrayList<Pair<String, OutputType>>()
         it.content.subs("parameter").forEach {
             print("function parameter:", it)
             val parameterEvaluation = continueWithOne(it, complexExpression) { handleComplexExpression(currentGeneration) }
@@ -159,7 +169,7 @@ fun ExpressionResultsHandlerContext.handleFunctionCallParameters(currentGenerati
                 println(parameterEvaluation.error)
                 return Error(parameterEvaluation.error, parameterEvaluation.range)
             }
-            if (parameterEvaluation is Ok<String>) {
+            if (parameterEvaluation is Ok<Pair<String, OutputType>>) {
                 parameters.add(parameterEvaluation.ok)
             }
         }

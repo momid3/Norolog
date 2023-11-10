@@ -1,3 +1,1 @@
-val someVal = 3;
-
-print(someVal + 7 + 37);
+print("o");
