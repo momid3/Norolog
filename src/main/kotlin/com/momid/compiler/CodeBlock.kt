@@ -5,25 +5,34 @@ import com.momid.parser.expression.*
 
 val text = "print(3 + 7 + 37)".toList()
 
-val statements = listOf(assignment, functionCall)
+val statements = listOf(assignment, functionCall, forStatement)
 
 val statementsExp =
-    some(inlineToOne(spaces + anyOf(*statements.toTypedArray())["statement"] + spaces))
+    some(spaces + anyOf(*statements.toTypedArray())["statement"] + spaces)
 
 fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentGeneration): Result<String> {
     this.expressionResult.isOf(statementsExp) {
         it.forEach {
             println("is statement: " + it.tokens())
-            it.content.isOf(functionCall) {
-                println("is function call")
-                continueStraight(it) {
-                    handleFunctionCall(currentGeneration)
+            with(it["statement"]) {
+                content.isOf(functionCall) {
+                    println("is function call")
+                    continueStraight(it) {
+                        handleFunctionCall(currentGeneration)
+                    }
                 }
-            }
 
-            it.content.isOf(assignment) {
-                continueStraight(it) {
-                    handleAssignment(currentGeneration)
+                content.isOf(assignment) {
+                    continueStraight(it) {
+                        handleAssignment(currentGeneration)
+                    }
+                }
+
+                content.isOf(forStatement) {
+                    println("is for loop")
+                    continueStraight(it) {
+                        handleForLoop(currentGeneration)
+                    }
                 }
             }
         }
@@ -33,7 +42,7 @@ fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentG
 
 fun ExpressionResultsHandlerContext.handleCodeBlock(currentGeneration: CurrentGeneration): Result<String> {
     val scope = currentGeneration.createScope()
-    continueWith(this.expressionResult, *statements.toTypedArray()) {
+    continueWith(this.expressionResult, statementsExp) {
         handleStatements(currentGeneration)
     }
     currentGeneration.goOutOfScope()
@@ -42,7 +51,7 @@ fun ExpressionResultsHandlerContext.handleCodeBlock(currentGeneration: CurrentGe
 
 fun ExpressionResultsHandlerContext.handleCodeBlock(currentGeneration: CurrentGeneration, scope: Scope): Result<String> {
     currentGeneration.createScope(scope)
-    continueWith(this.expressionResult, *statements.toTypedArray()) {
+    continueWith(this.expressionResult, statementsExp) {
         handleStatements(currentGeneration)
     }
     currentGeneration.goOutOfScope()

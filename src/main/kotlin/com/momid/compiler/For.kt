@@ -8,20 +8,22 @@ val insideOfFor =
     Expression()
 
 val forStatement =
-    !"for" + spaces + "(" + spaces + variableName["variableName"] + spaces + "in" + spaces + complexExpression["rangeStart"] +
+    !"for" + spaces + "(" + spaces + variableNameO["variableName"] + spaces + "in" + spaces + complexExpression["rangeStart"] +
             spaces + "until" + spaces + complexExpression["rangeEnd"] + spaces + ")" + spaces +
-            inlineContent(insideOf(insideOfFor, '{', '}')["forInside"])
+            (insideOf("forInside", '{', '}'))["forInside"]
 
 fun ExpressionResultsHandlerContext.handleForLoop(currentGeneration: CurrentGeneration): Result<String> {
     this.expressionResult.isOf(forStatement) {
+        println("is for loop: " + it.tokens())
         var output = ""
         val rangeStart = continueStraight(it["rangeStart"]) { handleComplexExpression(currentGeneration) }
         val rangeEnd = continueStraight(it["rangeEnd"]) { handleComplexExpression(currentGeneration) }
         val indexName = createVariableName()
-        val indexVariable = VariableInformation(indexName, Type.Int, 0, it["variableName"].tokens(), OutputType("Int"))
+        val indexVariable = VariableInformation(it["variableName"].tokens(), Type.Int, 0, indexName, OutputType("Int"))
         val scope = Scope()
         scope.variables.add(indexVariable)
-        val insideForLoop = continueStraight(it["forInside"]) { handleCodeBlock(currentGeneration, scope) }
+        println("inside of for loop: " + it["forInside"].content.tokens())
+        val insideForLoop = continueStraight(it["forInside"].content) { handleCodeBlock(currentGeneration, scope) }
 
         if (rangeStart is Ok) {
             if (rangeEnd is Ok) {
@@ -35,5 +37,6 @@ fun ExpressionResultsHandlerContext.handleForLoop(currentGeneration: CurrentGene
 
         return Error("some error happened when evaluating for loop", it.range)
     }
+    println("is not for loop")
     return Error("is not for loop", this.expressionResult.range)
 }

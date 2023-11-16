@@ -1,5 +1,7 @@
 package com.momid.parser.expression
 
+import com.momid.parser.not
+
 val spaces = some0(condition { it.isWhitespace() })
 
 val insideParentheses = CustomExpression() { tokens, startIndex, endIndex ->
@@ -81,7 +83,29 @@ fun insideOf(expression: Expression, parenthesesStart: Char, parenthesesEnd: Cha
                 numberOfLefts -= 1
             }
             if (numberOfLefts == 0) {
-                return@CustomExpressionValueic ContentExpressionResult(ExpressionResult(expression, startIndex until endIndex), ExpressionResult(expression, startIndex + 1 until endIndex - 1))
+                return@CustomExpressionValueic ContentExpressionResult(ExpressionResult(expression, startIndex .. tokenIndex + 1), ExpressionResult(expression, startIndex + 1 .. (tokenIndex + 1) - 1))
+            }
+        }
+        return@CustomExpressionValueic null
+    }
+}
+
+fun insideOf(name: String, parenthesesStart: Char, parenthesesEnd: Char): CustomExpressionValueic {
+    val expression = (!"")[name]
+    return CustomExpressionValueic() { tokens, startIndex, endIndex ->
+        if (tokens[startIndex] != parenthesesStart) {
+            return@CustomExpressionValueic null
+        }
+        var numberOfLefts = 1
+        for (tokenIndex in startIndex + 1 until endIndex) {
+            if (tokens[tokenIndex] == parenthesesStart) {
+                numberOfLefts += 1
+            }
+            if (tokens[tokenIndex] == parenthesesEnd) {
+                numberOfLefts -= 1
+            }
+            if (numberOfLefts == 0) {
+                return@CustomExpressionValueic ContentExpressionResult(ExpressionResult(expression, startIndex .. tokenIndex + 1), ExpressionResult(expression, startIndex + 1 .. (tokenIndex + 1) - 1))
             }
         }
         return@CustomExpressionValueic null
@@ -107,5 +131,22 @@ fun combineExpressions(expression: Expression, otherExpression: Expression): Exp
         } else {
             return@CustomExpression -1
         }
+    }
+}
+
+fun and(vararg expressions: Expression): CustomExpression {
+    return CustomExpression() { tokens, startIndex, endIndex ->
+        var maxNextIndex = 0
+        for (expression in expressions) {
+            val nextIndex = evaluateExpression(expression, startIndex, tokens, endIndex)
+            if (nextIndex == -1) {
+                return@CustomExpression -1
+            } else {
+                if (nextIndex > maxNextIndex) {
+                    maxNextIndex = nextIndex
+                }
+            }
+        }
+        return@CustomExpression maxNextIndex
     }
 }

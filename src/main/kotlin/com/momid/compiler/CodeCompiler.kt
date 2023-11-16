@@ -21,7 +21,7 @@ fun compile(codeText: String): String {
 
 //    println(currentGeneration.generatedSource)
 
-    return wholeProgram(currentGeneration.generatedSource)
+    return wholeProgram(currentGeneration.currentScope.generatedSource)
 }
 
 fun compileFromSource() {

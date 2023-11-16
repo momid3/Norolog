@@ -108,10 +108,10 @@ fun inlineToOne(multiExpression: Expression): CustomExpressionValueic {
             }
 
         if (inlinedExpressionResults.size > 1) {
-            throw(Throwable("expression " + ((multiExpression.name) ?: (multiExpression::class.simpleName)) + "is not inlinable to one, because it has more than one named sub expressions"))
+            throw(Throwable("expression " + expressionResult.correspondingTokensText(tokens) + (multiExpression.name) + (multiExpression::class.simpleName) + "is not inlinable to one, because it has more than one named sub expressions"))
         }
         if (inlinedExpressionResults.isEmpty()) {
-            throw(Throwable("expression " + ((multiExpression.name) ?: (multiExpression::class.simpleName)) + "is not inlinable to one, because it has no named sub expressions"))
+            throw(Throwable("expression " + expressionResult.correspondingTokensText(tokens) + (multiExpression.name) + (multiExpression::class.simpleName) + "is not inlinable to one, because it has no named sub expressions"))
         }
 
         return@CustomExpressionValueic ContentExpressionResult(inlinedExpressionResults[0].apply { this.range = expressionResult.range }, inlinedExpressionResults[0])

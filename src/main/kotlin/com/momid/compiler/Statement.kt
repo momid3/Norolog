@@ -11,7 +11,7 @@ val space =
     some(condition { it.isWhitespace() })
 
 val assignment =
-    !"val" + space + variableName["variableName"] + spaces + "=" + spaces + complexExpression["assignmentExpression"] + ";"
+    !"val" + space + variableNameO["variableName"] + spaces + "=" + spaces + complexExpression["assignmentExpression"] + ";"
 
 val functionCall =
     spaces + function["function"] + ";"
@@ -42,7 +42,7 @@ fun ExpressionResultsHandlerContext.handleAssignment(currentGeneration: CurrentG
                 )
             )
             output = "int " + variableName + " = " + evaluation.ok.first + ";" + "\n"
-            currentGeneration.generatedSource += output
+            currentGeneration.currentScope.generatedSource += output
             println("generated assignment: " + output)
             return Ok(output)
         }

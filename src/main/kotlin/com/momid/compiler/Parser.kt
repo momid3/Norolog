@@ -27,14 +27,14 @@ val stringLiteral =
         return@CustomExpression -1
     }
 
-val variableName =
-    condition { it.isLetter() } + some0(condition { it.isLetterOrDigit() }) + not(condition { it == '(' })
+val variableNameO =
+    and(condition { it.isLetter() } + some0(condition { it.isLetterOrDigit() }) + not(condition { it == '(' }), not(anyOf(!"in", !"until")))
 
 val number =
     condition { it.isDigit() } + some0(dotInTheMiddleOfNumber) + some0(condition { it.isDigit() })
 
 val atomicExp =
-    anyOf(variableName, number, function, stringLiteral)
+    anyOf(variableNameO, number, function, stringLiteral)
 
 val operator =
     anyOf('+', '-', '*', '/')
@@ -112,7 +112,7 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                                 }
                             }
 
-                            it.content.isOf(variableName) {
+                            it.content.isOf(variableNameO) {
                                 print("variable:", it)
                                 val outputVariable = continueStraight(it) {
                                     resolveVariable (currentGeneration)
