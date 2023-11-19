@@ -2,7 +2,7 @@ package com.momid.parser.expression
 
 import com.momid.parser.not
 
-val spaces = some0(condition { it.isWhitespace() })
+val spaces = some0(condition { it.isWhitespace() }).apply { this.isValueic = false }
 
 val insideParentheses = CustomExpression() { tokens, startIndex, endIndex ->
     var numberOfLefts = 1

@@ -2,6 +2,8 @@ package com.momid.compiler
 
 import com.momid.compiler.output.OutputType
 import com.momid.compiler.output.VariableInformation
+import com.momid.compiler.output.outputInt
+import com.momid.compiler.output.outputString
 import com.momid.parser.expression.*
 import com.momid.parser.isOf
 import com.momid.parser.not
@@ -129,14 +131,14 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
 
                             it.content.isOf(number) {
                                 println("is number " + it.correspondingTokensText(tokens))
-                                type = OutputType("Int")
+                                type = OutputType(outputInt)
                                 output += it.correspondingTokensText(tokens)
                             }
 
                             it.content.isOf(stringLiteral) {
                                 println("is string literal: " + it.tokens())
                                 val text = it.tokens()
-                                type = OutputType("String")
+                                type = OutputType(outputString)
                                 output += text
                             }
                         }

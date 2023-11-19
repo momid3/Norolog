@@ -16,8 +16,12 @@ fun createVariableName(): String {
 
 class VariableInformation(var name: String, var type: Type, var value: Any, var outputName: String, var outputType: OutputType)
 
-class OutputType(val specifier: String)
+class OutputType(val outputClass: Class, val specifier: String = "")
 
-enum class Type {
-    Int, Boolean, CharArray
+class Type(val name: String, val specifier: String = "") {
+    companion object {
+        val Int = Type("int")
+        val Boolean = Type("bool")
+        val CharArray = Type("CharArray")
+    }
 }

@@ -1,5 +1,6 @@
 package com.momid.compiler
 
+import com.momid.compiler.output.ClassesInformation
 import com.momid.compiler.output.Scope
 import com.momid.parser.expression.Error
 
@@ -8,7 +9,11 @@ class CurrentGeneration {
     var rootScope: Scope = Scope()
     var currentScope: Scope = rootScope
     var generatedSource = ""
+    var globalDefinitionsGeneratedSource = ""
+    val classesInformation = ClassesInformation()
     val errors = ArrayList<Error<*>>()
+
+    private var currentCStructNameNumber = 0
 
     fun createScope(): Scope {
         val scope = Scope()
@@ -41,5 +46,10 @@ class CurrentGeneration {
 
     fun constructOutputSource(): String {
         return wholeProgram(generatedSource)
+    }
+
+    fun createCStructName(): String {
+        currentCStructNameNumber += 1
+        return "Struct" + currentCStructNameNumber
     }
 }

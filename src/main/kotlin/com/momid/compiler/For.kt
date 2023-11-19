@@ -19,7 +19,7 @@ fun ExpressionResultsHandlerContext.handleForLoop(currentGeneration: CurrentGene
         val rangeStart = continueStraight(it["rangeStart"]) { handleComplexExpression(currentGeneration) }
         val rangeEnd = continueStraight(it["rangeEnd"]) { handleComplexExpression(currentGeneration) }
         val indexName = createVariableName()
-        val indexVariable = VariableInformation(it["variableName"].tokens(), Type.Int, 0, indexName, OutputType("Int"))
+        val indexVariable = VariableInformation(it["variableName"].tokens(), Type.Int, 0, indexName, OutputType(outputInt))
         val scope = Scope()
         scope.variables.add(indexVariable)
         println("inside of for loop: " + it["forInside"].content.tokens())
