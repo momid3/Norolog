@@ -1,6 +1,7 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.OutputType
+import com.momid.compiler.output.nothingOutputType
 import com.momid.parser.expression.*
 
 val functionName =
@@ -118,7 +119,7 @@ fun inlineToOne(multiExpression: Expression): CustomExpressionValueic {
     })
 }
 
-fun ExpressionResultsHandlerContext.handleFunction(currentGeneration: CurrentGeneration): Result<String> {
+fun ExpressionResultsHandlerContext.handleFunction(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
     var output = ""
     with(this.expressionResult) {
         isOf(function) {
@@ -138,16 +139,17 @@ fun ExpressionResultsHandlerContext.handleFunction(currentGeneration: CurrentGen
                     return Error("parameters of more than one are not currently supported for functions", this.range)
                 } else {
                     with(parameters[0]) {
+                        println("printing: " + this.first)
                         println("its type is: " + this.second.outputClass.name)
                         if (this.second.outputClass.name == "String") {
                             output += "printf" + "(" + this.first + ")" + ";" + "\n"
                             currentGeneration.currentScope.generatedSource += output
-                            return Ok("")
+                            return Ok(Pair("", nothingOutputType))
                         }
                         if (this.second.outputClass.name == "Int") {
                             output += "printf" + "(" + "\"%d\\n\"" + ", " + this.first + ")" + ";" + "\n"
                             currentGeneration.currentScope.generatedSource += output
-                            return Ok("")
+                            return Ok(Pair("", nothingOutputType))
                         }
                     }
                 }

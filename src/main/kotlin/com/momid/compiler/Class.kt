@@ -4,17 +4,21 @@ import com.momid.compiler.output.*
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
-val classVariableExp =
+val classVariableExp by lazy {
     variableNameO["variableName"] + spaces + ":" + spaces + variableNameO["variableType"]
+}
 
-val classVariable =
+val classVariable by lazy {
     ignoreParentheses(condition { it != ',' && it != '}' })
+}
 
-val classVariables =
+val classVariables by lazy {
     spaces + inline(classVariable["classVariable"] + inline(some0(spaces + !"," + spaces + classVariable["classVariable"])) + spaces) + spaces
+}
 
-val klass =
+val klass by lazy {
     !"class" + space + variableNameO["className"] + spaces + insideOf("classInside", '{', '}')
+}
 
 fun ExpressionResultsHandlerContext.handleClass(currentGeneration: CurrentGeneration): Result<String> {
     this.expressionResult.isOf(klass) {
@@ -29,7 +33,8 @@ fun ExpressionResultsHandlerContext.handleClass(currentGeneration: CurrentGenera
         }, {
             it.forEach {
                 println("class variable: " + it.name + ": " + it.type)
-                val classVariable = ClassVariable(it.name, OutputType(resolveType(it.type, currentGeneration)))
+                val classVariableTypeClass = resolveType(it.type, currentGeneration) ?: return Error("could not resolve class: " + it.type, this.expressionResult.range)
+                val classVariable = ClassVariable(it.name, OutputType(classVariableTypeClass))
                 classVariablesOutput.add(classVariable)
             }
 
@@ -91,10 +96,14 @@ fun resolveType(outputType: Class, currentGeneration: CurrentGeneration): Type {
     }
 }
 
-fun resolveType(outputTypeName: String, currentGeneration: CurrentGeneration): Class {
+fun resolveType(outputTypeName: String, currentGeneration: CurrentGeneration): Class? {
     return currentGeneration.classesInformation.classes.entries.find {
         it.key.name == outputTypeName
-    }?.key ?: throw (Throwable("class with this name not found: " + outputTypeName))
+    }?.key.also {
+        if (it == null) {
+            println("class with this name not found: " + outputTypeName)
+        }
+    }
 }
 
 inline fun <T> Result<T>.handle(error: (Error<T>) -> Unit = {  }, ok: (T) -> Unit) {

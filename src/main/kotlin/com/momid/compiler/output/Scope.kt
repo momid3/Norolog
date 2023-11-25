@@ -16,7 +16,19 @@ fun createVariableName(): String {
 
 class VariableInformation(var name: String, var type: Type, var value: Any, var outputName: String, var outputType: OutputType)
 
-class OutputType(val outputClass: Class, val specifier: String = "")
+class OutputType(val outputClass: Class, val specifier: String = "") {
+    override fun equals(other: Any?): Boolean {
+        return other is OutputType && other.outputClass.name == this.outputClass.name
+    }
+
+    override fun hashCode(): Int {
+        var result = outputClass.hashCode()
+        result = 31 * result + specifier.hashCode()
+        return result
+    }
+}
+
+val nothingOutputType = OutputType(outputNothing)
 
 class Type(val name: String, val specifier: String = "") {
     companion object {

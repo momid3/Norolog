@@ -7,11 +7,17 @@ import com.momid.compiler.output.createVariableName
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
-val space =
+val space by lazy {
     some(condition { it.isWhitespace() })
+}
 
-val assignment =
+fun space(): RecurringSomeExpression {
+    return some(condition { it.isWhitespace() })
+}
+
+val assignment by lazy {
     !"val" + space + variableNameO["variableName"] + spaces + "=" + spaces + complexExpression["assignmentExpression"] + ";"
+}
 
 val functionCall =
     spaces + function["function"] + ";"

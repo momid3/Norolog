@@ -29,14 +29,15 @@ val stringLiteral =
         return@CustomExpression -1
     }
 
-val variableNameO =
+val variableNameO by lazy {
     and(condition { it.isLetter() } + some0(condition { it.isLetterOrDigit() }) + not(condition { it == '(' }), not(anyOf(!"in", !"until")))
+}
 
 val number =
     condition { it.isDigit() } + some0(dotInTheMiddleOfNumber) + some0(condition { it.isDigit() })
 
 val atomicExp =
-    anyOf(variableNameO, number, function, stringLiteral)
+    anyOf(variableNameO, number, cf, stringLiteral)
 
 val operator =
     anyOf('+', '-', '*', '/')
@@ -50,8 +51,9 @@ val expressionInParentheses =
 val simpleExpressionInParentheses =
     !"(" + expressionInParentheses["insideParentheses"] + ")"
 
-val complexExpression =
+val complexExpression by lazy {
     some(inlineContent(anyOf(simpleExpression, simpleExpressionInParentheses)))
+}
 
 
 private fun handleExpressionResults(expressionFinder: ExpressionFinder, expressionResults: List<ExpressionResult>, tokens: List<Char>) {
@@ -103,10 +105,11 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                     it.forEach {
                         it.isOf(atomicExp) {
 
-                            it.content.isOf(function) {
-                                val evaluatedFunction = continueWithOne(it, function) { handleFunction(currentGeneration) }
-                                if (evaluatedFunction is Ok<String>) {
-                                    output += evaluatedFunction.ok
+                            it.content.isOf(cf) {
+                                val evaluatedFunction = continueWithOne(it, cf) { handleCF(currentGeneration) }
+                                if (evaluatedFunction is Ok) {
+                                    type = evaluatedFunction.ok.second
+                                    output += evaluatedFunction.ok.first
                                 }
                                 if (evaluatedFunction is Error<*>) {
                                     currentGeneration.errors.add(evaluatedFunction)

@@ -13,3 +13,5 @@ class ClassesInformation(val classes: HashMap<Class, CStruct> = HashMap())
 val outputInt = Class("Int", arrayListOf())
 
 val outputString = Class("String", arrayListOf())
+
+val outputNothing = Class("Nothing", arrayListOf())

@@ -31,7 +31,7 @@ inline fun <T : Expression> ExpressionResult.isOf(expression: T, then: (Expressi
     }
 }
 
-fun ExpressionResult.forEach(block: (ExpressionResult) -> Unit) {
+inline fun ExpressionResult.forEach(block: (ExpressionResult) -> Unit) {
     when (this) {
         is MultiExpressionResult -> this.forEach { block(it) }
         else -> throw(Throwable("this expressionresult kind does not have sub expressionresults"))
@@ -61,7 +61,11 @@ fun MultiExpressionResult.getForName(name: String): IntRange? {
 
 operator fun Expression.plus(expression: Expression): MultiExpression {
     if (this is MultiExpression) {
-        return this + expression
+        if (this.name == null) {
+            return this + expression
+        } else {
+            return MultiExpression(arrayListOf(this, expression))
+        }
     } else {
         return MultiExpression(arrayListOf(this, expression))
     }
