@@ -42,12 +42,27 @@ fun ExpressionResultsHandlerContext.handleAssignment(currentGeneration: CurrentG
                 VariableInformation(
                     it["variableName"].correspondingTokensText(tokens),
                     Type.Int,
-                    evaluation.ok.first.toInt(),
+                    evaluation.ok.first,
                     variableName,
                     evaluation.ok.second
                 )
             )
-            output = "int " + variableName + " = " + evaluation.ok.first + ";" + "\n"
+            val cTypeName = with(resolveType(evaluation.ok.second.outputClass, currentGeneration)) {
+                when (this) {
+                    Type.Int -> {
+                        "int"
+                    }
+
+                    Type.Boolean -> {
+                        "bool"
+                    }
+
+                    else -> {
+                        "struct " + this.name
+                    }
+                }
+            }
+            output = cTypeName + " " + variableName + " = " + evaluation.ok.first + ";" + "\n"
             currentGeneration.currentScope.generatedSource += output
             println("generated assignment: " + output)
             return Ok(output)
@@ -62,13 +77,13 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
 //        val evaluation = continueWithOne(it["function"], function) { handleFunction(currentGeneration) }
         val evaluation = continueStraight(it["function"]) { handleFunction(currentGeneration) }
 
-        if (evaluation is Ok<String>) {
+        if (evaluation is Ok) {
             return Ok("")
         }
-        if (evaluation is Error<*>) {
+        if (evaluation is Error) {
             currentGeneration.errors.add(evaluation)
             println(evaluation.error)
-            return evaluation
+            return evaluation.to()
         }
     }
     return Error("is not a function call", this.expressionResult.range)

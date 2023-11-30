@@ -56,12 +56,13 @@ interface EvaluateExpression {
 }
 
 fun evaluateExpression(expression: Expression, startIndex: Int, tokens: List<Char>, endIndex: Int = tokens.size): Int {
-    if (startIndex >= tokens.size) {
+    if (startIndex >= endIndex) {
         if (expression is RecurringSome0Expression) {
             return startIndex
-        } else {
-            return -1
         }
+//        else {
+//            return -1
+//        }
     }
     when (expression) {
         is ExactExpression -> return evaluateExpression(expression, startIndex, tokens, endIndex)
@@ -79,12 +80,13 @@ fun evaluateExpression(expression: Expression, startIndex: Int, tokens: List<Cha
 }
 
 fun evaluateExpressionValueic(expression: Expression, startIndex: Int, tokens: List<Char>, endIndex: Int = tokens.size): ExpressionResult? {
-    if (startIndex >= tokens.size) {
+    if (startIndex >= endIndex) {
         if (expression is RecurringSome0Expression) {
             return ExpressionResult(expression, startIndex..startIndex)
-        } else {
-            return null
         }
+//        else {
+//            return null
+//        }
     }
     when (expression) {
         is MultiExpression -> return evaluateExpressionValueic(expression, startIndex, tokens, endIndex)
@@ -121,6 +123,9 @@ fun evaluateExpression(exactExpression: ExactExpression, startIndex: Int, tokens
 }
 
 fun evaluateExpression(conditionExpression: ConditionExpression, startIndex: Int, tokens: List<Char>, endIndex: Int = tokens.size): Int {
+    if (startIndex >= endIndex) {
+        return -1
+    }
     if (conditionExpression.condition(tokens[startIndex])) {
         return startIndex + 1
     } else return -1
@@ -212,6 +217,9 @@ fun evaluateExpressionValueic(eachOfExpression: EachOfExpression, startIndex: In
 }
 
 fun evaluateExpression(eachOfTokensExpression: EachOfTokensExpression, startIndex: Int, tokens: List<Char>, endIndex: Int = tokens.size): Int {
+    if (startIndex >= endIndex) {
+        return -1
+    }
     eachOfTokensExpression.forEach {
         if (tokens[startIndex] == it) {
             return startIndex + 1
@@ -301,6 +309,9 @@ fun evaluateExpressionValueic(recurringSome0Expression: RecurringSome0Expression
 }
 
 fun evaluateExpression(notExpression: NotExpression, startIndex: Int, tokens: List<Char>, endIndex: Int = tokens.size): Int {
+    if (startIndex >= endIndex) {
+        return startIndex
+    }
     val tokensEndIndex = evaluateExpression(notExpression.expression, startIndex, tokens, endIndex)
     if (tokensEndIndex == -1) {
         return startIndex

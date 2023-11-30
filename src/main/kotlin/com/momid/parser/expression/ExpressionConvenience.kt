@@ -61,7 +61,7 @@ fun MultiExpressionResult.getForName(name: String): IntRange? {
 
 operator fun Expression.plus(expression: Expression): MultiExpression {
     if (this is MultiExpression) {
-        if (this.name == null) {
+        if (this.name == null && expression.name == null) {
             return this + expression
         } else {
             return MultiExpression(arrayListOf(this, expression))

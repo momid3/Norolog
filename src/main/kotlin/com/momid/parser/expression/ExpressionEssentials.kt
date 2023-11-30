@@ -6,7 +6,7 @@ val spaces = some0(condition { it.isWhitespace() }).apply { this.isValueic = fal
 
 val insideParentheses = CustomExpression() { tokens, startIndex, endIndex ->
     var numberOfLefts = 1
-    for (tokenIndex in startIndex..tokens.lastIndex) {
+    for (tokenIndex in startIndex..endIndex - 1) {
         if (tokens[tokenIndex] == '(') {
             numberOfLefts += 1
         }
@@ -23,7 +23,7 @@ val insideParentheses = CustomExpression() { tokens, startIndex, endIndex ->
 fun inline(multiExpression: Expression): CustomExpressionValueic {
     return CustomExpressionValueic() { tokens, startIndex, endIndex ->
         val inlinedExpressionResults = ArrayList<ExpressionResult>()
-        val expressionResult = evaluateExpressionValueic(multiExpression, startIndex, tokens) ?: return@CustomExpressionValueic null
+        val expressionResult = evaluateExpressionValueic(multiExpression, startIndex, tokens, endIndex) ?: return@CustomExpressionValueic null
         if (expressionResult !is MultiExpressionResult) {
             throw(Throwable("expression " + multiExpression::class + "does not evaluate to a MultiExpressionResult"))
         }
@@ -54,7 +54,7 @@ fun spaced(expressions: () -> MultiExpression): MultiExpression {
 fun insideOfParentheses(parenthesesStart: Char, parenthesesEnd: Char): CustomExpression {
     return CustomExpression() { tokens, startIndex, endIndex ->
         var numberOfLefts = 1
-        for (tokenIndex in startIndex..tokens.lastIndex) {
+        for (tokenIndex in startIndex..endIndex - 1) {
             if (tokens[tokenIndex] == parenthesesStart) {
                 numberOfLefts += 1
             }
@@ -122,7 +122,7 @@ fun matchesFully(expression: Expression, tokenSlice: List<Char>): Boolean {
 
 fun combineExpressions(expression: Expression, otherExpression: Expression): Expression {
     return CustomExpression() { tokens, startIndex, endIndex ->
-        val expressionNextIndex = evaluateExpression(expression, startIndex, tokens)
+        val expressionNextIndex = evaluateExpression(expression, startIndex, tokens, endIndex)
         if (expressionNextIndex == -1) {
             return@CustomExpression -1
         }

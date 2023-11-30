@@ -22,6 +22,16 @@ fun compile(codeText: String): String {
         }
     }
 
+    currentGeneration.errors.apply {
+        if (this.isNotEmpty()) {
+            println("program contains errors: ")
+            println()
+            this.forEach {
+                println(it.error)
+            }
+        }
+    }
+
 //    println(currentGeneration.generatedSource)
 
     return wholeProgram(currentGeneration.globalDefinitionsGeneratedSource + currentGeneration.currentScope.generatedSource)

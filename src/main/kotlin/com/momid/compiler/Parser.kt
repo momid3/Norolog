@@ -16,8 +16,11 @@ val dotInTheMiddleOfNumber = CustomExpression() { tokens, startIndex, endIndex -
     }
 }
 
-val stringLiteral =
+val stringLiteral by lazy {
     CustomExpression() { tokens, startIndex, endIndex ->
+        if (startIndex >= endIndex) {
+            return@CustomExpression -1
+        }
         if (tokens[startIndex] != '"') {
             return@CustomExpression -1
         }
@@ -28,28 +31,36 @@ val stringLiteral =
         }
         return@CustomExpression -1
     }
+}
 
 val variableNameO by lazy {
     and(condition { it.isLetter() } + some0(condition { it.isLetterOrDigit() }) + not(condition { it == '(' }), not(anyOf(!"in", !"until")))
 }
 
-val number =
+val number by lazy {
     condition { it.isDigit() } + some0(dotInTheMiddleOfNumber) + some0(condition { it.isDigit() })
+}
 
 val atomicExp =
-    anyOf(variableNameO, number, cf, stringLiteral)
+    anyOf(variableNameO, number, cf, stringLiteral)["atomic"] + not(!".")
 
 val operator =
     anyOf('+', '-', '*', '/')
 
-val simpleExpression =
-    some(inlineContent(anyOf(inlineToOne(spaces + atomicExp["atomicExp"] + spaces), inlineToOne(spaces + operator["operator"] + spaces))))
+val simpleExpression by lazy {
+    some(inlineContent(anyOf(
+        inlineToOne(spaces + atomicExp["atomicExp"] + spaces),
+        inlineToOne(spaces + operator["operator"] + spaces),
+        inlineToOne(spaces + propertyAccess["propertyAccess"] + spaces)
+    )))
+}
 
 val expressionInParentheses =
     insideParentheses
 
-val simpleExpressionInParentheses =
+val simpleExpressionInParentheses by lazy {
     !"(" + expressionInParentheses["insideParentheses"] + ")"
+}
 
 val complexExpression by lazy {
     some(inlineContent(anyOf(simpleExpression, simpleExpressionInParentheses)))
@@ -85,6 +96,25 @@ fun ExpressionResultsHandlerContext.resolveVariable(currentGeneration: CurrentGe
     return Error("could not resolve variable: " + this.expressionResult.tokens(), this.expressionResult.range)
 }
 
+fun resolveVariable(variableName: String, currentGeneration: CurrentGeneration): VariableInformation? {
+    var scope = currentGeneration.currentScope
+    var foundVariable: VariableInformation? = null
+    while (true) {
+        scope.variables.forEach {
+            if (it.name == variableName) {
+                foundVariable = it
+                return it
+            }
+        }
+        if (scope.upperScope != null) {
+            scope = scope.upperScope!!
+        } else {
+            break
+        }
+    }
+    return null
+}
+
 /***
  * evaluates the value of the expression and returns the value of it that can be inserted to the output
  * and the output type of the value of the expression
@@ -105,7 +135,7 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                     it.forEach {
                         it.isOf(atomicExp) {
 
-                            it.content.isOf(cf) {
+                            it["atomic"].content.isOf(cf) {
                                 val evaluatedFunction = continueWithOne(it, cf) { handleCF(currentGeneration) }
                                 if (evaluatedFunction is Ok) {
                                     type = evaluatedFunction.ok.second
@@ -117,7 +147,7 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                                 }
                             }
 
-                            it.content.isOf(variableNameO) {
+                            it["atomic"].content.isOf(variableNameO) {
                                 print("variable:", it)
                                 val outputVariable = continueStraight(it) {
                                     resolveVariable (currentGeneration)
@@ -132,18 +162,27 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                                 }
                             }
 
-                            it.content.isOf(number) {
+                            it["atomic"].content.isOf(number) {
                                 println("is number " + it.correspondingTokensText(tokens))
                                 type = OutputType(outputInt)
                                 output += it.correspondingTokensText(tokens)
                             }
 
-                            it.content.isOf(stringLiteral) {
+                            it["atomic"].content.isOf(stringLiteral) {
                                 println("is string literal: " + it.tokens())
                                 val text = it.tokens()
                                 type = OutputType(outputString)
                                 output += text
                             }
+                        }
+
+                        it.isOf(propertyAccess) {
+                            val propertyAccessEvaluation = continueStraight(it) { handlePropertyAccess(currentGeneration) }.okOrReport {
+                                println(it.error)
+                                return it.to()
+                            }
+                            type = propertyAccessEvaluation.second
+                            output += propertyAccessEvaluation.first
                         }
 
                         it.isOf("operator") {

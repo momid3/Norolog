@@ -32,9 +32,12 @@ fun ignoreParentheses(conditionExpression: ConditionExpression): CustomExpressio
             if (tokenEndIndex >= tokens.size) {
                 break
             }
-            tokenEndIndex = evaluateExpressionValueic(conditionExpression, tokenEndIndex, tokens)?.range?.last ?: break
+            tokenEndIndex = evaluateExpressionValueic(conditionExpression, tokenEndIndex, tokens, endIndex)?.range?.last ?: break
+            if (tokenEndIndex >= tokens.size) {
+                break
+            }
             if (tokens[tokenEndIndex] == '(') {
-                val nextParenthesesIndex = (evaluateExpressionValueic(insideParentheses, tokenEndIndex + 1, tokens)?.range?.last) ?: return@CustomExpression -1
+                val nextParenthesesIndex = (evaluateExpressionValueic(insideParentheses, tokenEndIndex + 1, tokens, endIndex)?.range?.last) ?: return@CustomExpression -1
                 if (nextParenthesesIndex <= tokens.lastIndex) {
                     tokenEndIndex = nextParenthesesIndex + 1
                 } else {
@@ -64,7 +67,7 @@ fun ExpressionResult.subs(name: String): List<ExpressionResult> {
 fun inline(multiExpression: Expression): CustomExpressionValueic {
     return CustomExpressionValueic() { tokens, startIndex, endIndex ->
         val inlinedExpressionResults = ArrayList<ExpressionResult>()
-        val expressionResult = evaluateExpressionValueic(multiExpression, startIndex, tokens) ?: return@CustomExpressionValueic null
+        val expressionResult = evaluateExpressionValueic(multiExpression, startIndex, tokens, endIndex) ?: return@CustomExpressionValueic null
         if (expressionResult !is MultiExpressionResult) {
             throw(Throwable("expression " + multiExpression::class + "does not evaluate to a MultiExpressionResult"))
         }
@@ -87,7 +90,7 @@ fun inline(multiExpression: Expression): CustomExpressionValueic {
 
 fun inlineContent(multiExpression: Expression): CustomExpressionValueic {
     return CustomExpressionValueic() { tokens, startIndex, endIndex ->
-        val expressionResult = evaluateExpressionValueic(multiExpression, startIndex, tokens) ?: return@CustomExpressionValueic null
+        val expressionResult = evaluateExpressionValueic(multiExpression, startIndex, tokens, endIndex) ?: return@CustomExpressionValueic null
         if (expressionResult !is ContentExpressionResult) {
             throw(Throwable("expression " + multiExpression::class + "does not evaluate to a ContentExpressionResult"))
         }
@@ -98,7 +101,7 @@ fun inlineContent(multiExpression: Expression): CustomExpressionValueic {
 fun inlineToOne(multiExpression: Expression): CustomExpressionValueic {
     return inlineContent(CustomExpressionValueic { tokens, startIndex, endIndex ->
         val inlinedExpressionResults = ArrayList<ExpressionResult>()
-        val expressionResult = evaluateExpressionValueic(multiExpression, startIndex, tokens) ?: return@CustomExpressionValueic null
+        val expressionResult = evaluateExpressionValueic(multiExpression, startIndex, tokens, endIndex) ?: return@CustomExpressionValueic null
         if (expressionResult !is MultiExpressionResult) {
             throw(Throwable("expression " + multiExpression::class + "does not evaluate to a MultiExpressionResult"))
         }

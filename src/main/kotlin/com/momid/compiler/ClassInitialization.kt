@@ -44,7 +44,7 @@ fun ExpressionResultsHandlerContext.handleClassInitialization(currentGeneration:
                 return Error("class parameters are not of expected type", this.expressionResult.range)
             }
 
-            output += cStructInitialization(className, resolvedClass.variables.mapIndexed { index, classVariable ->
+            output += cStructInitialization(resolveClass(resolvedClass, currentGeneration).name, resolvedClass.variables.mapIndexed { index, classVariable ->
                 Pair(classVariable.name, it[index].first)
             })
             return Ok(Pair(output, OutputType(resolvedClass)))

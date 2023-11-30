@@ -45,8 +45,12 @@ class ExpressionResultsHandlerContext(
     }
 
     fun continueWith(expressionResult: ExpressionResult, vararg registerExpressions: Expression, anotherHandler: ExpressionResultsHandlerContext.() -> Result<*>) {
-        ExpressionFinder().apply { registerExpressions(registerExpressions.toList()) }.start(tokens, expressionResult.range).forEach {
-            ExpressionResultsHandlerContext(expressionFinder, it, tokens, anotherHandler).anotherHandler()
+        val finder: ExpressionFinder
+        ExpressionFinder().apply {
+            finder = this
+            registerExpressions(registerExpressions.toList())
+        }.start(tokens, expressionResult.range).forEach {
+            ExpressionResultsHandlerContext(finder, it, tokens, anotherHandler).anotherHandler()
         }
     }
 
@@ -57,11 +61,49 @@ class ExpressionResultsHandlerContext(
     }
 
     fun <R> continueWithOne(expressionResult: ExpressionResult, vararg registerExpressions: Expression, anotherHandler: ExpressionResultsHandlerContext.() -> Result<R>): Result<R> {
-        ExpressionFinder().apply { registerExpressions(registerExpressions.toList()) }.start(tokens, expressionResult.range).apply {
+        val finder: ExpressionFinder
+        ExpressionFinder().apply {
+            finder = this
+            registerExpressions(registerExpressions.toList())
+        }.start(tokens, expressionResult.range).apply {
             if (isNotEmpty()) {
-                return ExpressionResultsHandlerContext(expressionFinder, this[0], tokens, anotherHandler).anotherHandler()
+                return ExpressionResultsHandlerContext(finder, this[0], tokens, anotherHandler).anotherHandler()
             } else {
-                throw (Throwable("is more than one"))
+                return NoExpressionResultsError(expressionResult.range)
+            }
+        }
+    }
+
+    fun <R> continueWithOneSeparate(expressionResult: ExpressionResult, vararg registerExpressions: Expression, anotherHandler: ExpressionResultsHandlerContext.() -> Result<R>): Result<R> {
+        val finder: ExpressionFinder
+        ExpressionFinder().apply {
+            finder = this
+            registerExpressions(registerExpressions.toList())
+        }.start((expressionResult.tokens()).toList()).apply {
+            if (isNotEmpty()) {
+                return ExpressionResultsHandlerContext(finder, this[0], (expressionResult.tokens()).toList(), anotherHandler).anotherHandler()
+            } else {
+                return NoExpressionResultsError(expressionResult.range)
+            }
+        }
+    }
+
+//    inline fun require(expressionResult: ExpressionResult, registerExpressions: List<Expression>, notFound: (range: IntRange) -> Unit, continueWith: (ExpressionResult) -> Unit) {
+//        ExpressionFinder().apply { registerExpressions(registerExpressions) }.start(tokens, expressionResult.range).apply {
+//            if (isNotEmpty()) {
+//                continueWith(this[0])
+//            } else {
+//                notFound(expressionResult.range)
+//            }
+//        }
+//    }
+
+    inline fun require(expressionResult: ExpressionResult, registerExpression: Expression, notFound: () -> Unit, continueWith: (ExpressionResult) -> Unit) {
+        ExpressionFinder().apply { registerExpressions(listOf(registerExpression)) }.start(tokens, expressionResult.range).apply {
+            if (isNotEmpty()) {
+                continueWith(this[0])
+            } else {
+                notFound()
             }
         }
     }
@@ -85,3 +127,5 @@ class ExpressionResultsHandlerContext(
         return this.correspondingTokensText(this@ExpressionResultsHandlerContext.tokens)
     }
 }
+
+class NoExpressionResultsError<T>(range: IntRange): Error<T>("", range)
