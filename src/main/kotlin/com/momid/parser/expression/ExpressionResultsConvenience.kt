@@ -26,6 +26,19 @@ val ExpressionResult.content: ExpressionResult
         }
     }
 
+inline fun ExpressionResult.continuing(report: (ExpressionResult) -> Unit): ExpressionResult {
+    if (this is ContinueExpressionResult) {
+        if (this.content != null) {
+            return this.content
+        } else {
+            report(this)
+        }
+        throw (Throwable("you should have returned in the report function"))
+    } else {
+        throw (Throwable("this expression kind does return a ContinueExpressionResult"))
+    }
+}
+
 class ExpressionResultsHandlerContext(
     val expressionFinder: ExpressionFinder,
     val expressionResult: ExpressionResult,

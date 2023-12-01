@@ -41,13 +41,14 @@ fun inline(multiExpression: Expression): CustomExpressionValueic {
 }
 
 fun spaced(expressions: () -> MultiExpression): MultiExpression {
-    val spacedExpressions = MultiExpression(arrayListOf())
+    val spacedExpressions = MultiExpression(arrayListOf(spaces))
     val expressions = expressions()
     for (expressionIndex in 0..expressions.lastIndex - 1) {
         spacedExpressions.expressions.add(expressions[expressionIndex])
         spacedExpressions.expressions.add(spaces)
     }
     spacedExpressions.expressions.add(expressions[expressions.lastIndex])
+    spacedExpressions.expressions.add(spaces)
     return spacedExpressions
 }
 
@@ -109,6 +110,76 @@ fun insideOf(name: String, parenthesesStart: Char, parenthesesEnd: Char): Custom
             }
         }
         return@CustomExpressionValueic null
+    }
+}
+
+fun insideOf(parenthesesStart: Char, parenthesesEnd: Char, expression: Expression): CustomExpressionValueic {
+    return CustomExpressionValueic() { tokens, startIndex, endIndex ->
+        if (tokens[startIndex] != parenthesesStart) {
+            return@CustomExpressionValueic null
+        }
+        var numberOfLefts = 1
+        for (tokenIndex in startIndex + 1 until endIndex) {
+            if (tokens[tokenIndex] == parenthesesStart) {
+                numberOfLefts += 1
+            }
+            if (tokens[tokenIndex] == parenthesesEnd) {
+                numberOfLefts -= 1
+            }
+            if (numberOfLefts == 0) {
+                val evaluation = evaluateExpressionValueic(expression, startIndex + 1, tokens, (tokenIndex + 1) - 1)
+                return@CustomExpressionValueic ContinueExpressionResult(ExpressionResult(expression, startIndex .. tokenIndex + 1), evaluation)
+            }
+        }
+        return@CustomExpressionValueic null
+    }
+}
+
+fun insideOf(parenthesesStart: Char, parenthesesEnd: Char, expression: () -> Expression): CustomExpressionValueic {
+    return CustomExpressionValueic() { tokens, startIndex, endIndex ->
+        if (tokens[startIndex] != parenthesesStart) {
+            return@CustomExpressionValueic null
+        }
+        var numberOfLefts = 1
+        for (tokenIndex in startIndex + 1 until endIndex) {
+            if (tokens[tokenIndex] == parenthesesStart) {
+                numberOfLefts += 1
+            }
+            if (tokens[tokenIndex] == parenthesesEnd) {
+                numberOfLefts -= 1
+            }
+            if (numberOfLefts == 0) {
+                val evaluation = evaluateExpressionValueic(expression(), startIndex + 1, tokens, (tokenIndex + 1) - 1)
+                return@CustomExpressionValueic ContinueExpressionResult(ExpressionResult(expression(), startIndex .. tokenIndex + 1), evaluation)
+            }
+        }
+        return@CustomExpressionValueic null
+    }
+}
+
+fun wanting(expression: Expression, until: Expression): CustomExpressionValueic {
+    return CustomExpressionValueic { tokens, startIndex, endIndex ->
+        var nextTokenIndex = startIndex
+        while (true) {
+            val evaluation = evaluateExpressionValueic(until, nextTokenIndex, tokens, endIndex)
+            if (evaluation == null) {
+                nextTokenIndex += 1
+            } else {
+                break
+            }
+            if (nextTokenIndex >= endIndex) {
+                break
+            }
+        }
+        val evaluation = evaluateExpressionValueic(expression, startIndex, tokens, nextTokenIndex)
+        return@CustomExpressionValueic ContinueExpressionResult(ExpressionResult(expression, startIndex..nextTokenIndex), evaluation)
+    }
+}
+
+fun wanting(expression: Expression): CustomExpressionValueic {
+    return CustomExpressionValueic { tokens, startIndex, endIndex ->
+        val evaluation = evaluateExpressionValueic(expression, startIndex, tokens, endIndex)
+        return@CustomExpressionValueic ContinueExpressionResult(ExpressionResult(expression, startIndex..endIndex), evaluation)
     }
 }
 

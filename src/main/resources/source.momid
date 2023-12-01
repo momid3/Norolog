@@ -2,4 +2,4 @@ class SomeClass { someVariable: Int, anotherVariable: Int, someOtherVariable: In
 
 val theVal = SomeClass(3, 3, 3);
 
-for ( someVar in 0 until (theVal.someVariable) ) { print((theVal.someVariable + 7)); }
+for ( someVar in 0 until (theVal.someVariable) * 3 ) { print((theVal.someVariable + 7)); }

@@ -8,6 +8,11 @@ class MultiExpressionResult(val mainExpressionResult: ExpressionResult, val expr
 
 class ContentExpressionResult(val mainExpressionResult: ExpressionResult, val content: ExpressionResult): ExpressionResult(mainExpressionResult.expression, mainExpressionResult.range)
 
+/***
+ * same as ContentExpressionResult but its content may be null because after continuing no further results have been found
+ */
+class ContinueExpressionResult(val mainExpressionResult: ExpressionResult, val content: ExpressionResult?): ExpressionResult(mainExpressionResult.expression, mainExpressionResult.range)
+
 //fun ExpressionResult.getRange(): IntRange? {
 //    when (this) {
 //        is ExpressionResult -> return this.range
