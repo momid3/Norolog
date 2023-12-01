@@ -13,11 +13,11 @@ val propertyAccessVariable by lazy {
 }
 
 val propertyAccessElement by lazy {
-    ignoreParentheses(condition { it != '.' })
+    ignoreParentheses(condition { it != '.'  && it != ')' && it != ' '})
 }
 
 val propertyAccess by lazy {
-    spaces + propertyAccessFirstElement["firstExpression"] + inline(some0(spaces + !"." + spaces + propertyAccessElement["element"])["otherElements"]) + spaces
+    spaces + propertyAccessFirstElement["firstExpression"] + inline(some(spaces + !"." + spaces + propertyAccessElement["element"])["otherElements"]) + spaces
 }
 
 fun ExpressionResultsHandlerContext.handlePropertyAccess(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {

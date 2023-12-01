@@ -29,21 +29,21 @@ fun ignoreParentheses(conditionExpression: ConditionExpression): CustomExpressio
     return CustomExpression { tokens, startIndex, endIndex ->
         var tokenEndIndex = startIndex
         while (true) {
-            if (tokenEndIndex >= tokens.size) {
-                break
-            }
-            tokenEndIndex = evaluateExpressionValueic(conditionExpression, tokenEndIndex, tokens, endIndex)?.range?.last ?: break
-            if (tokenEndIndex >= tokens.size) {
+            if (tokenEndIndex >= endIndex) {
                 break
             }
             if (tokens[tokenEndIndex] == '(') {
                 val nextParenthesesIndex = (evaluateExpressionValueic(insideParentheses, tokenEndIndex + 1, tokens, endIndex)?.range?.last) ?: return@CustomExpression -1
-                if (nextParenthesesIndex <= tokens.lastIndex) {
+                if (nextParenthesesIndex <= endIndex - 1) {
                     tokenEndIndex = nextParenthesesIndex + 1
                 } else {
                     tokenEndIndex = nextParenthesesIndex
                     break
                 }
+            }
+            tokenEndIndex = evaluateExpressionValueic(conditionExpression, tokenEndIndex, tokens, endIndex)?.range?.last ?: break
+            if (tokenEndIndex >= endIndex) {
+                break
             }
         }
         return@CustomExpression tokenEndIndex
@@ -69,7 +69,7 @@ fun inline(multiExpression: Expression): CustomExpressionValueic {
         val inlinedExpressionResults = ArrayList<ExpressionResult>()
         val expressionResult = evaluateExpressionValueic(multiExpression, startIndex, tokens, endIndex) ?: return@CustomExpressionValueic null
         if (expressionResult !is MultiExpressionResult) {
-            throw(Throwable("expression " + multiExpression::class + "does not evaluate to a MultiExpressionResult"))
+            throw(Throwable("expression " + multiExpression.text() + " does not evaluate to a MultiExpressionResult"))
         }
         expressionResult.forEach {
             if (it is MultiExpressionResult) {
@@ -127,6 +127,7 @@ fun ExpressionResultsHandlerContext.handleFunction(currentGeneration: CurrentGen
     with(this.expressionResult) {
         isOf(function) {
             println("function: " + it.correspondingTokensText(tokens))
+            println("function parameters are: " + it["parameters"].tokens())
             val parametersEvaluation = continueWithOne(it["parameters"], functionParameters) { handleFunctionCallParameters(currentGeneration) }
 
             if (parametersEvaluation is Error<*>) {
@@ -185,10 +186,22 @@ fun ExpressionResultsHandlerContext.handleFunctionCallParameters(currentGenerati
 }
 
 fun main() {
-    val text = "someFunction(3 + 7 + anotherFunction() + (someVar + 373), 7, 3)".toList()
+//    val text = "someFunction(3 + 7 + anotherFunction() + (someVar + 373), 7, 3)".toList()
+//    val finder = ExpressionFinder()
+//    finder.registerExpressions(listOf(function))
+//    val expressionResults = finder.start(text)
+
+    val currentGeneration = CurrentGeneration()
+    val text = "((theVal.someVariable + 7));".toList()
     val finder = ExpressionFinder()
-    finder.registerExpressions(listOf(function))
-    val expressionResults = finder.start(text)
+    finder.registerExpressions(listOf(ignoreParentheses(condition { it != ',' && it != ')' })))
+    finder.start(text).forEach {
+        handleExpressionResult(finder, it, text) {
+//            handleClassInitialization(currentGeneration)
+            println(this.expressionResult.tokens())
+            return@handleExpressionResult Ok("")
+        }
+    }
 
 //    expressionResults.forEach {
 //        handleExpressionResult(finder, it, text) {

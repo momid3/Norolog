@@ -63,7 +63,7 @@ val simpleExpressionInParentheses by lazy {
 }
 
 val complexExpression by lazy {
-    some(inlineContent(anyOf(simpleExpression, simpleExpressionInParentheses)))
+    spaces + some(inlineContent(anyOf(simpleExpression, simpleExpressionInParentheses)))["complexExpression"] + spaces
 }
 
 
@@ -128,7 +128,7 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
             var type: OutputType? = null
             var output = ""
             print("complex expression:", it)
-            it.forEach {
+            it["complexExpression"].forEach {
 
                 it.isOf(simpleExpression) {
                     print("simple:", it)
@@ -202,6 +202,7 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                     if (evaluation is Error<*>) {
                         currentGeneration.errors.add(evaluation)
                         println(evaluation.error)
+                        return evaluation.to()
                     }
                 }
             }
@@ -216,7 +217,8 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
 
 fun main() {
 
-    val text = "someVar + 3 + some + someFunction(3, 7, 3) + 7 + (3 + 37 + (373 + 373))".toList()
+//    val text = "someVar + 3 + some + someFunction(3, 7, 3) + 7 + (3 + 37 + (373 + 373))".toList()
+    val text = "(someVar + 3 + some.theVariable + someFunction(3, 7, 3) + 7 + (3 + 37 + (373 + 373))))))))".toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(complexExpression))
     val expressionResults = finder.start(text)
