@@ -47,7 +47,7 @@ fun ExpressionResultsHandlerContext.handleAssignment(currentGeneration: CurrentG
                     evaluation.ok.second
                 )
             )
-            val cTypeName = with(resolveType(evaluation.ok.second.outputClass, currentGeneration)) {
+            val cTypeName = with(resolveType(evaluation.ok.second, currentGeneration)) {
                 when (this) {
                     Type.Int -> {
                         "int"

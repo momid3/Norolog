@@ -34,13 +34,17 @@ fun ExpressionResultsHandlerContext.handleClass(currentGeneration: CurrentGenera
             it.forEach {
                 println("class variable: " + it.name + ": " + it.type)
                 val classVariableTypeClass = resolveType(it.type, currentGeneration) ?: return Error("could not resolve class: " + it.type, this.expressionResult.range)
-                val classVariable = ClassVariable(it.name, OutputType(classVariableTypeClass))
+                val classVariable = ClassVariable(it.name, ClassType(classVariableTypeClass))
                 classVariablesOutput.add(classVariable)
             }
 
             val outputClass = Class(className, classVariablesOutput)
             val outputStruct = CStruct(currentGeneration.createCStructName(), classVariablesOutput.map {
-                CStructVariable(it.name, resolveType(it.type.outputClass, currentGeneration))
+                if (it.type is ClassType) {
+                    CStructVariable(it.name, resolveType(it.type.outputClass, currentGeneration))
+                } else {
+                    throw (Throwable("other types than class type are not currently available"))
+                }
             })
 
             currentGeneration.classesInformation.classes[outputClass] = outputStruct
@@ -93,6 +97,22 @@ fun resolveType(outputType: Class, currentGeneration: CurrentGeneration): Type {
         return Type.CharArray
     } else {
         return Type(currentGeneration.classesInformation.classes[outputType]?.name ?: throw (Throwable("could not resolve corresponding CStruct to this class")))
+    }
+}
+
+fun resolveType(outputType: OutputType, currentGeneration: CurrentGeneration): Type {
+    if (outputType is ClassType) {
+        return resolveType(outputType.outputClass, currentGeneration)
+    } else {
+        throw (Throwable("only class type is available currently"))
+    }
+}
+
+fun confirmTypeIsClassType(outputType: OutputType): ClassType {
+    if (outputType is ClassType) {
+        return outputType
+    } else {
+        throw (Throwable("only class type is available currently"))
     }
 }
 

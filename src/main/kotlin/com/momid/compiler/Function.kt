@@ -2,6 +2,8 @@ package com.momid.compiler
 
 import com.momid.compiler.output.OutputType
 import com.momid.compiler.output.nothingOutputType
+import com.momid.compiler.output.outputIntType
+import com.momid.compiler.output.outputStringType
 import com.momid.parser.expression.*
 
 val functionName =
@@ -144,13 +146,13 @@ fun ExpressionResultsHandlerContext.handleFunction(currentGeneration: CurrentGen
                 } else {
                     with(parameters[0]) {
                         println("printing: " + this.first)
-                        println("its type is: " + this.second.outputClass.name)
-                        if (this.second.outputClass.name == "String") {
+                        println("its type is: " + this.second)
+                        if (this.second == outputStringType) {
                             output += "printf" + "(" + this.first + ")" + ";" + "\n"
                             currentGeneration.currentScope.generatedSource += output
                             return Ok(Pair("", nothingOutputType))
                         }
-                        if (this.second.outputClass.name == "Int") {
+                        if (this.second == outputIntType) {
                             output += "printf" + "(" + "\"%d\\n\"" + ", " + this.first + ")" + ";" + "\n"
                             currentGeneration.currentScope.generatedSource += output
                             return Ok(Pair("", nothingOutputType))

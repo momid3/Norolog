@@ -7,7 +7,7 @@ package com.momid.compiler.output
  * @param returnType return type of the function.
  * @param bodyRange index range of the body of the function in the source code.
  */
-class FunctionDefinition(val name: String, val parameters: List<FunctionParameter>, val returnType: OutputType, val bodyRange: IntRange) {
+class Function(val name: String, val parameters: List<FunctionParameter>, val returnType: OutputType, val bodyRange: IntRange) {
 }
 
 class FunctionParameter(val name: String, val type: OutputType)

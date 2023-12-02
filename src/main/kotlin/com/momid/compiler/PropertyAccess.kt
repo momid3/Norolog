@@ -35,7 +35,7 @@ fun ExpressionResultsHandlerContext.handlePropertyAccess(currentGeneration: Curr
             return it.to()
         }
         val firstElementValue = firstElementEvaluation.first
-        val firstElementType = firstElementEvaluation.second
+        val firstElementType = confirmTypeIsClassType(firstElementEvaluation.second)
         println("first element: " + it["firstExpression"].tokens())
         var currentType = firstElementType
         output += firstElementValue
@@ -55,7 +55,7 @@ fun ExpressionResultsHandlerContext.handlePropertyAccess(currentGeneration: Curr
                         }
                     }
                     val cAccessVariable = (currentGeneration.classesInformation.classes[currentType.outputClass] ?: throw(Throwable("class not found"))).variables[accessVariableIndex]
-                    currentType = currentType.outputClass.variables[accessVariableIndex].type
+                    currentType = confirmTypeIsClassType(currentType.outputClass.variables[accessVariableIndex].type)
                     output += "." + cAccessVariable.name
 
                 }

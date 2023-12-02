@@ -1,6 +1,7 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.Class
+import com.momid.compiler.output.ClassType
 import com.momid.compiler.output.OutputType
 import com.momid.parser.expression.*
 import com.momid.parser.not
@@ -47,7 +48,7 @@ fun ExpressionResultsHandlerContext.handleClassInitialization(currentGeneration:
             output += cStructInitialization(resolveClass(resolvedClass, currentGeneration).name, resolvedClass.variables.mapIndexed { index, classVariable ->
                 Pair(classVariable.name, it[index].first)
             })
-            return Ok(Pair(output, OutputType(resolvedClass)))
+            return Ok(Pair(output, ClassType(resolvedClass)))
         })
     }
     println("is not class initialization")
@@ -91,7 +92,7 @@ fun ExpressionResultsHandlerContext.handleClassInitializationParameter(currentGe
 fun validateCIParameterTypes(ciClass: Class, ciParameters: List<OutputType>): Boolean {
     ciClass.variables.forEachIndexed { index, classVariable ->
         if (classVariable.type != ciParameters[index]) {
-            println("type mismatch: expected: " + classVariable.type.outputClass.name + " got: " + ciParameters[index].outputClass.name)
+            println("type mismatch: expected: " + classVariable.type + " got: " + ciParameters[index])
             return false
         }
     }
