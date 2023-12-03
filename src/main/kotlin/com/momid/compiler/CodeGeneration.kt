@@ -32,3 +32,20 @@ fun cStructInitialization(structName: String, parameters: List<Pair<String, Stri
             parameters.joinToString(", ") { "." + it.first + " = " + it.second } +
             " }"
 }
+
+/***
+ * @param variableType type of the variable that is being allocated.
+ * it should be 'int' or 'bool' or 'struct SomeStruct' for structs or
+ * 'struct SomeStruct *' for pointers
+ */
+fun memoryAllocation(variableName: String, variableType: String): String {
+    return variableType + "*" + " " + variableName + " = " + "(" + variableType + "*" + ") " + "malloc(sizeof(" + variableType + "));"
+}
+
+fun memoryCopy(destination: String, source: String, sourceType: String): String {
+    return "memcpy(" + destination + ", " + "&(" + source + ")" + ", " + "sizeof(" + sourceType + "));"
+}
+
+fun variableDeclaration(variableName: String, variableType: String, variableValue: String): String {
+    return variableType + " " + variableName + " = " + variableValue + ";"
+}

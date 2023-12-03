@@ -5,6 +5,7 @@ import com.momid.compiler.output.nothingOutputType
 import com.momid.compiler.output.outputIntType
 import com.momid.compiler.output.outputStringType
 import com.momid.parser.expression.*
+import com.momid.parser.not
 
 val functionName =
     condition { it.isLetter() } + some0(condition { it.isLetterOrDigit() })
@@ -16,7 +17,7 @@ val functionParameters =
     anyOf(inline(inline(some(functionParameter["parameter"] + spaces + "," + spaces)) + functionParameter["parameter"]), functionParameter["parameter"])
 
 val function =
-    functionName + "(" + insideParentheses["parameters"] + ")"
+    functionName["functionName"] + !"(" + insideParentheses["parameters"] + !")"
 
 fun ExpressionResult.isOf(name: String, then: (ExpressionResult) -> Unit) {
     if (this.expression.name == name) {
@@ -130,41 +131,37 @@ fun ExpressionResultsHandlerContext.handleFunction(currentGeneration: CurrentGen
         isOf(function) {
             println("function: " + it.correspondingTokensText(tokens))
             println("function parameters are: " + it["parameters"].tokens())
+
             val parametersEvaluation = continueWithOne(it["parameters"], functionParameters) { handleFunctionCallParameters(currentGeneration) }
+            val functionName = it["functionName"].tokens()
 
             if (parametersEvaluation is Error<*>) {
                 currentGeneration.errors.add(parametersEvaluation)
                 println(parametersEvaluation.error)
                 return Error(parametersEvaluation.error, parametersEvaluation.range)
             }
-            if (parametersEvaluation is Ok<List<Pair<String, OutputType>>>) {
+            if (parametersEvaluation is Ok) {
                 val parameters = parametersEvaluation.ok
 
-                if (parameters.size > 1) {
-                    print("parameters of more than one are not currently supported for functions")
-                    return Error("parameters of more than one are not currently supported for functions", this.range)
-                } else {
-                    with(parameters[0]) {
-                        println("printing: " + this.first)
-                        println("its type is: " + this.second)
-                        if (this.second == outputStringType) {
-                            output += "printf" + "(" + this.first + ")" + ";" + "\n"
-                            currentGeneration.currentScope.generatedSource += output
-                            return Ok(Pair("", nothingOutputType))
-                        }
-                        if (this.second == outputIntType) {
-                            output += "printf" + "(" + "\"%d\\n\"" + ", " + this.first + ")" + ";" + "\n"
-                            currentGeneration.currentScope.generatedSource += output
-                            return Ok(Pair("", nothingOutputType))
-                        }
-                    }
+                val functionCall = FunctionCallEvaluation(functionName, parameters)
+
+                val functionCallEvaluation = when (functionName) {
+                    "ref" -> continueStraight(it) { handleReferenceFunction(functionCall, currentGeneration) }
+                    "print" -> continueStraight(it) { handlePrintFunction(functionCall, currentGeneration) }
+                    else -> Error("could not resolve function: " + functionName, it.range)
                 }
+
+                return functionCallEvaluation
             }
         }
         return Error("is not a function", this.range)
     }
 }
 
+/***
+ * @return a list of evaluated function parameters. first element is the evaluated output of the parameter
+ * and last element is the type of the evaluated value.
+ */
 fun ExpressionResultsHandlerContext.handleFunctionCallParameters(currentGeneration: CurrentGeneration): Result<List<Pair<String, OutputType>>> {
     this.expressionResult.isOf(functionParameters) {
         print("function parameters:", it)
@@ -187,6 +184,42 @@ fun ExpressionResultsHandlerContext.handleFunctionCallParameters(currentGenerati
     return Error("is not function parameters", this.expressionResult.range)
 }
 
+fun ExpressionResultsHandlerContext.handlePrintFunction(functionCall: FunctionCallEvaluation, currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
+    with(this.expressionResult) {
+        var output = ""
+        if (functionCall.parameters.size > 1) {
+            print("parameters of more than one are not currently supported for print function")
+            return Error("parameters of more than one are not currently supported for print function", this.range)
+        } else {
+            with(functionCall.parameters[0]) {
+
+                println("printing: " + this.first)
+                println("its type is: " + this.second)
+
+                val parameterType = this.second
+
+                if (parameterType == outputStringType) {
+                    output += "printf" + "(" + this.first + ")" + ";" + "\n"
+                    currentGeneration.currentScope.generatedSource += output
+                    return Ok(Pair("", nothingOutputType))
+                }
+
+                else if (parameterType == outputIntType) {
+                    output += "printf" + "(" + "\"%d\\n\"" + ", " + this.first + ")" + ";" + "\n"
+                    currentGeneration.currentScope.generatedSource += output
+                    return Ok(Pair("", nothingOutputType))
+                } else {
+                    return Error("this variable type could not be printed: " + parameterType, this@handlePrintFunction.expressionResult.range)
+                }
+            }
+        }
+    }
+}
+
+class FunctionCallParsing(val name: String, val parameters: List<String>)
+
+class FunctionCallEvaluation(val name: String, val parameters: List<Pair<String, OutputType>>)
+
 fun main() {
 //    val text = "someFunction(3 + 7 + anotherFunction() + (someVar + 373), 7, 3)".toList()
 //    val finder = ExpressionFinder()
@@ -204,47 +237,4 @@ fun main() {
             return@handleExpressionResult Ok("")
         }
     }
-
-//    expressionResults.forEach {
-//        handleExpressionResult(finder, it, text) {
-//            with(this.expressionResult) {
-//                isOf(function) {
-//                    println("function: " + it.correspondingTokensText(tokens))
-////                println(it["parameters"].correspondingTokensText(text))
-//                    continueWith<String>(it["parameters"], functionParameters)
-//                }
-//                isOf(functionParameters) {
-//                    print("function parameters:", it)
-//                    it.content.subs("parameter").forEach {
-//                            print("function parameter:", it)
-//                            continueWith(it, complexExpression) { handleComplexExpression() }
-//                    }
-//                }
-////                isOf("parameters") {
-////                    print("function parameters:", it)
-//////                    it.subs("parameter").forEach {
-//////                        print("function parameter:", it)
-//////                        continueWith(it, complexExpression)
-//////                    }
-////                    println(it.expression.name)
-////                    it.forEach {
-////                        println(it.expression.name)
-////                        if (it is MultiExpressionResult) {
-////                            it.forEach {
-////                                println(it.expression.name)
-////                                if (it is MultiExpressionResult) {
-////                                    it.forEach {
-////                                        println(it.expression.name)
-////                                    }
-////                                }
-////                            }
-////                            println()
-////                        }
-////                    }
-////                    println()
-////                }
-//            }
-//            return@handleExpressionResult Ok("")
-//        }
-//    }
 }

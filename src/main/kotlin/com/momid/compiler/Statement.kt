@@ -1,6 +1,6 @@
 package com.momid.compiler
 
-import com.momid.compiler.output.OutputType
+import com.momid.compiler.output.ReferenceType
 import com.momid.compiler.output.Type
 import com.momid.compiler.output.VariableInformation
 import com.momid.compiler.output.createVariableName
@@ -36,32 +36,27 @@ fun ExpressionResultsHandlerContext.handleAssignment(currentGeneration: CurrentG
             println(evaluation.error)
             return Error(evaluation.error, evaluation.range)
         }
-        if (evaluation is Ok<Pair<String, OutputType>>) {
+        if (evaluation is Ok) {
+            val expressionEvaluation = evaluation.ok.first
+            val expressionType = evaluation.ok.second
+
+            if (expressionType is ReferenceType) {
+                println("no variable assignment is created for reference type")
+                return Ok("\n")
+            }
+
             val variableName = createVariableName()
             currentGeneration.currentScope.variables.add(
                 VariableInformation(
                     it["variableName"].correspondingTokensText(tokens),
                     Type.Int,
-                    evaluation.ok.first,
+                    expressionEvaluation,
                     variableName,
-                    evaluation.ok.second
+                    expressionType
                 )
             )
-            val cTypeName = with(resolveType(evaluation.ok.second, currentGeneration)) {
-                when (this) {
-                    Type.Int -> {
-                        "int"
-                    }
 
-                    Type.Boolean -> {
-                        "bool"
-                    }
-
-                    else -> {
-                        "struct " + this.name
-                    }
-                }
-            }
+            val cTypeName = cTypeName(expressionType, currentGeneration)
             output = cTypeName + " " + variableName + " = " + evaluation.ok.first + ";" + "\n"
             currentGeneration.currentScope.generatedSource += output
             println("generated assignment: " + output)

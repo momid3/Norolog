@@ -7,13 +7,15 @@ val nothingOutputType = NorType()
 val outputIntType = ClassType(outputInt)
 val outputStringType = ClassType(outputString)
 
-class Type(val name: String, val specifier: String = "") {
+open class Type(val name: String, val specifier: String = "") {
     companion object {
         val Int = Type("int")
         val Boolean = Type("bool")
         val CharArray = Type("CharArray")
     }
 }
+
+class CReferenceType(val actualType: Type): Type("")
 
 class ClassType(val outputClass: Class) : OutputType() {
     override fun equals(other: Any?): Boolean {
@@ -35,7 +37,7 @@ class FunctionType(val outputFunction: Function) : OutputType() {
     }
 }
 
-class ReferenceType(val actualType: OutputType) : OutputType() {
+class ReferenceType(val actualType: OutputType, underlyingCReferenceName: String) : OutputType() {
     override fun equals(other: Any?): Boolean {
         return other is ReferenceType && other.actualType == this.actualType
     }

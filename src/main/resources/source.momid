@@ -1,5 +1,7 @@
 class SomeClass { someVariable: Int, anotherVariable: Int, someOtherVariable: Int }
 
+val theVariable = ref(SomeClass(7, 7, 7));
+
 val theVal = SomeClass(3, 3, 3);
 
 for ( someVar in 0 until (theVal.someVariable) * 3 ) { print((theVal.someVariable + 7)); }

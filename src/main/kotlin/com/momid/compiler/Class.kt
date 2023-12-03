@@ -104,7 +104,11 @@ fun resolveType(outputType: OutputType, currentGeneration: CurrentGeneration): T
     if (outputType is ClassType) {
         return resolveType(outputType.outputClass, currentGeneration)
     } else {
-        throw (Throwable("only class type is available currently"))
+        if (outputType is ReferenceType) {
+            return CReferenceType(resolveType(outputType.actualType, currentGeneration))
+        } else {
+            throw (Throwable("only class type is available currently"))
+        }
     }
 }
 
