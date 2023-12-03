@@ -40,12 +40,16 @@ fun ExpressionResultsHandlerContext.handleAssignment(currentGeneration: CurrentG
             val expressionEvaluation = evaluation.ok.first
             val expressionType = evaluation.ok.second
 
-            if (expressionType is ReferenceType) {
-                println("no variable assignment is created for reference type")
-                return Ok("\n")
-            }
+//            if (expressionType is ReferenceType) {
+//                println("no variable assignment is created for reference type")
+//                return Ok("\n")
+//            }
 
-            val variableName = createVariableName()
+            val variableName = if (expressionType is ReferenceType) {
+                "pointer_" + createVariableName()
+            } else {
+                createVariableName()
+            }
             currentGeneration.currentScope.variables.add(
                 VariableInformation(
                     it["variableName"].correspondingTokensText(tokens),

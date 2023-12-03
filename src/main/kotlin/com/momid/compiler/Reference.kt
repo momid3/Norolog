@@ -21,7 +21,7 @@ fun ExpressionResultsHandlerContext.handleReferenceFunction(functionCall: Functi
         currentGeneration.currentScope.generatedSource += memoryAllocation(cPointerName, cTypeName(parameterType, currentGeneration)) + "\n"
         currentGeneration.currentScope.generatedSource += memoryCopy(cPointerName, temporaryEvaluationVariableName, cTypeName(parameterType, currentGeneration)) + "\n"
         currentGeneration.currentScope.generatedSource += "\n"
-        return Ok(Pair("", ReferenceType(parameterType, cPointerName)))
+        return Ok(Pair(cPointerName, ReferenceType(parameterType, cPointerName)))
     }
 }
 

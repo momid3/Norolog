@@ -1,6 +1,6 @@
 class SomeClass { someVariable: Int, anotherVariable: Int, someOtherVariable: Int }
 
-val theVariable = ref(SomeClass(7, 7, 7));
+val theVariable = ref(ref(ref(SomeClass(7, 7, 7))));
 
 val theVal = SomeClass(3, 3, 3);
 
