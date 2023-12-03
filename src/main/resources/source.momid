@@ -4,4 +4,6 @@ val theVariable = ref(ref(ref(SomeClass(7, 7, 7))));
 
 val theVal = SomeClass(3, 3, 3);
 
-for ( someVar in 0 until (theVal.someVariable) * 3 ) { print((theVal.someVariable + 7)); }
+for (someVar in 0 until (theVal.someVariable) * 3) {
+    print((theVal.someVariable + 7 + theVariable.value.value.value.someVariable));
+}

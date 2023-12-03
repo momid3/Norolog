@@ -1,6 +1,8 @@
 package com.momid.compiler
 
+import com.momid.compiler.output.ClassType
 import com.momid.compiler.output.OutputType
+import com.momid.compiler.output.ReferenceType
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -26,6 +28,7 @@ fun ExpressionResultsHandlerContext.handlePropertyAccess(currentGeneration: Curr
         println("is property access: " + it.tokens())
         val firstElement = it["firstExpression"]
         println("first element: " + firstElement.tokens())
+
         val firstElementEvaluation = continueWithOne(firstElement, complexExpression) { handleComplexExpression(currentGeneration) }.okOrReport {
             if (it is NoExpressionResultsError) {
                 println("expected expression. found: " + firstElement.tokens())
@@ -34,30 +37,55 @@ fun ExpressionResultsHandlerContext.handlePropertyAccess(currentGeneration: Curr
             println(it.error)
             return it.to()
         }
+
         val firstElementValue = firstElementEvaluation.first
-        val firstElementType = confirmTypeIsClassType(firstElementEvaluation.second)
+        val firstElementType = firstElementEvaluation.second
+
         println("first element: " + it["firstExpression"].tokens())
+
         var currentType = firstElementType
         output += firstElementValue
 
         it["otherElements"].forEach {
             println("other element: " + it.tokens())
+
             require(it, propertyAccessVariable, {
                 println("expecting variable or function call. found: " + it.tokens())
                 return Error("expecting variable or function call. found: " + it.tokens(), it.range)
             }) {
                 it.content.isOf(variableNameO) {
                     println("is variable: " + it.tokens())
+
                     val accessVariableName = it.tokens()
-                    val accessVariableIndex = currentType.outputClass.variables.indexOfFirst { it.name == accessVariableName }.apply {
-                        if (this == -1) {
-                            return Error("unknown property: " + accessVariableName, it.range)
+
+                    if (currentType is ReferenceType) {
+                        if (accessVariableName == "value") {
+                            val (evaluation, outputType) = continueStraight(it) { handleReferenceAccess(output, currentType, currentGeneration) }.okOrReport {
+                                println(it.error)
+                                return it.to()
+                            }
+                            currentType = outputType
+                            output = "(" + evaluation + ")"
+                            return@forEach
+                        } else {
+                            return Error("its not currently possible to access from reference types", it.range)
                         }
                     }
-                    val cAccessVariable = (currentGeneration.classesInformation.classes[currentType.outputClass] ?: throw(Throwable("class not found"))).variables[accessVariableIndex]
-                    currentType = confirmTypeIsClassType(currentType.outputClass.variables[accessVariableIndex].type)
-                    output += "." + cAccessVariable.name
 
+                    if (currentType is ClassType) {
+                        val classType = currentType as ClassType
+
+                        val accessVariableIndex =
+                            classType.outputClass.variables.indexOfFirst { it.name == accessVariableName }.apply {
+                                if (this == -1) {
+                                    return Error("unknown property: " + accessVariableName, it.range)
+                                }
+                            }
+                        val cAccessVariable = (currentGeneration.classesInformation.classes[classType.outputClass]
+                            ?: throw (Throwable("class not found"))).variables[accessVariableIndex]
+                        currentType = confirmTypeIsClassType(classType.outputClass.variables[accessVariableIndex].type)
+                        output += "." + cAccessVariable.name
+                    }
                 }
 
                 it.content.isOf(function) {

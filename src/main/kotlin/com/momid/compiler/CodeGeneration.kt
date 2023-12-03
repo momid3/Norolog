@@ -49,3 +49,7 @@ fun memoryCopy(destination: String, source: String, sourceType: String): String 
 fun variableDeclaration(variableName: String, variableType: String, variableValue: String): String {
     return variableType + " " + variableName + " = " + variableValue + ";"
 }
+
+fun pointerDereference(pointerVariableName: String): String {
+    return "*" + "(" + pointerVariableName + ")"
+}

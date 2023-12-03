@@ -37,7 +37,7 @@ class FunctionType(val outputFunction: Function) : OutputType() {
     }
 }
 
-class ReferenceType(val actualType: OutputType, underlyingCReferenceName: String) : OutputType() {
+class ReferenceType(val actualType: OutputType, val underlyingCReferenceName: String) : OutputType() {
     override fun equals(other: Any?): Boolean {
         return other is ReferenceType && other.actualType == this.actualType
     }
