@@ -1,5 +1,6 @@
 package com.momid.compiler
 
+import com.momid.compiler.directory.readFilesRecursively
 import com.momid.compiler.output.*
 import com.momid.parser.expression.ExpressionFinder
 import com.momid.parser.expression.handleExpressionResult
@@ -45,6 +46,16 @@ fun compileFromSource() {
     runGeneratedSource()
 }
 
+fun compileFromSource(rootDirectory: String, mainFilePackage: String) {
+    readFilesRecursively(rootDirectory, mainFilePackage) { isMainFile, fileContent ->
+        val codeText = fileContent
+        val compiledCode = compile(codeText)
+        println(compiledCode)
+        createSource(compiledCode)
+        runGeneratedSource()
+    }
+}
+
 fun readMomidFileContents(filePath: String): String {
     if (!filePath.endsWith(".momid")) {
         throw IllegalArgumentException("Invalid file type. File must have a .momid extension.")
@@ -63,5 +74,6 @@ fun readResourceFileContents(fileName: String): String {
 }
 
 fun main() {
-    compileFromSource()
+//    compileFromSource()
+    compileFromSource("C:\\Users\\moham\\Desktop\\compilation\\MomidCompilation", "source")
 }
