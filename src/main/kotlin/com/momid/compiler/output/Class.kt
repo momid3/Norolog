@@ -1,6 +1,17 @@
 package com.momid.compiler.output
 
-class Class(val name: String, val variables: List<ClassVariable>, val definitionPackage: String = "")
+class Class(val name: String, val variables: List<ClassVariable>, val declarationPackage: String = "") {
+    override fun equals(other: Any?): Boolean {
+        return other is Class && other.name == this.name && other.declarationPackage == this.declarationPackage
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + variables.hashCode()
+        result = 31 * result + declarationPackage.hashCode()
+        return result
+    }
+}
 
 class ClassVariable(val name: String, val type: OutputType)
 

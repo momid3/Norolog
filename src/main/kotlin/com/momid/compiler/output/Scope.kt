@@ -6,6 +6,7 @@ class Scope(val scopes: ArrayList<Scope> = ArrayList()): List<Scope> by scopes {
 
     var upperScope: Scope? = null
     val variables = ArrayList<VariableInformation>()
+    val functionsInformation = FunctionsInformation(hashMapOf())
     var generatedSource = ""
 }
 

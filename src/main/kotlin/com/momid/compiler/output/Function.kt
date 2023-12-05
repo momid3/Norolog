@@ -10,4 +10,10 @@ package com.momid.compiler.output
 class Function(val name: String, val parameters: List<FunctionParameter>, val returnType: OutputType, val bodyRange: IntRange) {
 }
 
-class FunctionParameter(val name: String, val type: OutputType)
+class FunctionParameter(val name: String, val type: OutputType, relatedCFunction: CFunction? = null)
+
+class CFunction(val name: String, val parameters: List<CFunctionParameter>, val returnType: Type, bodyText: String)
+
+class CFunctionParameter(val name: String, val type: Type)
+
+class FunctionsInformation(val functionsInformation: HashMap<Function, CFunction>)

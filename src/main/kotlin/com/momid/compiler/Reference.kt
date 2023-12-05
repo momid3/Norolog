@@ -32,6 +32,7 @@ fun cTypeName(type: Type): String {
     return when (type) {
         Type.Int -> type.name
         Type.Boolean -> type.name
+        Type.Void -> type.name
         is CReferenceType -> cTypeName(type.actualType) + "*"
         else -> "struct " + type.name
     }

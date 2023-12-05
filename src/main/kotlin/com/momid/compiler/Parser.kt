@@ -79,7 +79,7 @@ fun ExpressionResultsHandlerContext.resolveVariable(currentGeneration: CurrentGe
     var foundVariable: VariableInformation? = null
     while (true) {
         scope.variables.forEach {
-            if (it.name == variableName) {
+            if (it.outputName == variableName) {
                 foundVariable = it
                 return Ok(it)
             }
@@ -151,7 +151,7 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                                 }
                                 if (outputVariable is Ok<VariableInformation>) {
                                     type = outputVariable.ok.outputType
-                                    output += outputVariable.ok.outputName
+                                    output += outputVariable.ok.name
                                 }
                                 if (outputVariable is Error<*>) {
                                     currentGeneration.errors.add(outputVariable)

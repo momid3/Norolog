@@ -1,7 +1,7 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.OutputType
-import com.momid.compiler.output.nothingOutputType
+import com.momid.compiler.output.norType
 import com.momid.compiler.output.outputIntType
 import com.momid.compiler.output.outputStringType
 import com.momid.parser.expression.*
@@ -201,13 +201,13 @@ fun ExpressionResultsHandlerContext.handlePrintFunction(functionCall: FunctionCa
                 if (parameterType == outputStringType) {
                     output += "printf" + "(" + this.first + ")" + ";" + "\n"
                     currentGeneration.currentScope.generatedSource += output
-                    return Ok(Pair("", nothingOutputType))
+                    return Ok(Pair("", norType))
                 }
 
                 else if (parameterType == outputIntType) {
                     output += "printf" + "(" + "\"%d\\n\"" + ", " + this.first + ")" + ";" + "\n"
                     currentGeneration.currentScope.generatedSource += output
-                    return Ok(Pair("", nothingOutputType))
+                    return Ok(Pair("", norType))
                 } else {
                     return Error("this variable type could not be printed: " + parameterType, this@handlePrintFunction.expressionResult.range)
                 }

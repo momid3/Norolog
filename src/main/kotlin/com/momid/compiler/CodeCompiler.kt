@@ -35,7 +35,11 @@ fun compile(codeText: String): String {
 
 //    println(currentGeneration.generatedSource)
 
-    return wholeProgram(currentGeneration.globalDefinitionsGeneratedSource + currentGeneration.currentScope.generatedSource)
+    return wholeProgram(
+        currentGeneration.currentScope.generatedSource,
+        currentGeneration.globalDefinitionsGeneratedSource,
+        currentGeneration.functionDeclarationsGeneratedSource
+    )
 }
 
 fun compileFromSource() {

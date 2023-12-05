@@ -18,7 +18,7 @@ class ExpressionFinder {
                     break@whi
                 }
                 val expressionResult = evaluateExpressionValueic(expression, currentTokenIndex, tokens, maxTokenIndex) ?: continue
-                currentTokenIndex = expressionResult.range.last
+                currentTokenIndex = expressionResult.nextTokenIndex
                 foundExpressions.add(expressionResult)
                 continue@whi
             }

@@ -2,7 +2,7 @@ package com.momid.parser.expression
 
 open class SomeExpressionResult(val expressionResult: ExpressionResult?)
 
-open class ExpressionResult(val expression: Expression, var range: IntRange)
+open class ExpressionResult(val expression: Expression, var range: IntRange, val nextTokenIndex: Int = range.last)
 
 class MultiExpressionResult(val mainExpressionResult: ExpressionResult, val expressionResults: ArrayList<ExpressionResult> = arrayListOf()): List<ExpressionResult> by expressionResults, ExpressionResult(mainExpressionResult.expression, mainExpressionResult.range)
 

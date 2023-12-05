@@ -1,7 +1,11 @@
 package com.momid.compiler
 
-fun wholeProgram(programText: String): String {
+fun wholeProgram(programText: String, classDeclarations: String, functionDeclarations: String): String {
     return "#include <stdio.h>\n" +
+            "\n" +
+            classDeclarations +
+            "\n" +
+            functionDeclarations +
             "\n" +
             "int main() {\n" +
             programText +
@@ -52,4 +56,9 @@ fun variableDeclaration(variableName: String, variableType: String, variableValu
 
 fun pointerDereference(pointerVariableName: String): String {
     return "*" + "(" + pointerVariableName + ")"
+}
+
+fun cFunction(name: String, parameters: List<Pair<String, String>>, returnType: String, functionBody: String): String {
+    return returnType + " " + name + "(" + parameters.joinToString(", ") { it.second + " " + it.first } + ")" +
+            " {" + "\n" + functionBody + "\n" + "}"
 }

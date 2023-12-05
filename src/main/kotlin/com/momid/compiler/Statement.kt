@@ -52,10 +52,10 @@ fun ExpressionResultsHandlerContext.handleAssignment(currentGeneration: CurrentG
             }
             currentGeneration.currentScope.variables.add(
                 VariableInformation(
-                    it["variableName"].correspondingTokensText(tokens),
+                    variableName,
                     Type.Int,
                     expressionEvaluation,
-                    variableName,
+                    it["variableName"].tokens(),
                     expressionType
                 )
             )

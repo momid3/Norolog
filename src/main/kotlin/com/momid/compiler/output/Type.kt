@@ -3,7 +3,7 @@ package com.momid.compiler.output
 open class OutputType(val specifier: String = "") {
 }
 
-val nothingOutputType = NorType()
+val norType = NorType()
 val outputIntType = ClassType(outputInt)
 val outputStringType = ClassType(outputString)
 
@@ -12,6 +12,7 @@ open class Type(val name: String, val specifier: String = "") {
         val Int = Type("int")
         val Boolean = Type("bool")
         val CharArray = Type("CharArray")
+        val Void = Type("void")
     }
 }
 

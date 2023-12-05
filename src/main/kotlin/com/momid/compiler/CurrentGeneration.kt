@@ -10,10 +10,12 @@ class CurrentGeneration {
     var currentScope: Scope = rootScope
     var generatedSource = ""
     var globalDefinitionsGeneratedSource = ""
+    var functionDeclarationsGeneratedSource = ""
     val classesInformation = ClassesInformation()
     val errors = ArrayList<Error<*>>()
 
     private var currentCStructNameNumber = 0
+    private var currentCFunctionNameNumber = 0
 
     fun createScope(): Scope {
         val scope = Scope()
@@ -45,11 +47,16 @@ class CurrentGeneration {
     }
 
     fun constructOutputSource(): String {
-        return wholeProgram(generatedSource)
+        return wholeProgram(generatedSource, globalDefinitionsGeneratedSource, functionDeclarationsGeneratedSource)
     }
 
     fun createCStructName(): String {
         currentCStructNameNumber += 1
         return "Struct" + currentCStructNameNumber
+    }
+
+    fun createCFunctionName(): String {
+        currentCFunctionNameNumber += 1
+        return "function" + currentCFunctionNameNumber
     }
 }
