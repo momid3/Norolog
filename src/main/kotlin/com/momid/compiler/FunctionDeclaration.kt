@@ -102,7 +102,7 @@ fun ExpressionResultsHandlerContext.handleFunctionDeclaration(
 
         val cFunction = CFunction(cFunctionName, cFunctionParameters, cFunctionReturnType, "")
 
-        currentGeneration.currentScope.functionsInformation.functionsInformation[function] = cFunction
+        currentGeneration.functionsInformation.functionsInformation[function] = cFunction
 
         val cFunctionBody = continueStraight(ExpressionResult(this@handleFunctionDeclaration.expressionResult.expression, this.bodyRange)) { handleCodeBlock(currentGeneration, functionScope) }.okOrReport {
             println(it.error)

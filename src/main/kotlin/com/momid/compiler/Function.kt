@@ -1,9 +1,7 @@
 package com.momid.compiler
 
-import com.momid.compiler.output.OutputType
-import com.momid.compiler.output.norType
-import com.momid.compiler.output.outputIntType
-import com.momid.compiler.output.outputStringType
+import com.momid.compiler.output.*
+import com.momid.compiler.output.Function
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -148,7 +146,12 @@ fun ExpressionResultsHandlerContext.handleFunction(currentGeneration: CurrentGen
                 val functionCallEvaluation = when (functionName) {
                     "ref" -> continueStraight(it) { handleReferenceFunction(functionCall, currentGeneration) }
                     "print" -> continueStraight(it) { handlePrintFunction(functionCall, currentGeneration) }
-                    else -> Error("could not resolve function: " + functionName, it.range)
+                    else -> {
+                        val (function, cFunction) = resolveFunction(functionCall, currentGeneration) ?:
+                        return Error("unresolved function: " + functionCall.name, it.range)
+
+                        return Ok(Pair(cFunctionCall(cFunction.name, functionCall.parameters.map { it.first }), function.returnType))
+                    }
                 }
 
                 return functionCallEvaluation
@@ -182,6 +185,30 @@ fun ExpressionResultsHandlerContext.handleFunctionCallParameters(currentGenerati
         return Ok(parameters)
     }
     return Error("is not function parameters", this.expressionResult.range)
+}
+
+inline fun <T> List<T>.forEveryIndexed(onEach: (index: Int, item: T) -> Boolean): Boolean {
+    this.forEachIndexed { index, item ->
+        if (!onEach(index, item)) {
+            return false
+        }
+    }
+    return true
+}
+
+fun functionSignaturesMatch(function: Function, anotherFunction: FunctionCallEvaluation): Boolean {
+    return function.name == anotherFunction.name && function.parameters.forEveryIndexed { index, parameter ->
+        anotherFunction.parameters[index].second == parameter.type
+    }
+}
+
+fun resolveFunction(function: FunctionCallEvaluation, currentGeneration: CurrentGeneration): Pair<Function, CFunction>? {
+    currentGeneration.functionsInformation.functionsInformation.forEach { (functionDeclaration, cFunctionDeclaration) ->
+        if (functionSignaturesMatch(functionDeclaration, function)) {
+            return Pair(functionDeclaration, cFunctionDeclaration)
+        }
+    }
+    return null
 }
 
 fun ExpressionResultsHandlerContext.handlePrintFunction(functionCall: FunctionCallEvaluation, currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {

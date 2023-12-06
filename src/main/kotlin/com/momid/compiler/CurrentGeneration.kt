@@ -1,6 +1,7 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.ClassesInformation
+import com.momid.compiler.output.FunctionsInformation
 import com.momid.compiler.output.Scope
 import com.momid.parser.expression.Error
 
@@ -12,6 +13,7 @@ class CurrentGeneration {
     var globalDefinitionsGeneratedSource = ""
     var functionDeclarationsGeneratedSource = ""
     val classesInformation = ClassesInformation()
+    val functionsInformation = FunctionsInformation(HashMap())
     val errors = ArrayList<Error<*>>()
 
     private var currentCStructNameNumber = 0
