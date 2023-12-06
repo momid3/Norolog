@@ -226,15 +226,13 @@ fun ExpressionResultsHandlerContext.handlePrintFunction(functionCall: FunctionCa
                 val parameterType = this.second
 
                 if (parameterType == outputStringType) {
-                    output += "printf" + "(" + this.first + ")" + ";" + "\n"
-                    currentGeneration.currentScope.generatedSource += output
-                    return Ok(Pair("", norType))
+                    output += "printf" + "(" + this.first + ")"
+                    return Ok(Pair(output, norType))
                 }
 
                 else if (parameterType == outputIntType) {
-                    output += "printf" + "(" + "\"%d\\n\"" + ", " + this.first + ")" + ";" + "\n"
-                    currentGeneration.currentScope.generatedSource += output
-                    return Ok(Pair("", norType))
+                    output += "printf" + "(" + "\"%d\\n\"" + ", " + this.first + ")"
+                    return Ok(Pair(output, norType))
                 } else {
                     return Error("this variable type could not be printed: " + parameterType, this@handlePrintFunction.expressionResult.range)
                 }

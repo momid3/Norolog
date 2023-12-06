@@ -1,8 +1,10 @@
 package com.momid.compiler.output
 
+import com.momid.compiler.Context
+
 var currentVariableNameNumber = 0
 
-class Scope(val scopes: ArrayList<Scope> = ArrayList()): List<Scope> by scopes {
+class Scope(val scopes: ArrayList<Scope> = ArrayList(), var scopeContext: Context = Context()): List<Scope> by scopes {
 
     var upperScope: Scope? = null
     val variables = ArrayList<VariableInformation>()

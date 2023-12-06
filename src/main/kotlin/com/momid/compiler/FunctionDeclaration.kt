@@ -42,7 +42,7 @@ fun ExpressionResultsHandlerContext.handleFunctionDeclarationParsing(currentGene
             FunctionParameterParsing(parsing(fdp["parameterName"]), parsing(fdp["parameterType"]))
         }
 
-        val returnType = with(it["functionReturnType"].continuing) {
+        val returnType = with(it["functionReturnType"].continuing?.get("functionReturnType")) {
             if (this != null) {
                 parsing(this)
             } else {
@@ -84,6 +84,7 @@ fun ExpressionResultsHandlerContext.handleFunctionDeclaration(
         }
 
         val functionScope = Scope()
+        functionScope.scopeContext = FunctionContext(function)
 
         function.parameters.forEachIndexed { index, functionParameter ->
             val variableInformation = VariableInformation(

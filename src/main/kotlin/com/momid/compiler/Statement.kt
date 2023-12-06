@@ -77,7 +77,7 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
         val evaluation = continueStraight(it["function"]) { handleFunction(currentGeneration) }
 
         if (evaluation is Ok) {
-            currentGeneration.currentScope.generatedSource += evaluation.ok.first + ";"
+            currentGeneration.currentScope.generatedSource += evaluation.ok.first + ";" + "\n"
             return Ok("")
         }
         if (evaluation is Error) {

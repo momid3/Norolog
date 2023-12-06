@@ -66,3 +66,7 @@ fun cFunction(name: String, parameters: List<Pair<String, String>>, returnType: 
 fun cFunctionCall(name: String, parameters: List<String>): String {
     return name + "(" + parameters.joinToString(", ") + ")"
 }
+
+fun returnStatement(returnExpression: String): String {
+    return "return " + returnExpression + ";"
+}
