@@ -1,6 +1,7 @@
 package com.momid.compiler.output
 
-class Class(val name: String, val variables: List<ClassVariable>, val declarationPackage: String = "") {
+open class Class(val name: String, val variables: List<ClassVariable>, val declarationPackage: String = "") {
+
     override fun equals(other: Any?): Boolean {
         return other is Class && other.name == this.name && other.declarationPackage == this.declarationPackage
     }
@@ -11,9 +12,29 @@ class Class(val name: String, val variables: List<ClassVariable>, val declaratio
         result = 31 * result + declarationPackage.hashCode()
         return result
     }
+
+    open fun clone(): Class {
+        return Class(this.name, variables.map { it.clone() }, this.declarationPackage)
+    }
 }
 
-class ClassVariable(val name: String, val type: OutputType)
+class ClassVariable(val name: String, val type: OutputType) {
+    fun clone(): ClassVariable {
+        return ClassVariable(this.name, this.type)
+    }
+}
+
+class GenericTypeParameter(val name: String, var substitutionType: OutputType? = null) {
+    fun clone(): GenericTypeParameter {
+        return GenericTypeParameter(this.name)
+    }
+}
+
+class GenericClass(name: String, variables: List<ClassVariable>, declarationPackage: String, val typeParameters: List<GenericTypeParameter>): Class(name, variables, declarationPackage) {
+    override fun clone(): GenericClass {
+        return GenericClass(this.name, variables.map { it.clone() }, declarationPackage, typeParameters.map { it.clone() })
+    }
+}
 
 class CStruct(val name: String, val variables: List<CStructVariable>)
 

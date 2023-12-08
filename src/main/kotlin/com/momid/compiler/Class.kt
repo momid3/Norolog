@@ -123,12 +123,17 @@ fun confirmTypeIsClassType(outputType: OutputType): ClassType {
 }
 
 fun resolveType(outputTypeName: String, currentGeneration: CurrentGeneration): Class? {
-    return currentGeneration.classesInformation.classes.entries.find {
+    val outputClass = currentGeneration.classesInformation.classes.entries.find {
         it.key.name == outputTypeName
     }?.key.also {
         if (it == null) {
             println("class with this name not found: " + outputTypeName)
         }
+    }
+    if (outputClass is GenericClass) {
+        return outputClass.clone()
+    } else {
+        return outputClass
     }
 }
 
