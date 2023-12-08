@@ -312,8 +312,8 @@ fun evaluateExpression(notExpression: NotExpression, startIndex: Int, tokens: Li
     if (startIndex >= endIndex) {
         return startIndex
     }
-    val tokensEndIndex = evaluateExpression(notExpression.expression, startIndex, tokens, endIndex)
-    if (tokensEndIndex == -1) {
+    val tokensEndIndex = evaluateExpressionValueic(notExpression.expression, startIndex, tokens, endIndex)
+    if (tokensEndIndex == null) {
         return startIndex
     } else {
         return -1

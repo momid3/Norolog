@@ -8,11 +8,11 @@ import com.momid.parser.expression.*
 import com.momid.parser.not
 
 val classType by lazy {
-    className["className"] + not(spaces + !"<")
+    not(spaces + !"ref" + space) + className["className"] + not(spaces + !"<")
 }
 
 val referenceType by lazy {
-    !"ref" + space + spaces + anything["actualType"]
+    !"ref" + space + anything["actualType"]
 }
 
 val functionTypeParameters: CustomExpressionValueic by lazy {
@@ -48,13 +48,7 @@ val outputTypeO by lazy {
 }
 
 fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentGeneration): Result<OutputType> {
-    this.expressionResult.isOf(outputTypeO) {
-        println("is output type")
-        println(it.expression::class)
-    }
-    println("is not output type")
     with(this.expressionResult["outputType"]) {
-        println(this::class)
         content.isOf(classType) {
             val className = it["className"].tokens()
             val outputType = ClassType(resolveType(className, currentGeneration) ?:
@@ -64,7 +58,10 @@ fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentG
 
         content.isOf(referenceType) {
             val actualType = it["actualType"]
-            val actualOutputType = continueWithOne(actualType) { handleOutputType(currentGeneration) }.okOrReport {
+            val actualOutputType = continueWithOne(actualType, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
+                if (it is NoExpressionResultsError) {
+                    println("expected type, found" + tokens.slice(it.range.first until it.range.last))
+                }
                 println(it.error)
                 return it.to()
             }
@@ -82,7 +79,7 @@ fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentG
                     println("expected type Parameter, found: " + it.tokens())
                     return Error("expected type parameter, found: " + it.tokens(), it.range)
                 }
-                val parameterOutputType = continueWithOne(typeParameter["typeParameterOutputType"]) { handleOutputType(currentGeneration) }.okOrReport {
+                val parameterOutputType = continueWithOne(typeParameter["typeParameterOutputType"], outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
                     println(it.error)
                     return it.to()
                 }
@@ -108,5 +105,17 @@ fun ExpressionResult.asMulti(): MultiExpressionResult {
         return this
     } else {
         throw (Throwable("this expression result is not a multi expression result"))
+    }
+}
+
+fun main() {
+    val currentGeneration = CurrentGeneration()
+    val text = "SomeClass".toList()
+    val finder = ExpressionFinder()
+    finder.registerExpressions(listOf(classType))
+    finder.start(text).forEach {
+        handleExpressionResult(finder, it, text) {
+            handleOutputType(currentGeneration)
+        }
     }
 }

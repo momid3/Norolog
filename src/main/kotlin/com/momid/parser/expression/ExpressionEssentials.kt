@@ -221,3 +221,13 @@ fun and(vararg expressions: Expression): CustomExpression {
         return@CustomExpression maxNextIndex
     }
 }
+
+fun Expression.andAlso(vararg otherExpressions: Expression): CustomExpressionValueic {
+    return CustomExpressionValueic { tokens, startIndex, endIndex ->
+        val evaluation = evaluateExpressionValueic(this, startIndex, tokens, endIndex) ?: return@CustomExpressionValueic null
+        for (expression in otherExpressions) {
+            evaluateExpressionValueic(expression, startIndex, tokens, endIndex)?.nextTokenIndex ?: return@CustomExpressionValueic null
+        }
+        return@CustomExpressionValueic evaluation
+    }
+}
