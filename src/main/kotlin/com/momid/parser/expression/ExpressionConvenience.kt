@@ -15,7 +15,7 @@ operator fun Expression.get(name: String): Expression {
 }
 
 operator fun MultiExpressionResult.get(name: String): ExpressionResult {
-    return this.find { it.expression.name == name } ?: throw(Throwable("there is no sub expressionresult with this name"))
+    return this.find { it.expression.name == name } ?: throw(Throwable("there is no sub expressionresult with this name: " + name))
 }
 
 operator fun ExpressionResult.get(name: String): ExpressionResult {

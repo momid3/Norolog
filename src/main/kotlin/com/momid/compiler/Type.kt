@@ -7,47 +7,54 @@ import com.momid.compiler.output.ReferenceType
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
-val classType =
+val classType by lazy {
     className["className"] + not(spaces + !"<")
+}
 
-val referenceType: MultiExpression by lazy {
-    !"ref" + space + spaces + outputType["actualType"]
+val referenceType by lazy {
+    !"ref" + space + spaces + anything["actualType"]
 }
 
 val functionTypeParameters: CustomExpressionValueic by lazy {
     oneOrZero(
         inline(
-            wanting(outputType["parameterOutputType"], !",")
-                    + some0(one(!"," + spaces + wanting(outputType["parameterOutputType"], !",")))
+            wanting(anything["parameterOutputType"], !",")
+                    + some0(one(!"," + spaces + wanting(anything["parameterOutputType"], !",")))
         )
     )
 }
 
-val functionType: MultiExpression by lazy {
+val functionType by lazy {
     insideOf('(', ')') {
         functionTypeParameters["functionTypeParameters"]
-    } + spaces + !"->" + spaces + outputType["functionReturnType"]
+    } + spaces + !"->" + spaces + anything["functionReturnType"]
 }
 
 val genericTypeParameters by lazy {
     inline(
-        wanting(outputType["typeParameterOutputType"], !",")
-                + some0(one(!"," + spaces + wanting(outputType["typeParameterOutputType"], !",")))
+        wanting(anything["typeParameterOutputType"], !",")
+                + some0(one(!"," + spaces + wanting(anything["typeParameterOutputType"], !",")))
     )
 }
 
-val genericClassType: MultiExpression by lazy {
+val genericClassType by lazy {
     classType["className"] + spaces + insideOf('<', '>') {
         genericTypeParameters["genericTypes"]
     }
 }
 
-val outputType by lazy {
-    one(spaces + anyOf(classType, referenceType, functionType, genericClassType)["outputType"] + spaces)
+val outputTypeO by lazy {
+    spaces + anyOf(classType, referenceType, functionType, genericClassType)["outputType"] + spaces
 }
 
 fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentGeneration): Result<OutputType> {
-    with(this.expressionResult) {
+    this.expressionResult.isOf(outputTypeO) {
+        println("is output type")
+        println(it.expression::class)
+    }
+    println("is not output type")
+    with(this.expressionResult["outputType"]) {
+        println(this::class)
         content.isOf(classType) {
             val className = it["className"].tokens()
             val outputType = ClassType(resolveType(className, currentGeneration) ?:
@@ -57,7 +64,7 @@ fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentG
 
         content.isOf(referenceType) {
             val actualType = it["actualType"]
-            val actualOutputType = continueStraight(actualType) { handleOutputType(currentGeneration) }.okOrReport {
+            val actualOutputType = continueWithOne(actualType) { handleOutputType(currentGeneration) }.okOrReport {
                 println(it.error)
                 return it.to()
             }
@@ -75,7 +82,7 @@ fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentG
                     println("expected type Parameter, found: " + it.tokens())
                     return Error("expected type parameter, found: " + it.tokens(), it.range)
                 }
-                val parameterOutputType = continueStraight(typeParameter["typeParameterOutputType"]) { handleOutputType(currentGeneration) }.okOrReport {
+                val parameterOutputType = continueWithOne(typeParameter["typeParameterOutputType"]) { handleOutputType(currentGeneration) }.okOrReport {
                     println(it.error)
                     return it.to()
                 }

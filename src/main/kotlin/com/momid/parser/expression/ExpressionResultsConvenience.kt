@@ -1,5 +1,8 @@
 package com.momid.parser.expression
 
+import com.momid.compiler.text
+import com.momid.parser.nIndent
+
 fun ExpressionResult.correspondingTokens(tokens: List<Char>): List<Char> {
     return tokens.slice(this.range.first until this.range.last)
 }
@@ -138,6 +141,38 @@ class ExpressionResultsHandlerContext(
 
     fun ExpressionResult.tokens(): String {
         return this.correspondingTokensText(this@ExpressionResultsHandlerContext.tokens)
+    }
+}
+
+fun ExpressionResultsHandlerContext.printExpressionResultO(expressionResult: ExpressionResult, indents: Int = 0) {
+    when (expressionResult) {
+        is MultiExpressionResult -> {
+            println(expressionResult.mainExpressionResult.expression.text() + "   " + expressionResult.mainExpressionResult.range + "   " + expressionResult.tokens())
+            if (expressionResult.isNotEmpty()) {
+                println(nIndent(3 * (indents + 1)) + "sub expression results of " + expressionResult.mainExpressionResult.expression.text() + " :")
+            }
+            expressionResult.forEach {
+                printExpressionResultO(it, indents + 1)
+            }
+        }
+
+        is ContentExpressionResult -> {
+            println(expressionResult.mainExpressionResult.expression.text() + "   " + expressionResult.mainExpressionResult.range + "   " + expressionResult.tokens())
+            println(nIndent(3 * (indents + 1)) + "contents of " + expressionResult.mainExpressionResult.expression.text() + " :")
+            printExpressionResultO(expressionResult.content, indents + 1)
+        }
+
+        is ContinueExpressionResult -> {
+            println(expressionResult.mainExpressionResult.expression.text() + "   " + expressionResult.mainExpressionResult.range + "   " + expressionResult.tokens())
+            if (expressionResult.content != null) {
+                println(nIndent(3 * (indents + 1)) + "continuing of " + expressionResult.mainExpressionResult.expression.text() + " :")
+                printExpressionResultO(expressionResult.content, indents + 1)
+            }
+        }
+
+        else -> {
+            println(nIndent(3 * indents) + expressionResult.expression.text() + "   " + expressionResult.range + "   " + expressionResult.tokens())
+        }
     }
 }
 

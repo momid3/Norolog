@@ -9,7 +9,7 @@ val anything =
     some0(condition { true })
 
 val functionDeclarationParameter =
-    className["parameterName"] + spaces + !":" + spaces + className["parameterType"] + spaces
+    className["parameterName"] + spaces + !":" + spaces + outputTypeO["parameterType"] + spaces
 
 val fdp = functionDeclarationParameter
 
@@ -24,7 +24,7 @@ val functionDeclarationParameters =
 val functionDeclaration =
     !"fun" + space + functionName["functionName"] + insideOf('(', ')') {
         functionDeclarationParameters["functionDeclarationParameters"]
-    } + spaces + oneOrZero(one(spaces + !":" + spaces + className["functionReturnType"] + spaces), "functionReturnType") + spaces +
+    } + spaces + oneOrZero(one(spaces + !":" + spaces + outputTypeO["functionReturnType"] + spaces), "functionReturnType") + spaces +
             insideOf('{', '}') {
         anything["functionInside"]
     }
@@ -34,7 +34,7 @@ fun ExpressionResultsHandlerContext.handleFunctionDeclarationParsing(currentGene
         val functionName = parsing(it["functionName"])
         val fdps = it["functionDeclarationParameters"].continuing?.continuing
 
-        val functionParameters = (fdps as? MultiExpressionResult)?.map {
+        val functionParameters = fdps?.asMulti()?.map {
             val fdp = it["fdp"].continuing {
                 println("expected function parameter, got: " + it.tokens())
                 return Error("expected function parameters, got: " + it.tokens(), it.range)
@@ -42,7 +42,7 @@ fun ExpressionResultsHandlerContext.handleFunctionDeclarationParsing(currentGene
             FunctionParameterParsing(parsing(fdp["parameterName"]), parsing(fdp["parameterType"]))
         }
 
-        val returnType = with(it["functionReturnType"].continuing?.get("functionReturnType")) {
+        val returnType = with(it["functionReturnType"].continuing) {
             if (this != null) {
                 parsing(this)
             } else {
@@ -66,16 +66,19 @@ fun ExpressionResultsHandlerContext.handleFunctionDeclaration(
 
     with(functionDeclaration) {
         val returnType = if (this.returnType != null) {
-            ClassType(
-                resolveType(this.returnType.tokens, currentGeneration)
-                    ?: return Error("unresolved type: " + this.returnType.tokens, this.returnType.range)
-            )
+            continueStraight(this.returnType.expressionResult!!) { handleOutputType(currentGeneration) }.okOrReport {
+                println(it.error)
+                return it.to()
+            }
         } else {
             norType
         }
 
         val function = Function(this.name.tokens, this.parameters?.map {
-            FunctionParameter(it.name.tokens, ClassType(resolveType(it.outputType.tokens, currentGeneration) ?: return Error("unresolved type: " + it.outputType.tokens, it.outputType.range)))
+            FunctionParameter(it.name.tokens, continueStraight(it.outputType.expressionResult!!) { handleOutputType(currentGeneration) }.okOrReport {
+                println(it.error)
+                return it.to()
+            })
         } ?: emptyList(), returnType, this.bodyRange)
 
         val cFunctionParameters = function.parameters.map {
@@ -117,12 +120,12 @@ fun ExpressionResultsHandlerContext.handleFunctionDeclaration(
 }
 
 fun ExpressionResultsHandlerContext.parsing(expressionResult: ExpressionResult): Parsing {
-    return Parsing(expressionResult.tokens(), expressionResult.range)
+    return Parsing(expressionResult.tokens(), expressionResult.range, expressionResult)
 }
 
 typealias Parsing = ParsingElement
 
-class ParsingElement(val tokens: String, val range: IntRange)
+class ParsingElement(val tokens: String, val range: IntRange, val expressionResult: ExpressionResult? = null)
 
 class FunctionParameterParsing(val name: ParsingElement, val outputType: ParsingElement)
 
@@ -161,7 +164,7 @@ fun oneOrZero(expression: Expression, name: String): CustomExpressionValueic {
             if (evaluation.isEmpty()) {
                 return@CustomExpressionValueic ContinueExpressionResult(evaluation, null)
             } else {
-                return@CustomExpressionValueic ContinueExpressionResult(evaluation, evaluation)
+                return@CustomExpressionValueic ContinueExpressionResult(evaluation, evaluation.expressionResults[0])
             }
         } else {
             throw (Throwable("some0 should have returned MultiExpressionResult but returned something else"))
@@ -186,7 +189,7 @@ fun one(expression: Expression): CustomExpressionValueic {
             if (namedExpressionResult == null) {
                 throw (Throwable("there should be one named expression but yours has none"))
             } else {
-                return@CustomExpressionValueic ExpressionResult(namedExpressionResult!!.expression, namedExpressionResult!!.range, evaluation.nextTokenIndex)
+                return@CustomExpressionValueic namedExpressionResult!!.apply { this.nextTokenIndex = evaluation.nextTokenIndex }
             }
         } else {
             evaluation
