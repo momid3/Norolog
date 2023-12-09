@@ -19,38 +19,62 @@ fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentG
                     println("is function call")
                     continueStraight(it) {
                         handleFunctionCall(currentGeneration)
-                    }
+                    }.handle({
+                        currentGeneration.errors.add(it)
+                    }, {
+
+                    })
                 }
 
                 content.isOf(assignment) {
                     continueStraight(it) {
                         handleAssignment(currentGeneration)
-                    }
+                    }.handle({
+                        currentGeneration.errors.add(it)
+                    }, {
+
+                    })
                 }
 
                 content.isOf(forStatement) {
                     println("is for loop")
                     continueStraight(it) {
                         handleForLoop(currentGeneration)
-                    }
+                    }.handle({
+                        currentGeneration.errors.add(it)
+                    }, {
+
+                    })
                 }
 
                 content.isOf(klass) {
                     continueStraight(it) {
                         handleClass(currentGeneration)
-                    }
+                    }.handle({
+                        currentGeneration.errors.add(it)
+                    }, {
+
+                    })
                 }
 
                 content.isOf(functionDeclaration) {
                     continueStraight(it) {
                         handleFunctionDeclaration(currentGeneration)
-                    }
+                    }.handle({
+                        currentGeneration.errors.add(it)
+                    }, {
+
+                    })
                 }
 
                 content.isOf(returnStatement) {
                     continueStraight(it) {
                         handleReturnStatement(currentGeneration)
-                    }
+                    }.handle({
+                        currentGeneration.errors.add(it)
+                    }, {
+
+                    })
                 }
             }
         }

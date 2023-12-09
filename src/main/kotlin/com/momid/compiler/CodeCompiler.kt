@@ -1,7 +1,8 @@
 package com.momid.compiler
 
-import com.momid.compiler.directory.readFilesRecursively
 import com.momid.compiler.output.*
+import com.momid.compiler.packaging.readFilesRecursively
+import com.momid.compiler.terminal.printError
 import com.momid.parser.expression.ExpressionFinder
 import com.momid.parser.expression.handleExpressionResult
 import java.nio.charset.StandardCharsets
@@ -28,7 +29,7 @@ fun compile(codeText: String): String {
             println("program contains errors: ")
             println()
             this.forEach {
-                println(it.error)
+                printError(it.error)
             }
         }
     }

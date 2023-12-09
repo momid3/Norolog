@@ -1,11 +1,12 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.*
+import com.momid.compiler.terminal.printError
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
 val classVariableExp by lazy {
-    variableNameO["variableName"] + spaces + ":" + spaces + variableNameO["variableType"]
+    variableNameO["variableName"] + spaces + ":" + spaces + outputTypeO["variableType"]
 }
 
 val classVariable by lazy {
@@ -23,46 +24,50 @@ val klass by lazy {
 fun ExpressionResultsHandlerContext.handleClass(currentGeneration: CurrentGeneration): Result<String> {
     this.expressionResult.isOf(klass) {
         val classVariablesOutput = ArrayList<ClassVariable>()
-        println("class definition: " + it.tokens())
-        println("class content: " + it["classInside"].content.tokens())
-        val className = it["className"].tokens()
-        val classVariablesS = continueWithOne(it["classInside"].content, classVariables) { handleClassVariables(currentGeneration) }
 
-        classVariablesS.handle({
-            return Error(it.error, it.range)
+        val className = it["className"].tokens()
+
+        val outputClass = Class(className, classVariablesOutput)
+
+        currentGeneration.classesInformation.classes[outputClass] = null
+
+        val classVariablesEvaluation = continueWithOne(it["classInside"].content, classVariables) { handleClassVariables(currentGeneration) }
+
+        classVariablesEvaluation.handle({
+            println(it.error)
+            return it.to()
         }, {
             it.forEach {
-                println("class variable: " + it.name + ": " + it.type)
-                val classVariableTypeClass = resolveType(it.type, currentGeneration) ?: return Error("could not resolve class: " + it.type, this.expressionResult.range)
-                val classVariable = ClassVariable(it.name, ClassType(classVariableTypeClass))
+                if (it.type == ClassType(outputClass)) {
+                    printError("a class cannot have a variable of its own type. instead you can have a reference of that type")
+                    return Error("a class cannot have a variable of its own type. instead you can have a reference of that type", this.expressionResult.range)
+                }
+                val classVariable = ClassVariable(it.name, it.type)
                 classVariablesOutput.add(classVariable)
             }
 
-            val outputClass = Class(className, classVariablesOutput)
             val outputStruct = CStruct(currentGeneration.createCStructName(), classVariablesOutput.map {
-                if (it.type is ClassType) {
-                    CStructVariable(it.name, resolveType(it.type.outputClass, currentGeneration))
-                } else {
-                    throw (Throwable("other types than class type are not currently available"))
-                }
+                CStructVariable(it.name, resolveType(it.type, currentGeneration))
             })
 
             currentGeneration.classesInformation.classes[outputClass] = outputStruct
 
             currentGeneration.globalDefinitionsGeneratedSource += cStruct(outputStruct.name, outputStruct.variables.map { Pair(it.name, it.type.name) }) + "\n"
+
+            return Ok("")
         })
     }
     println("is not class")
     return Error("is not class", this.expressionResult.range)
 }
 
-fun ExpressionResultsHandlerContext.handleClassVariables(currentGeneration: CurrentGeneration): Result<List<ClassVariableS>> {
+fun ExpressionResultsHandlerContext.handleClassVariables(currentGeneration: CurrentGeneration): Result<List<ClassVariableEvaluation>> {
     this.expressionResult.isOf(classVariables) {
         var hasErrors = false
-        val classVariables = ArrayList<ClassVariableS>()
+        val classVariables = ArrayList<ClassVariableEvaluation>()
         it.forEach {
             it.forEach {
-                val classVariable = continueWithOne(it, classVariableExp) { handleClassVariable() }
+                val classVariable = continueWithOne(it, classVariableExp) { handleClassVariable(currentGeneration) }
 
                 classVariable.handle({
                     currentGeneration.errors.add(it)
@@ -77,11 +82,14 @@ fun ExpressionResultsHandlerContext.handleClassVariables(currentGeneration: Curr
     return Error("is not class variables", this.expressionResult.range)
 }
 
-fun ExpressionResultsHandlerContext.handleClassVariable(): Result<ClassVariableS> {
+fun ExpressionResultsHandlerContext.handleClassVariable(currentGeneration: CurrentGeneration): Result<ClassVariableEvaluation> {
     this.expressionResult.isOf(classVariableExp) {
         val name = it["variableName"].tokens()
-        val type = it["variableType"].tokens()
-        return Ok(ClassVariableS(name, type))
+        val type = continueStraight(it["variableType"]) { handleOutputType(currentGeneration) }.okOrReport {
+            println(it.error)
+            return it.to()
+        }
+        return Ok(ClassVariableEvaluation(name, type))
     }
     return Error("is not class variable", this.expressionResult.range)
 }
@@ -148,6 +156,8 @@ inline fun <T> Result<T>.handle(error: (Error<T>) -> Unit = {  }, ok: (T) -> Uni
 }
 
 class ClassVariableS(val name: String, val type: String)
+
+class ClassVariableEvaluation(val name: String, val type: OutputType)
 
 fun main() {
     val currentGeneration = CurrentGeneration()

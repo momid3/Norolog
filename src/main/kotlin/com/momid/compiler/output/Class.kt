@@ -40,7 +40,7 @@ class CStruct(val name: String, val variables: List<CStructVariable>)
 
 class CStructVariable(val name: String, val type: Type)
 
-class ClassesInformation(val classes: HashMap<Class, CStruct> = HashMap())
+class ClassesInformation(val classes: HashMap<Class, CStruct?> = HashMap())
 
 val outputInt = Class("Int", arrayListOf())
 

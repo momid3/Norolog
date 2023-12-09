@@ -1,4 +1,4 @@
-package com.momid.compiler.directory
+package com.momid.compiler.packaging
 
 import java.io.File
 
