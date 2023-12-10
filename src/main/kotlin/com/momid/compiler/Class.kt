@@ -145,6 +145,44 @@ fun resolveType(outputTypeName: String, currentGeneration: CurrentGeneration): C
     }
 }
 
+fun resolveOutputType(outputTypeName: String, currentGeneration: CurrentGeneration): OutputType? {
+    val genericParameter = resolveGenericParameter(outputTypeName, currentGeneration)
+    if (genericParameter != null) {
+        return genericParameter
+    }
+
+    val outputClass = resolveType(outputTypeName, currentGeneration)
+    if (outputClass != null) {
+        return ClassType(outputClass)
+    }
+
+    return null
+}
+
+fun resolveGenericParameter(genericParameterName: String, currentGeneration: CurrentGeneration): TypeParameterType? {
+    var currentScope = currentGeneration.currentScope
+    while (true) {
+        val scopeContext = currentScope.scopeContext
+        when (scopeContext) {
+            is ClassContext -> {
+                if (scopeContext.outputClass is GenericClass) {
+                    scopeContext.outputClass.typeParameters.forEach {
+                        if (it.name == genericParameterName) {
+                            return TypeParameterType(it)
+                        }
+                    }
+                }
+            }
+
+            is FunctionContext -> {
+
+            }
+        }
+
+        currentScope = currentScope.upperScope ?: return null
+    }
+}
+
 inline fun <T> Result<T>.handle(error: (Error<T>) -> Unit = {  }, ok: (T) -> Unit) {
     if (this is Ok) {
         ok(this.ok)

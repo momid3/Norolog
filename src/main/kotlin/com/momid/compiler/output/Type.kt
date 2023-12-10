@@ -48,6 +48,8 @@ class ReferenceType(val actualType: OutputType, val underlyingCReferenceName: St
     }
 }
 
+class TypeParameterType(val genericTypeParameter: GenericTypeParameter): OutputType()
+
 class NorType() : OutputType() {
     override fun equals(other: Any?): Boolean {
         return other is NorType

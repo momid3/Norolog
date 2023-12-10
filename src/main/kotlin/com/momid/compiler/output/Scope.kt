@@ -8,6 +8,7 @@ class Scope(val scopes: ArrayList<Scope> = ArrayList(), var scopeContext: Contex
 
     var upperScope: Scope? = null
     val variables = ArrayList<VariableInformation>()
+    val classesInformation = ClassesInformation()
     val functionsInformation = FunctionsInformation(hashMapOf())
     var generatedSource = ""
 }
