@@ -75,7 +75,7 @@ fun ExpressionResultsHandlerContext.handleFunctionDeclaration(
         }
 
         val function = Function(this.name.tokens, this.parameters?.map {
-            FunctionParameter(it.name.tokens, continueStraight(it.outputType.expressionResult!!) { handleOutputType(currentGeneration) }.okOrReport {
+            FunctionParameter(it.name.tokens, continueWithOne(it.outputType.expressionResult!!, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
                 println(it.error)
                 return it.to()
             })

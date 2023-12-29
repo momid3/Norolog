@@ -5,7 +5,7 @@ import com.momid.parser.expression.*
 import com.momid.parser.not
 
 val classDeclarationParameter =
-    className["parameterName"] + spaces + !":" + spaces + outputTypeO["parameterType"] + spaces
+    spaces + className["parameterName"] + spaces + !":" + spaces + outputTypeO["parameterType"] + spaces
 
 val cdp = classDeclarationParameter
 
@@ -24,9 +24,9 @@ val typeParameters =
     )
 
 val gClass =
-    !"class" + space + insideOf('<', '>') {
+    !"class" + space + oneOrZero(insideOf('<', '>') {
         typeParameters["typeParameters"]
-    } + space + className["className"] + insideOf('(', ')') {
+    }, "typeParameters") + spaces + className["className"] + insideOf('(', ')') {
         classDeclarationParameters["classDeclarationParameters"]
     }
 
@@ -67,7 +67,9 @@ fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: Cu
         classTypeVariables.add(GenericTypeParameter(it.name.tokens))
     }
 
-    val outputClass = if (classTypeVariables.isNotEmpty()) {
+    val isGenericClass = classTypeVariables.isNotEmpty()
+
+    val outputClass = if (isGenericClass) {
         GenericClass(classDeclarationPE.name.tokens, classParameters, "", classTypeVariables)
     } else {
         Class(classDeclarationPE.name.tokens, classParameters)
@@ -77,15 +79,34 @@ fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: Cu
     classScope.scopeContext = ClassContext(outputClass)
     currentGeneration.createScope(classScope)
 
-    currentGeneration.classesInformation.classes[outputClass] = null
+    if (isGenericClass) {
+        currentGeneration.classesInformation.classes[outputClass] = null
 
-    classDeclarationPE.parameters.forEach {
-        val name = it.name.tokens
-        val outputType = continueWithOne(it.outputTYpe.expressionResult!!, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
-            return it.to()
+        classDeclarationPE.parameters.forEach {
+            val name = it.name.tokens
+            val outputType = continueWithOne(it.outputTYpe.expressionResult!!, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
+                return it.to()
+            }
+            val classVariable = ClassVariable(name, outputType)
+            classParameters.add(classVariable)
         }
-        val classVariable = ClassVariable(name, outputType)
-        classParameters.add(classVariable)
+    } else {
+        val cStructVariables = ArrayList<CStructVariable>()
+        val cStruct = CStruct(currentGeneration.createCStructName(), cStructVariables)
+        currentGeneration.classesInformation.classes[outputClass] = cStruct
+
+        classDeclarationPE.parameters.forEach {
+            val name = it.name.tokens
+            val outputType = continueWithOne(it.outputTYpe.expressionResult!!, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
+                return it.to()
+            }
+            val classVariable = ClassVariable(name, outputType)
+            classParameters.add(classVariable)
+
+            cStructVariables.add(CStructVariable(classVariable.name, resolveType(classVariable.type, currentGeneration)))
+
+            currentGeneration.globalDefinitionsGeneratedSource += cStruct(cStruct.name, cStruct.variables.map { Pair(it.name, cTypeName(it.type)) })
+        }
     }
 
     return Ok(true)

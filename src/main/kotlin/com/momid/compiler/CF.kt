@@ -34,7 +34,7 @@ fun ExpressionResultsHandlerContext.handleCF(currentGeneration: CurrentGeneratio
     this.expressionResult.isOf(cf) {
         val cfName = it["cfName"].tokens()
         if (cfName[0].isUpperCase()) {
-            return continueWithOne(it, classInitialization) { handleClassInitialization(currentGeneration) }
+            return continueWithOne(it, ci) { handleCI(currentGeneration) }
         } else {
             return continueWithOne(it, function) { handleFunction(currentGeneration) }
         }

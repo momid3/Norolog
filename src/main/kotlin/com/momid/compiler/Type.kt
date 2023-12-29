@@ -57,6 +57,7 @@ fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentG
         }
 
         content.isOf(referenceType) {
+            println("reference")
             val actualType = it["actualType"]
             val actualOutputType = continueWithOne(actualType, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
                 if (it is NoExpressionResultsError) {
@@ -96,7 +97,7 @@ fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentG
             }
         }
 
-        return Error("other types are not usable yet", this.range)
+        return Error("other types are not usable yet: " + this.tokens(), this.range)
     }
 }
 

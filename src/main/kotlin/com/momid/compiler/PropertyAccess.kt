@@ -81,8 +81,7 @@ fun ExpressionResultsHandlerContext.handlePropertyAccess(currentGeneration: Curr
                                     return Error("unknown property: " + accessVariableName, it.range)
                                 }
                             }
-                        val cAccessVariable = (currentGeneration.classesInformation.classes[classType.outputClass]
-                            ?: throw (Throwable("class not found"))).variables[accessVariableIndex]
+                        val cAccessVariable = resolveClass(classType.outputClass, currentGeneration).variables[accessVariableIndex]
                         currentType = confirmTypeIsClassType(classType.outputClass.variables[accessVariableIndex].type)
                         output += "." + cAccessVariable.name
                     }

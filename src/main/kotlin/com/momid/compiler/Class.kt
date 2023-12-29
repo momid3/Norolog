@@ -95,7 +95,9 @@ fun ExpressionResultsHandlerContext.handleClassVariable(currentGeneration: Curre
 }
 
 fun resolveClass(outputType: Class, currentGeneration: CurrentGeneration): CStruct {
-    return currentGeneration.classesInformation.classes[outputType] ?: throw (Throwable("could not resolve corresponding CStruct to this class"))
+    return currentGeneration.classesInformation.classes.entries.find {
+        it.key == outputType
+    }?.value ?: throw (Throwable("could not resolve corresponding CStruct to this class: " + outputType))
 }
 
 fun resolveType(outputType: Class, currentGeneration: CurrentGeneration): Type {
@@ -104,7 +106,9 @@ fun resolveType(outputType: Class, currentGeneration: CurrentGeneration): Type {
     } else if (outputType == outputString) {
         return Type.CharArray
     } else {
-        return Type(currentGeneration.classesInformation.classes[outputType]?.name ?: throw (Throwable("could not resolve corresponding CStruct to this class")))
+        return Type(currentGeneration.classesInformation.classes.entries.find {
+            it.key == outputType
+        }?.value?.name ?: throw (Throwable("could not resolve corresponding CStruct to this class")))
     }
 }
 
@@ -112,7 +116,11 @@ fun resolveType(outputType: OutputType, currentGeneration: CurrentGeneration): T
     if (outputType is ClassType) {
         return resolveType(outputType.outputClass, currentGeneration)
     } else {
-        if (outputType is ReferenceType) {
+        if (outputType is TypeParameterType) {
+            val substitution = outputType.genericTypeParameter.substitutionType ?:
+            throw (Throwable("type variable " + outputType.genericTypeParameter.name + " should have been substituted with a type"))
+            return resolveType(substitution, currentGeneration)
+        } else if (outputType is ReferenceType) {
             return CReferenceType(resolveType(outputType.actualType, currentGeneration))
         } else if (outputType is NorType) {
             return Type.Void
