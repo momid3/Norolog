@@ -82,7 +82,7 @@ fun ExpressionResultsHandlerContext.handlePropertyAccess(currentGeneration: Curr
                                 }
                             }
                         val cAccessVariable = resolveClass(classType.outputClass, currentGeneration).variables[accessVariableIndex]
-                        currentType = confirmTypeIsClassType(classType.outputClass.variables[accessVariableIndex].type)
+                        currentType = classType.outputClass.variables[accessVariableIndex].type
                         output += "." + cAccessVariable.name
                     }
                 }

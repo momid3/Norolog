@@ -43,8 +43,9 @@ fun ExpressionResultsHandlerContext.handleClassDeclarationParsing(): Result<Clas
             ClassParameterPE(parsing(parameterName), parsing(parameterType))
         }
 
-        val typeParameters = this["typeParameters"].continuing?.continuing?.asMulti()?.map {
-            val typeParameter = it["typeParameterName"].continuing {
+        val typeParameters = this["typeParameters"].continuing?.continuing?.asMulti()?.dropLast(1)?.map {
+            println("type parameter: " + it.tokens())
+            val typeParameter = it.also { println(it::class) }.continuing {
                 return Error("expected class parameter, found: " + it.tokens(), it.range)
             }
             ClassTypeVariablePE(parsing(typeParameter))

@@ -35,6 +35,7 @@ fun ExpressionResultsHandlerContext.handleFunctionDeclarationParsing(currentGene
         val fdps = it["functionDeclarationParameters"].continuing?.continuing
 
         val functionParameters = fdps?.asMulti()?.map {
+            println("function parameter: " + it.tokens())
             val fdp = it["fdp"].continuing {
                 println("expected function parameter, got: " + it.tokens())
                 return Error("expected function parameters, got: " + it.tokens(), it.range)

@@ -30,7 +30,7 @@ class GenericTypeParameter(val name: String, var substitutionType: OutputType? =
     }
 }
 
-class GenericClass(name: String, variables: List<ClassVariable>, declarationPackage: String, val typeParameters: List<GenericTypeParameter>): Class(name, variables, declarationPackage) {
+class GenericClass(name: String, variables: List<ClassVariable>, declarationPackage: String, val typeParameters: List<GenericTypeParameter>, var unsubstituted: Boolean = true): Class(name, variables, declarationPackage) {
     override fun clone(): GenericClass {
         return GenericClass(this.name, variables.map { it.clone() }, declarationPackage, typeParameters.map { it.clone() })
     }

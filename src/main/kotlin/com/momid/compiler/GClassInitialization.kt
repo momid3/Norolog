@@ -43,6 +43,8 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
         return Error("unresolved class: " + className, this.className.range)
 
         if (resolvedClass is GenericClass) {
+            resolvedClass.unsubstituted = false
+
             val cStructVariables = ArrayList<CStructVariable>()
             val parameterEvaluations = ArrayList<String>()
 

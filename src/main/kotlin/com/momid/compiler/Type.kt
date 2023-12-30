@@ -51,13 +51,12 @@ fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentG
     with(this.expressionResult["outputType"]) {
         content.isOf(classType) {
             val className = it["className"].tokens()
-            val outputType = ClassType(resolveType(className, currentGeneration) ?:
-            return Error("unresolved class: " + className, it["className"].range))
-            return Ok(outputType)
+            val resolvedOutputType = resolveOutputType(className, currentGeneration) ?:
+            return Error("unresolved class: " + className, it["className"].range)
+            return Ok(resolvedOutputType)
         }
 
         content.isOf(referenceType) {
-            println("reference")
             val actualType = it["actualType"]
             val actualOutputType = continueWithOne(actualType, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
                 if (it is NoExpressionResultsError) {

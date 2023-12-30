@@ -96,7 +96,11 @@ fun ExpressionResultsHandlerContext.handleClassVariable(currentGeneration: Curre
 
 fun resolveClass(outputType: Class, currentGeneration: CurrentGeneration): CStruct {
     return currentGeneration.classesInformation.classes.entries.find {
-        it.key == outputType
+        it.key == outputType && if (it.key is GenericClass) {
+            !(it.key as GenericClass).unsubstituted
+        } else {
+            true
+        }
     }?.value ?: throw (Throwable("could not resolve corresponding CStruct to this class: " + outputType))
 }
 
@@ -106,9 +110,7 @@ fun resolveType(outputType: Class, currentGeneration: CurrentGeneration): Type {
     } else if (outputType == outputString) {
         return Type.CharArray
     } else {
-        return Type(currentGeneration.classesInformation.classes.entries.find {
-            it.key == outputType
-        }?.value?.name ?: throw (Throwable("could not resolve corresponding CStruct to this class")))
+        return Type(resolveClass(outputType, currentGeneration).name)
     }
 }
 
@@ -140,7 +142,11 @@ fun confirmTypeIsClassType(outputType: OutputType): ClassType {
 
 fun resolveType(outputTypeName: String, currentGeneration: CurrentGeneration): Class? {
     val outputClass = currentGeneration.classesInformation.classes.entries.find {
-        it.key.name == outputTypeName
+        it.key.name == outputTypeName && if (it.key is GenericClass) {
+            (it.key as GenericClass).unsubstituted
+        } else {
+            true
+        }
     }?.key.also {
         if (it == null) {
             println("class with this name not found: " + outputTypeName)
@@ -156,7 +162,7 @@ fun resolveType(outputTypeName: String, currentGeneration: CurrentGeneration): C
 fun resolveOutputType(outputTypeName: String, currentGeneration: CurrentGeneration): OutputType? {
     val genericParameter = resolveGenericParameter(outputTypeName, currentGeneration)
     if (genericParameter != null) {
-        return genericParameter
+        return genericParameter.genericTypeParameter.substitutionType
     }
 
     val outputClass = resolveType(outputTypeName, currentGeneration)
