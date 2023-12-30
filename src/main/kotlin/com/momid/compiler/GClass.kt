@@ -11,17 +11,11 @@ val cdp = classDeclarationParameter
 
 val classDeclarationParameters =
     oneOrZero(
-        inline(
-            wanting(cdp["cdp"], !",")
-                    + some0(one(!"," + spaces + wanting(cdp["cdp"], !",")))
-        )
+        splitBy(cdp, ",")
     )
 
 val typeParameters =
-    inline(
-        wanting(className["typeParameterName"], !",")
-                + some0(one(!"," + spaces + wanting(className["typeParameterName"], !",")))
-    )
+    splitBy(className, ",")
 
 val gClass =
     !"class" + space + oneOrZero(insideOf('<', '>') {
@@ -35,7 +29,8 @@ fun ExpressionResultsHandlerContext.handleClassDeclarationParsing(): Result<Clas
         val className = this["className"]
         val classNameText = className.tokens()
         val classParameters = this["classDeclarationParameters"].continuing?.continuing?.asMulti()?.map {
-            val cdp = it["cdp"].continuing {
+            println(it.tokens())
+            val cdp = it.continuing {
                 return Error("expected class parameter, found: " + it.tokens(), it.range)
             }
             val parameterName = cdp["parameterName"]
@@ -43,7 +38,7 @@ fun ExpressionResultsHandlerContext.handleClassDeclarationParsing(): Result<Clas
             ClassParameterPE(parsing(parameterName), parsing(parameterType))
         }
 
-        val typeParameters = this["typeParameters"].continuing?.continuing?.asMulti()?.dropLast(1)?.map {
+        val typeParameters = this["typeParameters"].continuing?.continuing?.asMulti()?.map {
             println("type parameter: " + it.tokens())
             val typeParameter = it.also { println(it::class) }.continuing {
                 return Error("expected class parameter, found: " + it.tokens(), it.range)
@@ -105,9 +100,9 @@ fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: Cu
             classParameters.add(classVariable)
 
             cStructVariables.add(CStructVariable(classVariable.name, resolveType(classVariable.type, currentGeneration)))
-
-            currentGeneration.globalDefinitionsGeneratedSource += cStruct(cStruct.name, cStruct.variables.map { Pair(it.name, cTypeName(it.type)) })
         }
+
+        currentGeneration.globalDefinitionsGeneratedSource += cStruct(cStruct.name, cStruct.variables.map { Pair(it.name, cTypeName(it.type)) })
     }
 
     return Ok(true)

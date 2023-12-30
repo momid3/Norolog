@@ -2,17 +2,13 @@ package com.momid.compiler
 
 import com.momid.compiler.output.*
 import com.momid.parser.expression.*
-import com.momid.parser.not
 
 val ciName =
     condition { it.isLetter() } + some0(condition { it.isLetterOrDigit() })
 
 val ciParameters =
     oneOrZero(
-        inline(
-            wanting(anything["cip"], !",")
-                    + some0(one(!"," + spaces + wanting(anything["cip"], !",")))
-        )
+        splitBy(anything, ",")
     )
 
 val ci =
@@ -24,7 +20,7 @@ fun ExpressionResultsHandlerContext.handleCIParsing(): Result<CIParsing> {
     with(this.expressionResult) {
         val className = this["ciName"]
         val ciParameters = this["ciParameters"].continuing?.continuing?.asMulti()?.map {
-            val parameter = it["cip"].continuing!!
+            val parameter = it.continuing!!
             parameter
         }.orEmpty()
 

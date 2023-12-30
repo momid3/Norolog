@@ -9,16 +9,13 @@ val anything =
     some0(condition { true })
 
 val functionDeclarationParameter =
-    className["parameterName"] + spaces + !":" + spaces + outputTypeO["parameterType"] + spaces
+    spaces + className["parameterName"] + spaces + !":" + spaces + outputTypeO["parameterType"] + spaces
 
 val fdp = functionDeclarationParameter
 
 val functionDeclarationParameters =
     oneOrZero(
-        inline(
-            wanting(fdp["fdp"], !",")
-                    + some0(one(!"," + spaces + wanting(fdp["fdp"], !",")))
-        )
+        splitBy(fdp, ",")
     )
 
 val functionDeclaration =
@@ -36,7 +33,7 @@ fun ExpressionResultsHandlerContext.handleFunctionDeclarationParsing(currentGene
 
         val functionParameters = fdps?.asMulti()?.map {
             println("function parameter: " + it.tokens())
-            val fdp = it["fdp"].continuing {
+            val fdp = it.continuing {
                 println("expected function parameter, got: " + it.tokens())
                 return Error("expected function parameters, got: " + it.tokens(), it.range)
             }
@@ -147,7 +144,7 @@ fun oneOrZero(expression: Expression): CustomExpressionValueic {
             if (evaluation.isEmpty()) {
                 return@CustomExpressionValueic ContinueExpressionResult(evaluation, null)
             } else {
-                return@CustomExpressionValueic ContinueExpressionResult(evaluation, evaluation)
+                return@CustomExpressionValueic ContinueExpressionResult(evaluation, evaluation.expressionResults[0])
             }
         } else {
             throw (Throwable("some0 should have returned MultiExpressionResult but returned something else"))
