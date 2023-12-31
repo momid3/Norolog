@@ -20,7 +20,7 @@ class CReferenceType(val actualType: Type): Type("")
 
 class ClassType(val outputClass: Class) : OutputType() {
     override fun equals(other: Any?): Boolean {
-        return other is ClassType && other.outputClass.name == this.outputClass.name
+        return other is ClassType && other.outputClass == this.outputClass
     }
 
     override fun hashCode(): Int {

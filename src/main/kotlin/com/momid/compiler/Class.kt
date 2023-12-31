@@ -162,7 +162,7 @@ fun resolveType(outputTypeName: String, currentGeneration: CurrentGeneration): C
 fun resolveOutputType(outputTypeName: String, currentGeneration: CurrentGeneration): OutputType? {
     val genericParameter = resolveGenericParameter(outputTypeName, currentGeneration)
     if (genericParameter != null) {
-        return genericParameter.genericTypeParameter.substitutionType
+        return genericParameter
     }
 
     val outputClass = resolveType(outputTypeName, currentGeneration)

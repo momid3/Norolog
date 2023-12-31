@@ -176,4 +176,4 @@ fun ExpressionResultsHandlerContext.printExpressionResultO(expressionResult: Exp
     }
 }
 
-class NoExpressionResultsError<T>(range: IntRange): Error<T>("", range)
+class NoExpressionResultsError<T>(range: IntRange): Error<T>("expected tokens not found", range)

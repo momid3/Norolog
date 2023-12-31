@@ -59,16 +59,16 @@ fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: Cu
     val classParameters = ArrayList<ClassVariable>()
     val classTypeVariables = ArrayList<GenericTypeParameter>()
 
-    classDeclarationPE.typeVariables.forEach {
-        classTypeVariables.add(GenericTypeParameter(it.name.tokens))
-    }
-
     val isGenericClass = classTypeVariables.isNotEmpty()
 
     val outputClass = if (isGenericClass) {
         GenericClass(classDeclarationPE.name.tokens, classParameters, "", classTypeVariables)
     } else {
         Class(classDeclarationPE.name.tokens, classParameters)
+    }
+
+    classDeclarationPE.typeVariables.forEach {
+        classTypeVariables.add(GenericTypeParameter(it.name.tokens, null))
     }
 
     val classScope = Scope()

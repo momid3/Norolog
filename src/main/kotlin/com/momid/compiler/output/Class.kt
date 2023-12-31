@@ -1,5 +1,7 @@
 package com.momid.compiler.output
 
+import com.momid.compiler.forEveryIndexed
+
 open class Class(val name: String, val variables: List<ClassVariable>, val declarationPackage: String = "") {
 
     override fun equals(other: Any?): Boolean {
@@ -31,8 +33,24 @@ class GenericTypeParameter(val name: String, var substitutionType: OutputType? =
 }
 
 class GenericClass(name: String, variables: List<ClassVariable>, declarationPackage: String, val typeParameters: List<GenericTypeParameter>, var unsubstituted: Boolean = true): Class(name, variables, declarationPackage) {
+
+    override fun equals(other: Any?): Boolean {
+        return other is GenericClass && other.name == this.name && other.declarationPackage == this.declarationPackage
+                && other.typeParameters.forEveryIndexed { index, genericTypeParameter ->
+                    genericTypeParameter.substitutionType == this.typeParameters[index].substitutionType
+                            && other.unsubstituted == this.unsubstituted
+        }
+    }
+
     override fun clone(): GenericClass {
         return GenericClass(this.name, variables.map { it.clone() }, declarationPackage, typeParameters.map { it.clone() })
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + typeParameters.hashCode()
+        result = 31 * result + unsubstituted.hashCode()
+        return result
     }
 }
 

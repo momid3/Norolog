@@ -57,9 +57,9 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
 
                 parameterEvaluations.add(evaluation)
 
-                val (typesMatch, substitutions) = typesMatch(outputType, resolvedClass.variables[index].type)
+                val (typesMatch, substitutions) = typesMatch(outputType, resolvedClass.variables[index].type, resolvedClass)
                 if (!typesMatch) {
-                    return Error("type mismatch: " + parameter.tokens, parameter.range)
+                    return Error("type mismatch: " + parameter.tokens + ". expected " + resolvedClass.variables[index].type + " got " + outputType, parameter.range)
                 }
             }
 
@@ -84,7 +84,7 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
 
                 parameterEvaluations.add(evaluation)
 
-                if (!typesMatch(outputType, resolvedClass.variables[index].type).first) {
+                if (!typesMatch(outputType, resolvedClass.variables[index].type, null).first) {
                     return Error("type mismatch: " + parameter.tokens, parameter.range)
                 }
             }
@@ -100,7 +100,7 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
 
 class CIParsing(val className: Parsing, val parameters: List<Parsing>)
 
-fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, HashMap<GenericTypeParameter, OutputType>> {
+fun typesMatch(outputType: OutputType, expectedType: OutputType, owningClass: GenericClass?): Pair<Boolean, HashMap<GenericTypeParameter, OutputType>> {
     if (expectedType is ClassType && expectedType.outputClass is GenericClass) {
         if (outputType is ClassType && outputType.outputClass is GenericClass) {
             if (outputType.outputClass != expectedType.outputClass) {
@@ -113,8 +113,9 @@ fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, 
             val substitutions = HashMap<GenericTypeParameter, OutputType>()
             outputType.outputClass.typeParameters.forEachIndexed { index, parameter ->
                 val (typesMatch, substitution) = typesMatch(
-                    parameter.substitutionType!!,
-                    expectedType.outputClass.typeParameters[index].substitutionType!!
+                    actualGenericType(parameter, owningClass!!).substitutionType!!,
+                    expectedType.outputClass.typeParameters[index].substitutionType!!,
+                    owningClass
                 )
                 if (!typesMatch) {
                     return Pair(false, hashMapOf())
@@ -135,11 +136,12 @@ fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, 
     }
 
     else if (expectedType is TypeParameterType) {
-        val substitution = expectedType.genericTypeParameter.substitutionType
+        val actualTypeParameter = actualGenericType(expectedType.genericTypeParameter, owningClass!!)
+        val substitution = actualTypeParameter.substitutionType
         if (substitution == null) {
-            expectedType.genericTypeParameter.substitutionType = outputType
-            return Pair(true, hashMapOf(expectedType.genericTypeParameter to outputType))
-        } else if (!typesMatch(outputType, substitution).first) {
+            actualTypeParameter.substitutionType = outputType
+            return Pair(true, hashMapOf(actualTypeParameter to outputType))
+        } else if (!typesMatch(outputType, substitution, owningClass).first) {
             return Pair(false, hashMapOf())
         } else {
             return Pair(true, hashMapOf())
@@ -148,7 +150,7 @@ fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, 
 
     else if (expectedType is ReferenceType) {
         if (outputType is ReferenceType) {
-            return typesMatch(outputType.actualType, expectedType.actualType)
+            return typesMatch(outputType.actualType, expectedType.actualType, owningClass)
         }
     }
 
@@ -165,4 +167,10 @@ fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, 
     }
 
     return Pair(false, hashMapOf())
+}
+
+fun actualGenericType(genericTypeParameter: GenericTypeParameter, owningClass: GenericClass): GenericTypeParameter {
+    return owningClass.typeParameters.find {
+        it.name == genericTypeParameter.name
+    } ?: throw (Throwable("corresponding generic type parameter should have existed"))
 }

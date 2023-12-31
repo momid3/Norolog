@@ -3,6 +3,7 @@ package com.momid.compiler
 import com.momid.compiler.output.ClassType
 import com.momid.compiler.output.OutputType
 import com.momid.compiler.output.ReferenceType
+import com.momid.compiler.output.TypeParameterType
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -83,6 +84,9 @@ fun ExpressionResultsHandlerContext.handlePropertyAccess(currentGeneration: Curr
                             }
                         val cAccessVariable = resolveClass(classType.outputClass, currentGeneration).variables[accessVariableIndex]
                         currentType = classType.outputClass.variables[accessVariableIndex].type
+                        if (currentType is TypeParameterType) {
+                            currentType = (currentType as TypeParameterType).genericTypeParameter.substitutionType!!
+                        }
                         output += "." + cAccessVariable.name
                     }
                 }
