@@ -44,8 +44,7 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
             val cStructVariables = ArrayList<CStructVariable>()
             val parameterEvaluations = ArrayList<String>()
 
-            val cStruct = CStruct(currentGeneration.createCStructName(), cStructVariables)
-            currentGeneration.classesInformation.classes[resolvedClass] = cStruct
+            var cStruct = CStruct(currentGeneration.createCStructName(), cStructVariables)
 
             this.parameters.forEachIndexed { index, parameter ->
                 val (evaluation, outputType) = continueWithOne(
@@ -57,17 +56,29 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
 
                 parameterEvaluations.add(evaluation)
 
-                val (typesMatch, substitutions) = typesMatch(outputType, resolvedClass.variables[index].type, resolvedClass)
+                val (typesMatch, substitutions) = typesMatch(outputType, resolvedClass.variables[index].type)
                 if (!typesMatch) {
                     return Error("type mismatch: " + parameter.tokens + ". expected " + resolvedClass.variables[index].type + " got " + outputType, parameter.range)
                 }
             }
 
+            val alreadyExists = currentGeneration.classesInformation.classes.entries.find {
+                it.key == resolvedClass
+            } != null
+
             resolvedClass.variables.forEach {
                 cStructVariables.add(CStructVariable(it.name, resolveType(it.type, currentGeneration)))
             }
 
-            currentGeneration.globalDefinitionsGeneratedSource += cStruct(cStruct.name, cStruct.variables.map { Pair(it.name, cTypeName(it.type)) })
+            if (alreadyExists) {
+                cStruct = currentGeneration.classesInformation.classes.entries.find {
+                    it.key == resolvedClass
+                }!!.value!!
+            } else {
+                currentGeneration.classesInformation.classes[resolvedClass] = cStruct
+
+                currentGeneration.globalDefinitionsGeneratedSource += cStruct(cStruct.name, cStruct.variables.map { Pair(it.name, cTypeName(it.type)) })
+            }
 
             val output = cStructInitialization(cStruct.name, cStruct.variables.mapIndexed { index, cStructVariable ->
                 Pair(cStructVariable.name, parameterEvaluations[index])
@@ -84,7 +95,7 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
 
                 parameterEvaluations.add(evaluation)
 
-                if (!typesMatch(outputType, resolvedClass.variables[index].type, null).first) {
+                if (!typesMatch(outputType, resolvedClass.variables[index].type).first) {
                     return Error("type mismatch: " + parameter.tokens, parameter.range)
                 }
             }
@@ -100,7 +111,7 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
 
 class CIParsing(val className: Parsing, val parameters: List<Parsing>)
 
-fun typesMatch(outputType: OutputType, expectedType: OutputType, owningClass: GenericClass?): Pair<Boolean, HashMap<GenericTypeParameter, OutputType>> {
+fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, HashMap<GenericTypeParameter, OutputType>> {
     if (expectedType is ClassType && expectedType.outputClass is GenericClass) {
         if (outputType is ClassType && outputType.outputClass is GenericClass) {
             if (outputType.outputClass != expectedType.outputClass) {
@@ -113,9 +124,8 @@ fun typesMatch(outputType: OutputType, expectedType: OutputType, owningClass: Ge
             val substitutions = HashMap<GenericTypeParameter, OutputType>()
             outputType.outputClass.typeParameters.forEachIndexed { index, parameter ->
                 val (typesMatch, substitution) = typesMatch(
-                    actualGenericType(parameter, owningClass!!).substitutionType!!,
-                    expectedType.outputClass.typeParameters[index].substitutionType!!,
-                    owningClass
+                    parameter.substitutionType!!,
+                    expectedType.outputClass.typeParameters[index].substitutionType!!
                 )
                 if (!typesMatch) {
                     return Pair(false, hashMapOf())
@@ -136,12 +146,12 @@ fun typesMatch(outputType: OutputType, expectedType: OutputType, owningClass: Ge
     }
 
     else if (expectedType is TypeParameterType) {
-        val actualTypeParameter = actualGenericType(expectedType.genericTypeParameter, owningClass!!)
-        val substitution = actualTypeParameter.substitutionType
+        val genericTypeParameter = expectedType.genericTypeParameter
+        val substitution = genericTypeParameter.substitutionType
         if (substitution == null) {
-            actualTypeParameter.substitutionType = outputType
-            return Pair(true, hashMapOf(actualTypeParameter to outputType))
-        } else if (!typesMatch(outputType, substitution, owningClass).first) {
+            genericTypeParameter.substitutionType = outputType
+            return Pair(true, hashMapOf(genericTypeParameter to outputType))
+        } else if (!typesMatch(outputType, substitution).first) {
             return Pair(false, hashMapOf())
         } else {
             return Pair(true, hashMapOf())
@@ -150,7 +160,7 @@ fun typesMatch(outputType: OutputType, expectedType: OutputType, owningClass: Ge
 
     else if (expectedType is ReferenceType) {
         if (outputType is ReferenceType) {
-            return typesMatch(outputType.actualType, expectedType.actualType, owningClass)
+            return typesMatch(outputType.actualType, expectedType.actualType)
         }
     }
 
@@ -167,10 +177,4 @@ fun typesMatch(outputType: OutputType, expectedType: OutputType, owningClass: Ge
     }
 
     return Pair(false, hashMapOf())
-}
-
-fun actualGenericType(genericTypeParameter: GenericTypeParameter, owningClass: GenericClass): GenericTypeParameter {
-    return owningClass.typeParameters.find {
-        it.name == genericTypeParameter.name
-    } ?: throw (Throwable("corresponding generic type parameter should have existed"))
 }

@@ -26,9 +26,9 @@ class ClassVariable(val name: String, val type: OutputType) {
     }
 }
 
-class GenericTypeParameter(val name: String, var substitutionType: OutputType? = null) {
+class GenericTypeParameter(val name: String, var substitutionType: OutputType? = null, var owningClass: GenericClass) {
     fun clone(): GenericTypeParameter {
-        return GenericTypeParameter(this.name)
+        return GenericTypeParameter(this.name, null, owningClass)
     }
 }
 
@@ -43,7 +43,11 @@ class GenericClass(name: String, variables: List<ClassVariable>, declarationPack
     }
 
     override fun clone(): GenericClass {
-        return GenericClass(this.name, variables.map { it.clone() }, declarationPackage, typeParameters.map { it.clone() })
+        val clonedTypeParameters = typeParameters.map { it.clone() }
+        val clonedVariables = variables.map {
+            ClassVariable(it.name, cloneOutputType(it.type, clonedTypeParameters))
+        }
+        return GenericClass(this.name, clonedVariables, declarationPackage, clonedTypeParameters)
     }
 
     override fun hashCode(): Int {
@@ -52,6 +56,26 @@ class GenericClass(name: String, variables: List<ClassVariable>, declarationPack
         result = 31 * result + unsubstituted.hashCode()
         return result
     }
+}
+
+fun cloneOutputType(outputType: OutputType, typeParameters: List<GenericTypeParameter>): OutputType {
+    if (outputType is ClassType) {
+        if (outputType.outputClass is GenericClass) {
+            val genericClass = outputType.outputClass
+            return ClassType(GenericClass(genericClass.name, genericClass.variables, genericClass.declarationPackage, genericClass.typeParameters.map {
+                (cloneOutputType(it.substitutionType!!, typeParameters) as TypeParameterType).genericTypeParameter
+            }, genericClass.unsubstituted))
+        }
+    } else if (outputType is TypeParameterType) {
+        val correspondingTypeParameter = typeParameters.find { it.name == outputType.genericTypeParameter.name }
+        if (correspondingTypeParameter != null) {
+            return TypeParameterType(correspondingTypeParameter)
+        }
+    } else if (outputType is ReferenceType) {
+        return ReferenceType(cloneOutputType(outputType.actualType, typeParameters), outputType.underlyingCReferenceName)
+    }
+
+    return outputType
 }
 
 class CStruct(val name: String, val variables: List<CStructVariable>)
