@@ -44,10 +44,11 @@ val atomicExp =
 val operator =
     anyOf('+', '-', '*', '/')
 
-val simpleExpression by lazy {
+val simpleExpression: RecurringSomeExpression by lazy {
     some(inlineContent(anyOf(
         inlineToOne(spaces + atomicExp["atomicExp"] + spaces),
         inlineToOne(spaces + operator["operator"] + spaces),
+        inlineToOne(spaces + arrayAccess["arrayAccess"] + spaces),
         inlineToOne(spaces + propertyAccess["propertyAccess"] + spaces)
     )))
 }
@@ -180,6 +181,14 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                             }
                             type = propertyAccessEvaluation.second
                             output += propertyAccessEvaluation.first
+                        }
+
+                        it.isOf(arrayAccess) {
+                            val (evaluation, outputType) = continueStraight(it) { handleArrayAccess(currentGeneration) }.okOrReport {
+                                return it.to()
+                            }
+                            type = outputType
+                            output += evaluation
                         }
 
                         it.isOf("operator") {

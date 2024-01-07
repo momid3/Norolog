@@ -20,6 +20,10 @@ fun <T> handleExpressionResult(
     return ExpressionResultsHandlerContext(expressionFinder, expressionResult, tokens, handle).handle()
 }
 
+typealias Parsing = ParsingElement
+
+class ParsingElement(val tokens: String, val range: IntRange, val expressionResult: ExpressionResult)
+
 val ExpressionResult.content: ExpressionResult
     get() {
         if (this is ContentExpressionResult) {
@@ -130,6 +134,16 @@ class ExpressionResultsHandlerContext(
     ): Result<R> {
         return ExpressionResultsHandlerContext(this.expressionFinder, expressionResult, this.tokens, handle).anotherHandler()
     }
+
+    val ExpressionResult.parsing: Parsing
+        get() {
+            return Parsing(expressionResult.tokens(), expressionResult.range, expressionResult)
+        }
+
+    val ExpressionResult.tokens: String
+        get() {
+            return this.tokens()
+        }
 
     fun print(expressionResult: ExpressionResult) {
         println(expressionResult.correspondingTokensText(tokens))

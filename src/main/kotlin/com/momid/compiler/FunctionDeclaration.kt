@@ -121,10 +121,6 @@ fun ExpressionResultsHandlerContext.parsing(expressionResult: ExpressionResult):
     return Parsing(expressionResult.tokens(), expressionResult.range, expressionResult)
 }
 
-typealias Parsing = ParsingElement
-
-class ParsingElement(val tokens: String, val range: IntRange, val expressionResult: ExpressionResult? = null)
-
 class FunctionParameterParsing(val name: ParsingElement, val outputType: ParsingElement)
 
 class FunctionDeclarationParsing(

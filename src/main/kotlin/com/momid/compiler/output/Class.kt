@@ -26,7 +26,16 @@ class ClassVariable(val name: String, val type: OutputType) {
     }
 }
 
-class GenericTypeParameter(val name: String, var substitutionType: OutputType? = null, var owningClass: GenericClass) {
+class GenericTypeParameter(val name: String, var substitutionType: OutputType? = null, private val owningclass: GenericClass? = null) {
+
+    var owningClass: GenericClass = owningclass!!
+        get() {
+            return this.owningclass!!
+        }
+        set(value) {
+            field = value
+        }
+
     fun clone(): GenericTypeParameter {
         return GenericTypeParameter(this.name, null, owningClass)
     }
@@ -85,7 +94,10 @@ class CStructVariable(val name: String, val type: Type)
 class ClassesInformation(val classes: HashMap<Class, CStruct?> = HashMap())
 
 val outputInt = Class("Int", arrayListOf())
-
 val outputString = Class("String", arrayListOf())
-
 val outputNothing = Class("Nothing", arrayListOf())
+val arrayClass = GenericClass("Array", arrayListOf(), "",  listOf(GenericTypeParameter("T", null, null))).apply {
+    this.typeParameters.forEach {
+        it.owningClass = this
+    }
+}

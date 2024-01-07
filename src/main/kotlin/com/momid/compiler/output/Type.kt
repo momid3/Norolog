@@ -6,8 +6,9 @@ open class OutputType(val specifier: String = "") {
 val norType = NorType()
 val outputIntType = ClassType(outputInt)
 val outputStringType = ClassType(outputString)
+val outputArrayType = ClassType(arrayClass)
 
-open class Type(val name: String, val specifier: String = "") {
+open class Type(val name: String, val declarationPackage: String = "") {
     companion object {
         val Int = Type("int")
         val Boolean = Type("bool")
@@ -49,6 +50,8 @@ class ReferenceType(val actualType: OutputType, val underlyingCReferenceName: St
 }
 
 class TypeParameterType(val genericTypeParameter: GenericTypeParameter): OutputType()
+
+class ArrayType(val itemsType: OutputType, size: Int): OutputType()
 
 class NorType() : OutputType() {
     override fun equals(other: Any?): Boolean {

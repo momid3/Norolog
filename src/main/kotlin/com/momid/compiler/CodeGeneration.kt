@@ -70,3 +70,7 @@ fun cFunctionCall(name: String, parameters: List<String>): String {
 fun returnStatement(returnExpression: String): String {
     return "return " + returnExpression + ";"
 }
+
+fun arrayAccess(array: String, index: String): String {
+    return array + "[" + index + "]"
+}
