@@ -127,7 +127,7 @@ fun ExpressionResultsHandlerContext.handleFunction(currentGeneration: CurrentGen
     var output = ""
     with(this.expressionResult) {
         isOf(function) {
-            println("function: " + it.correspondingTokensText(tokens))
+            println("function: " + it.tokens)
             println("function parameters are: " + it["parameters"].tokens())
 
             val parametersEvaluation = continueWithOne(it["parameters"], functionParameters) { handleFunctionCallParameters(currentGeneration) }

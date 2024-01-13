@@ -6,7 +6,7 @@ open class OutputType(val specifier: String = "") {
 val norType = NorType()
 val outputIntType = ClassType(outputInt)
 val outputStringType = ClassType(outputString)
-val outputArrayType = ClassType(arrayClass)
+//val outputArrayType = ClassType(arrayClass)
 
 open class Type(val name: String, val declarationPackage: String = "") {
     companion object {

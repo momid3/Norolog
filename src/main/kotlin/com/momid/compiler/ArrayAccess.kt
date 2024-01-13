@@ -1,6 +1,8 @@
 package com.momid.compiler
 
-import com.momid.compiler.output.*
+import com.momid.compiler.output.ArrayType
+import com.momid.compiler.output.OutputType
+import com.momid.compiler.output.outputIntType
 import com.momid.parser.expression.*
 
 val arrayAccess =
@@ -45,7 +47,3 @@ fun ExpressionResultsHandlerContext.handleArrayAccess(currentGeneration: Current
 }
 
 class ArrayAccessParsing(val array: Parsing, val index: Parsing)
-
-fun classIsArray(klass: ClassType): Boolean {
-    return klass.outputClass.name == arrayClass.name && klass.outputClass.declarationPackage == arrayClass.declarationPackage
-}
