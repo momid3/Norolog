@@ -1,18 +1,19 @@
 package com.momid.compiler
 
-import com.momid.compiler.output.ClassType
-import com.momid.compiler.output.GenericClass
-import com.momid.compiler.output.OutputType
-import com.momid.compiler.output.ReferenceType
+import com.momid.compiler.output.*
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
 val classType by lazy {
-    not(spaces + !"ref" + space) + className["className"] + not(spaces + !"<")
+    not(spaces + !"ref" + space) + className["className"] + not(spaces + anyOf(!"<", !"["))
 }
 
 val referenceType by lazy {
     !"ref" + space + anything["actualType"]
+}
+
+val arrayType by lazy {
+    !"[" + spaces + outputTypeO["actualType"] + spaces + !"," + spaces + number["size"] + spaces + !"]"
 }
 
 val functionTypeParameters: CustomExpressionValueic by lazy {
@@ -67,6 +68,16 @@ fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentG
             }
             val referenceOutputType = ReferenceType(actualOutputType, "")
             return Ok(referenceOutputType)
+        }
+
+        content.isOf(arrayType) {
+            val actualType = it["actualType"]
+            val actualOutputType = continueStraight(actualType) { handleOutputType(currentGeneration) }.okOrReport {
+                return it.to()
+            }
+            val size = it["size"].tokens.toInt()
+            val arrayType = ArrayType(actualOutputType, size)
+            return Ok(arrayType)
         }
 
         content.isOf(genericClassType) {

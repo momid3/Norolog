@@ -39,7 +39,7 @@ val number by lazy {
 }
 
 val atomicExp =
-    anyOf(variableNameO, number, cf, stringLiteral)["atomic"] + not(!".")
+    anyOf(variableNameO, number, cf, stringLiteral, arrayInitialization)["atomic"] + not(!".")
 
 val operator =
     anyOf('+', '-', '*', '/')
@@ -171,6 +171,14 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                                 val text = it.tokens()
                                 type = ClassType(outputString)
                                 output += text
+                            }
+
+                            it["atomic"].content.isOf(arrayInitialization) {
+                                val (evaluation, outputType) = continueStraight(it) { handleArrayInitialization(currentGeneration) }.okOrReport {
+                                    return it.to()
+                                }
+                                type = outputType
+                                output += evaluation
                             }
                         }
 

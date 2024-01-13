@@ -74,3 +74,7 @@ fun returnStatement(returnExpression: String): String {
 fun arrayAccess(array: String, index: String): String {
     return array + "[" + index + "]"
 }
+
+fun arrayInitialization(initializeWith: String, arraySize: Int): String {
+    return "{" + "[" + "0" + " ... " + arraySize + "]" + " = " + initializeWith + "}"
+}
