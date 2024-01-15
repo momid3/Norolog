@@ -19,6 +19,8 @@ open class Type(val name: String, val declarationPackage: String = "") {
 
 class CReferenceType(val actualType: Type): Type("")
 
+class CArrayType(val itemsType: Type, val size: Int): Type("")
+
 class ClassType(val outputClass: Class) : OutputType() {
     override fun equals(other: Any?): Boolean {
         return other is ClassType && other.outputClass == this.outputClass
@@ -51,7 +53,7 @@ class ReferenceType(val actualType: OutputType, val underlyingCReferenceName: St
 
 class TypeParameterType(val genericTypeParameter: GenericTypeParameter): OutputType()
 
-class ArrayType(val itemsType: OutputType, size: Int): OutputType()
+class ArrayType(val itemsType: OutputType, val size: Int): OutputType()
 
 class NorType() : OutputType() {
     override fun equals(other: Any?): Boolean {

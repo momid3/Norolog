@@ -1,6 +1,8 @@
 package com.momid.compiler
 
-import com.momid.compiler.output.*
+import com.momid.compiler.output.OutputType
+import com.momid.compiler.output.ReferenceType
+import com.momid.compiler.output.createVariableName
 import com.momid.parser.expression.Error
 import com.momid.parser.expression.ExpressionResultsHandlerContext
 import com.momid.parser.expression.Ok
@@ -15,30 +17,14 @@ fun ExpressionResultsHandlerContext.handleReferenceFunction(functionCall: Functi
         val (parameterEvaluation, parameterType) = functionCall.parameters[0]
         val cPointerName = createVariableName()
         val temporaryEvaluationVariableName = "temporary_" + createVariableName()
-        val temporaryEvaluationVariable = variableDeclaration(temporaryEvaluationVariableName, cTypeName(parameterType, currentGeneration), parameterEvaluation) + "\n"
+        val parameterCTypeAndName = cTypeAndVariableName(parameterType, temporaryEvaluationVariableName, currentGeneration)
+        val parameterCTypeName = cTypeName(parameterType, currentGeneration)
+        val temporaryEvaluationVariable = variableDeclaration(parameterCTypeAndName, parameterEvaluation) + "\n"
         currentGeneration.currentScope.generatedSource += "\n"
         currentGeneration.currentScope.generatedSource += temporaryEvaluationVariable
-        currentGeneration.currentScope.generatedSource += memoryAllocation(cPointerName, cTypeName(parameterType, currentGeneration)) + "\n"
-        currentGeneration.currentScope.generatedSource += memoryCopy(cPointerName, temporaryEvaluationVariableName, cTypeName(parameterType, currentGeneration)) + "\n"
+        currentGeneration.currentScope.generatedSource += memoryAllocate(parameterCTypeAndName, parameterCTypeName) + "\n"
+        currentGeneration.currentScope.generatedSource += memoryCopy(cPointerName, temporaryEvaluationVariableName, parameterCTypeName) + "\n"
         currentGeneration.currentScope.generatedSource += "\n"
         return Ok(Pair(cPointerName, ReferenceType(parameterType, cPointerName)))
     }
-}
-
-/***
- * @return the output of this c type that can be used or inserted to the output
- */
-fun cTypeName(type: Type): String {
-    return when (type) {
-        Type.Int -> type.name
-        Type.Boolean -> type.name
-        Type.Void -> type.name
-        is CReferenceType -> cTypeName(type.actualType) + "*"
-        else -> "struct " + type.name
-    }
-}
-
-fun cTypeName(outputType: OutputType, currentGeneration: CurrentGeneration): String {
-    val cType = resolveType(outputType, currentGeneration)
-    return cTypeName(cType)
 }

@@ -60,8 +60,8 @@ fun ExpressionResultsHandlerContext.handleAssignment(currentGeneration: CurrentG
                 )
             )
 
-            val cTypeName = cTypeName(expressionType, currentGeneration)
-            output = cTypeName + " " + variableName + " = " + evaluation.ok.first + ";" + "\n"
+            val cTypeAndVariableName = cTypeAndVariableName(expressionType, variableName, currentGeneration)
+            output = cTypeAndVariableName + " = " + evaluation.ok.first + ";" + "\n"
             currentGeneration.currentScope.generatedSource += output
             println("generated assignment: " + output)
             return Ok(output)

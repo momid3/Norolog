@@ -78,3 +78,20 @@ fun arrayAccess(array: String, index: String): String {
 fun arrayInitialization(initializeWith: String, arraySize: Int): String {
     return "{" + "[" + "0" + " ... " + arraySize + "]" + " = " + initializeWith + "}"
 }
+
+fun variableDeclaration(variableTypeAndName: String, variableValue: String): String {
+    return variableTypeAndName + " = " + variableValue + ";"
+}
+
+/***
+ * types in parameter of this function should be reference applied to the desired type to be allocated such as:
+ * "CReference(TypeToBeAllocated)".
+ *
+ * to get the name of the type and the "type and variable" use cTypeAndVariableName() and cTypeName()
+ * functions.
+ * @see cTypeAndVariableName
+ * @see cTypeName
+ */
+fun memoryAllocate(typeAndVariableName: String, typeName: String): String {
+    return typeAndVariableName + " = " + "(" + typeName + ") " + "malloc(sizeof(" + typeName + "));"
+}

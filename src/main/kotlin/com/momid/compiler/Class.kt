@@ -124,6 +124,8 @@ fun resolveType(outputType: OutputType, currentGeneration: CurrentGeneration): T
             return resolveType(substitution, currentGeneration)
         } else if (outputType is ReferenceType) {
             return CReferenceType(resolveType(outputType.actualType, currentGeneration))
+        } else if (outputType is ArrayType) {
+            return CArrayType(resolveType(outputType.itemsType, currentGeneration), outputType.size)
         } else if (outputType is NorType) {
             return Type.Void
         } else {
@@ -157,6 +159,58 @@ fun resolveType(outputTypeName: String, currentGeneration: CurrentGeneration): C
     } else {
         return outputClass
     }
+}
+
+/***
+ * @return the output of this c type that can be used or inserted to the output
+ */
+fun cTypeName(type: Type): String {
+    return cTypeAndVariableName(type, "")
+}
+
+fun cTypeName(outputType: OutputType, currentGeneration: CurrentGeneration): String {
+    val cType = resolveType(outputType, currentGeneration)
+    return cTypeName(cType)
+}
+
+fun cTypeAndVariableName(type: Type, variableName: String): String {
+    val (base, tail) = cTypeAndVariableNameBase(type, variableName)
+    return base + " " + tail
+}
+
+/***
+ * returns the full type representation of this type. such as:
+ * "int * someVariable" or "int (*someVariable)[3]"
+ * @return the representation as Pair of (base, tail) which should be appended
+ */
+private fun cTypeAndVariableNameBase(type: Type, variableName: String, currentTail: String = variableName): Pair<String, String> {
+    when (type) {
+        Type.Int -> {
+            return Pair(type.name, currentTail)
+        }
+        Type.Boolean -> {
+            return Pair(type.name, currentTail)
+        }
+        Type.Void -> {
+            return Pair(type.name, currentTail)
+        }
+        is CReferenceType -> {
+            val modifiedTail = "(" + "* " + currentTail + ")"
+            return cTypeAndVariableNameBase(type.actualType, variableName, modifiedTail)
+        }
+        is CArrayType -> {
+            val modifiedTail = currentTail + "[" + type.size + "]"
+            return cTypeAndVariableNameBase(type.itemsType, variableName, modifiedTail)
+        }
+        else -> {
+            return Pair("struct " + type.name, variableName)
+        }
+    }
+}
+
+fun cTypeAndVariableName(outputType: OutputType, variableName: String, currentGeneration: CurrentGeneration): String {
+    val cType = resolveType(outputType, currentGeneration)
+    return cTypeAndVariableName(cType, variableName)
 }
 
 fun resolveOutputType(outputTypeName: String, currentGeneration: CurrentGeneration): OutputType? {
@@ -212,13 +266,15 @@ class ClassVariableS(val name: String, val type: String)
 class ClassVariableEvaluation(val name: String, val type: OutputType)
 
 fun main() {
-    val currentGeneration = CurrentGeneration()
-    val text = "class SomeClass { someVariable: SomeType, anotherVariable: AnotherType, someOtherVariable: SomeOtherType }".toList()
-    val finder = ExpressionFinder()
-    finder.registerExpressions(listOf(klass))
-    finder.start(text).forEach {
-        handleExpressionResult(finder, it, text) {
-            handleClass(currentGeneration)
-        }
-    }
+//    val currentGeneration = CurrentGeneration()
+//    val text = "class SomeClass { someVariable: SomeType, anotherVariable: AnotherType, someOtherVariable: SomeOtherType }".toList()
+//    val finder = ExpressionFinder()
+//    finder.registerExpressions(listOf(klass))
+//    finder.start(text).forEach {
+//        handleExpressionResult(finder, it, text) {
+//            handleClass(currentGeneration)
+//        }
+//    }
+
+    println(cTypeAndVariableName(CReferenceType(CArrayType(Type.Int, 3)), "someVariable"))
 }
