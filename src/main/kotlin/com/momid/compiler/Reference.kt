@@ -18,12 +18,14 @@ fun ExpressionResultsHandlerContext.handleReferenceFunction(functionCall: Functi
         val cPointerName = createVariableName()
         val temporaryEvaluationVariableName = "temporary_" + createVariableName()
         val parameterCTypeAndName = cTypeAndVariableName(parameterType, temporaryEvaluationVariableName, currentGeneration)
-        val parameterCTypeName = cTypeName(parameterType, currentGeneration)
+        val parameterCType = cTypeName(parameterType, currentGeneration)
+        val cPointerTypeAndName = cTypeAndVariableName(ReferenceType(parameterType, cPointerName), cPointerName, currentGeneration)
+        val cPointerType = cTypeName(ReferenceType(parameterType, cPointerName), currentGeneration)
         val temporaryEvaluationVariable = variableDeclaration(parameterCTypeAndName, parameterEvaluation) + "\n"
         currentGeneration.currentScope.generatedSource += "\n"
         currentGeneration.currentScope.generatedSource += temporaryEvaluationVariable
-        currentGeneration.currentScope.generatedSource += memoryAllocate(parameterCTypeAndName, parameterCTypeName) + "\n"
-        currentGeneration.currentScope.generatedSource += memoryCopy(cPointerName, temporaryEvaluationVariableName, parameterCTypeName) + "\n"
+        currentGeneration.currentScope.generatedSource += memoryAllocate(cPointerTypeAndName, cPointerType) + "\n"
+        currentGeneration.currentScope.generatedSource += memoryCopy(cPointerName, temporaryEvaluationVariableName, parameterCType) + "\n"
         currentGeneration.currentScope.generatedSource += "\n"
         return Ok(Pair(cPointerName, ReferenceType(parameterType, cPointerName)))
     }

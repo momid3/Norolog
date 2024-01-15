@@ -195,7 +195,8 @@ private fun cTypeAndVariableNameBase(type: Type, variableName: String, currentTa
             return Pair(type.name, currentTail)
         }
         is CReferenceType -> {
-            val modifiedTail = "(" + "* " + currentTail + ")"
+            val shouldHaveParentheses = type.actualType
+            val modifiedTail = "(" + "*" + currentTail + ")"
             return cTypeAndVariableNameBase(type.actualType, variableName, modifiedTail)
         }
         is CArrayType -> {
@@ -203,7 +204,7 @@ private fun cTypeAndVariableNameBase(type: Type, variableName: String, currentTa
             return cTypeAndVariableNameBase(type.itemsType, variableName, modifiedTail)
         }
         else -> {
-            return Pair("struct " + type.name, variableName)
+            return Pair("struct " + type.name, currentTail)
         }
     }
 }
