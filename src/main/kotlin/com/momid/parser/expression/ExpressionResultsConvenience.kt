@@ -137,7 +137,7 @@ class ExpressionResultsHandlerContext(
 
     val ExpressionResult.parsing: Parsing
         get() {
-            return Parsing(expressionResult.tokens(), expressionResult.range, expressionResult)
+            return Parsing(this.tokens(), this.range, this)
         }
 
     val ExpressionResult.tokens: String

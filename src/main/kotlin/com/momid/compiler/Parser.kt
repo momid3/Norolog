@@ -46,9 +46,9 @@ val operator =
 
 val simpleExpression: RecurringSomeExpression by lazy {
     some(inlineContent(anyOf(
+        inlineToOne(spaces + arrayAccess["arrayAccess"] + spaces),
         inlineToOne(spaces + atomicExp["atomicExp"] + spaces),
         inlineToOne(spaces + operator["operator"] + spaces),
-        inlineToOne(spaces + arrayAccess["arrayAccess"] + spaces),
         inlineToOne(spaces + propertyAccess["propertyAccess"] + spaces)
     )))
 }

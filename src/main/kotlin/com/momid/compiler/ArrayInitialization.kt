@@ -15,6 +15,6 @@ fun ExpressionResultsHandlerContext.handleArrayInitialization(currentGeneration:
         val (evaluation, outputType) = continueWithOne(itemsValue, complexExpression) { handleComplexExpression(currentGeneration) }.okOrReport {
             return it.to()
         }
-        return Ok(Pair(arrayInitialization(evaluation, size.tokens.toInt()), ArrayType(outputType, size.tokens.toInt())))
+        return Ok(Pair(arrayInitialization(evaluation, size.tokens.toInt() - 1), ArrayType(outputType, size.tokens.toInt())))
     }
 }

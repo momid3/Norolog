@@ -95,3 +95,12 @@ fun variableDeclaration(variableTypeAndName: String, variableValue: String): Str
 fun memoryAllocate(typeAndVariableName: String, typeName: String): String {
     return typeAndVariableName + " = " + "(" + typeName + ") " + "malloc(sizeof(" + typeName + "));"
 }
+
+/***
+ * @param parametersNat the type and name of each parameter altogether
+ */
+@JvmName("cFunction1")
+fun cFunction(name: String, parametersNat: List<String>, returnType: String, functionBody: String): String {
+    return returnType + " " + name + "(" + parametersNat.joinToString(", ") + ")" +
+            " {" + "\n" + functionBody + "\n" + "}"
+}

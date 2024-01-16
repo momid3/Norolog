@@ -7,7 +7,7 @@ import com.momid.parser.expression.*
 
 val arrayAccess =
     anyOf(atomicExp, propertyAccess, simpleExpressionInParentheses)["array"] + insideOf('[', ']') {
-        wanting(complexExpression["index"])
+        wanting(complexExpression)["index"]
     }
 
 fun ExpressionResultsHandlerContext.handleArrayAccessParsing(): Result<ArrayAccessParsing> {
@@ -21,12 +21,15 @@ fun ExpressionResultsHandlerContext.handleArrayAccessParsing(): Result<ArrayAcce
 }
 
 fun ExpressionResultsHandlerContext.handleArrayAccess(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
+    println("here")
     val arrayAccessParsing = handleArrayAccessParsing().okOrReport {
+        println("here")
         return it.to()
     }
 
     with(arrayAccessParsing) {
         val (evaluation, outputType) = continueWithOne(this.array.expressionResult, complexExpression) { handleComplexExpression(currentGeneration) }.okOrReport {
+            println("here")
             return it.to()
         }
         if (outputType !is ArrayType) {
@@ -34,6 +37,7 @@ fun ExpressionResultsHandlerContext.handleArrayAccess(currentGeneration: Current
         }
 
         val (indexEvaluation, indexOutputType) = continueWithOne(this.index.expressionResult, complexExpression) { handleComplexExpression(currentGeneration) }.okOrReport {
+            println("there")
             return it.to()
         }
 

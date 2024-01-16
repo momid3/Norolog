@@ -29,7 +29,7 @@ fun compile(codeText: String): String {
             println("program contains errors: ")
             println()
             this.forEach {
-                printError(it.error)
+                printError(it.error + ": " + codeText.slice(it.range.first until it.range.last))
             }
         }
     }
