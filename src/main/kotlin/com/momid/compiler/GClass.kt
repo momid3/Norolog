@@ -82,7 +82,7 @@ fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: Cu
 
         classDeclarationPE.parameters.forEach {
             val name = it.name.tokens
-            val outputType = continueWithOne(it.outputTYpe.expressionResult!!, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
+            val outputType = continueWithOne(it.outputTYpe.expressionResult, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
                 return it.to()
             }
             val classVariable = ClassVariable(name, outputType)
@@ -95,7 +95,7 @@ fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: Cu
 
         classDeclarationPE.parameters.forEach {
             val name = it.name.tokens
-            val outputType = continueWithOne(it.outputTYpe.expressionResult!!, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
+            val outputType = continueWithOne(it.outputTYpe.expressionResult, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
                 return it.to()
             }
             val classVariable = ClassVariable(name, outputType)
@@ -104,7 +104,7 @@ fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: Cu
             cStructVariables.add(CStructVariable(classVariable.name, resolveType(classVariable.type, currentGeneration)))
         }
 
-        currentGeneration.globalDefinitionsGeneratedSource += cStruct(cStruct.name, cStruct.variables.map { Pair(it.name, cTypeName(it.type)) })
+        currentGeneration.globalDefinitionsGeneratedSource += cStruct(cStruct.name, cStruct.variables.map { cTypeAndVariableName(it.type, it.name) })
     }
 
     return Ok(true)

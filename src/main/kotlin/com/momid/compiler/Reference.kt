@@ -24,7 +24,7 @@ fun ExpressionResultsHandlerContext.handleReferenceFunction(functionCall: Functi
         val temporaryEvaluationVariable = variableDeclaration(parameterCTypeAndName, parameterEvaluation) + "\n"
         currentGeneration.currentScope.generatedSource += "\n"
         currentGeneration.currentScope.generatedSource += temporaryEvaluationVariable
-        currentGeneration.currentScope.generatedSource += memoryAllocate(cPointerTypeAndName, cPointerType) + "\n"
+        currentGeneration.currentScope.generatedSource += memoryAllocate(cPointerTypeAndName, parameterCType, cPointerType) + "\n"
         currentGeneration.currentScope.generatedSource += memoryCopy(cPointerName, temporaryEvaluationVariableName, parameterCType) + "\n"
         currentGeneration.currentScope.generatedSource += "\n"
         return Ok(Pair(cPointerName, ReferenceType(parameterType, cPointerName)))

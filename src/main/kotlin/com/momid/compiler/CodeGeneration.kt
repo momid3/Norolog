@@ -84,16 +84,18 @@ fun variableDeclaration(variableTypeAndName: String, variableValue: String): Str
 }
 
 /***
- * types in parameter of this function should be reference applied to the desired type to be allocated such as:
+ * @param referenceTypeAndVariableName the type should be reference applied to the desired type to be allocated such as:
  * "CReference(TypeToBeAllocated)".
+ * @param typeName the type that has to be allocated (without reference applied to it)
+ * @param referenceTypeName the type that has to be allocated, with reference applied to it
  *
  * to get the name of the type and the "type and variable" use cTypeAndVariableName() and cTypeName()
  * functions.
  * @see cTypeAndVariableName
  * @see cTypeName
  */
-fun memoryAllocate(typeAndVariableName: String, typeName: String): String {
-    return typeAndVariableName + " = " + "(" + typeName + ") " + "malloc(sizeof(" + typeName + "));"
+fun memoryAllocate(referenceTypeAndVariableName: String, typeName: String, referenceTypeName: String): String {
+    return referenceTypeAndVariableName + " = " + "(" + referenceTypeName + ") " + "malloc(sizeof(" + typeName + "));"
 }
 
 /***
@@ -103,4 +105,11 @@ fun memoryAllocate(typeAndVariableName: String, typeName: String): String {
 fun cFunction(name: String, parametersNat: List<String>, returnType: String, functionBody: String): String {
     return returnType + " " + name + "(" + parametersNat.joinToString(", ") + ")" +
             " {" + "\n" + functionBody + "\n" + "}"
+}
+
+@JvmName("cStruct1")
+fun cStruct(name: String, variablesNat: List<String>): String {
+    return "struct " + name + " {" + "\n" +
+            variablesNat.joinToString(";\n") +
+            ";\n" + "}" + ";"
 }
