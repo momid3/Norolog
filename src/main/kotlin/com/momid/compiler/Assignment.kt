@@ -4,7 +4,7 @@ import com.momid.parser.expression.*
 import com.momid.parser.not
 
 val assignment =
-    anyOf(atomicExp, arrayAccess, propertyAccess)["variable"] + spaces + !"=" + spaces + wanting(complexExpression["value"], !"\n")
+    anyOf(arrayAccess, atomicExp, propertyAccess)["variable"] + spaces + !"=" + spaces + wanting(complexExpression["value"], !"\n") + spaces
 
 fun ExpressionResultsHandlerContext.handleAssignment(currentGeneration: CurrentGeneration): Result<Boolean> {
     with(this.expressionResult) {
@@ -22,7 +22,7 @@ fun ExpressionResultsHandlerContext.handleAssignment(currentGeneration: CurrentG
             return Error("incompatible types. expected " + variableOutputType + " received " + valueOutputType, value.range)
         }
 
-        currentGeneration.currentScope.generatedSource += assignment(variableEvaluation, valueEvaluation)
+        currentGeneration.currentScope.generatedSource += assignment(variableEvaluation, valueEvaluation) + "\n"
         return Ok(true)
     }
 }
