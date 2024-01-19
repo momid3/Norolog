@@ -5,7 +5,7 @@ import com.momid.parser.expression.*
 
 val text = "print(3 + 7 + 37)".toList()
 
-val statements = listOf(assignment, functionCall, forStatement, gClass, functionDeclaration, returnStatement)
+val statements = listOf(variableDeclaration, functionCall, forStatement, gClass, functionDeclaration, returnStatement, assignment)
 
 val statementsExp =
     some(spaces + anyOf(*statements.toTypedArray())["statement"] + spaces)
@@ -26,9 +26,9 @@ fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentG
                     })
                 }
 
-                content.isOf(assignment) {
+                content.isOf(variableDeclaration) {
                     continueStraight(it) {
-                        handleAssignment(currentGeneration)
+                        handleVariableDeclaration(currentGeneration)
                     }.handle({
                         currentGeneration.errors.add(it)
                     }, {
@@ -70,6 +70,16 @@ fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentG
                 content.isOf(returnStatement) {
                     continueStraight(it) {
                         handleReturnStatement(currentGeneration)
+                    }.handle({
+                        currentGeneration.errors.add(it)
+                    }, {
+
+                    })
+                }
+
+                content.isOf(assignment) {
+                    continueStraight(it) {
+                        handleAssignment(currentGeneration)
                     }.handle({
                         currentGeneration.errors.add(it)
                     }, {

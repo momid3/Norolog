@@ -15,7 +15,7 @@ fun space(): RecurringSomeExpression {
     return some(condition { it.isWhitespace() })
 }
 
-val assignment by lazy {
+val variableDeclaration by lazy {
     !"val" + space + variableNameO["variableName"] + spaces + "=" + spaces + complexExpression["assignmentExpression"] + ";"
 }
 
@@ -23,8 +23,8 @@ val functionCall =
     spaces + function["function"] + ";"
 
 
-fun ExpressionResultsHandlerContext.handleAssignment(currentGeneration: CurrentGeneration): Result<String> {
-    this.expressionResult.isOf(assignment) {
+fun ExpressionResultsHandlerContext.handleVariableDeclaration(currentGeneration: CurrentGeneration): Result<String> {
+    this.expressionResult.isOf(variableDeclaration) {
         println("is assignment statement")
         val output: String
         val evaluation = continueStraight(it["assignmentExpression"]) {

@@ -113,3 +113,7 @@ fun cStruct(name: String, variablesNat: List<String>): String {
             variablesNat.joinToString(";\n") +
             ";\n" + "}" + ";"
 }
+
+fun assignment(variable: String, value: String): String {
+    return variable + " = " + value + ";"
+}
