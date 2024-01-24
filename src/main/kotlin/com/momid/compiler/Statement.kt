@@ -19,8 +19,8 @@ val variableDeclaration by lazy {
     !"val" + space + variableNameO["variableName"] + spaces + "=" + spaces + complexExpression["assignmentExpression"] + ";"
 }
 
-val functionCall =
-    spaces + function["function"] + ";"
+val functionCallStatement =
+    spaces + functionCall["function"] + ";"
 
 
 fun ExpressionResultsHandlerContext.handleVariableDeclaration(currentGeneration: CurrentGeneration): Result<String> {
@@ -70,11 +70,11 @@ fun ExpressionResultsHandlerContext.handleVariableDeclaration(currentGeneration:
     return Error("is not assignment", this.expressionResult.range)
 }
 
-fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: CurrentGeneration): Result<String> {
-    this.expressionResult.isOf(functionCall) {
+fun ExpressionResultsHandlerContext.handleFunctionCallStatement(currentGeneration: CurrentGeneration): Result<String> {
+    this.expressionResult.isOf(functionCallStatement) {
         println("is function call")
 //        val evaluation = continueWithOne(it["function"], function) { handleFunction(currentGeneration) }
-        val evaluation = continueStraight(it["function"]) { handleFunction(currentGeneration) }
+        val evaluation = continueStraight(it["function"]) { handleFunctionCall(currentGeneration) }
 
         if (evaluation is Ok) {
             currentGeneration.currentScope.generatedSource += evaluation.ok.first + ";" + "\n"
@@ -92,12 +92,12 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
 fun main() {
     val text = "print(3 + 7 + 37);".toList()
     val finder = ExpressionFinder()
-    finder.registerExpressions(listOf(functionCall))
+    finder.registerExpressions(listOf(functionCallStatement))
 
     val currentGeneration = CurrentGeneration()
     finder.start(text).forEach {
         handleExpressionResult(finder, it, text) {
-            handleFunctionCall(currentGeneration)
+            handleFunctionCallStatement(currentGeneration)
         }
     }
 

@@ -12,7 +12,7 @@ val propertyAccessFirstElement by lazy {
 }
 
 val propertyAccessVariable by lazy {
-    anyOf(variableNameO, function)
+    anyOf(variableNameO, functionCall)
 }
 
 val propertyAccessElement by lazy {
@@ -91,7 +91,7 @@ fun ExpressionResultsHandlerContext.handlePropertyAccess(currentGeneration: Curr
                     }
                 }
 
-                it.content.isOf(function) {
+                it.content.isOf(functionCall) {
                     println("is function call: " + it.tokens())
                 }
             }

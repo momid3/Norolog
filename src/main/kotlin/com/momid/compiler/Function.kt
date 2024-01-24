@@ -123,43 +123,49 @@ fun inlineToOne(multiExpression: Expression): CustomExpressionValueic {
     })
 }
 
-fun ExpressionResultsHandlerContext.handleFunction(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
-    var output = ""
-    with(this.expressionResult) {
-        isOf(function) {
-            println("function: " + it.tokens)
-            println("function parameters are: " + it["parameters"].tokens())
-
-            val parametersEvaluation = continueWithOne(it["parameters"], functionParameters) { handleFunctionCallParameters(currentGeneration) }
-            val functionName = it["functionName"].tokens()
-
-            if (parametersEvaluation is Error<*>) {
-                currentGeneration.errors.add(parametersEvaluation)
-                println(parametersEvaluation.error)
-                return Error(parametersEvaluation.error, parametersEvaluation.range)
-            }
-            if (parametersEvaluation is Ok) {
-                val parameters = parametersEvaluation.ok
-
-                val functionCall = FunctionCallEvaluation(functionName, parameters)
-
-                val functionCallEvaluation = when (functionName) {
-                    "ref" -> continueStraight(it) { handleReferenceFunction(functionCall, currentGeneration) }
-                    "print" -> continueStraight(it) { handlePrintFunction(functionCall, currentGeneration) }
-                    else -> {
-                        val (function, cFunction) = resolveFunction(functionCall, currentGeneration) ?:
-                        return Error("unresolved function: " + functionCall.name, it.range)
-
-                        return Ok(Pair(cFunctionCall(cFunction.name, functionCall.parameters.map { it.first }), function.returnType))
-                    }
-                }
-
-                return functionCallEvaluation
-            }
-        }
-        return Error("is not a function", this.range)
-    }
-}
+//fun ExpressionResultsHandlerContext.handleFunction(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
+//    var output = ""
+//    with(this.expressionResult) {
+//        isOf(function) {
+//            println("function: " + it.tokens)
+//            println("function parameters are: " + it["parameters"].tokens())
+//
+//            val parametersEvaluation = continueWithOne(it["parameters"], functionParameters) { handleFunctionCallParameters(currentGeneration) }
+//            val functionName = it["functionName"].tokens()
+//
+//            if (parametersEvaluation is Error<*>) {
+//                currentGeneration.errors.add(parametersEvaluation)
+//                println(parametersEvaluation.error)
+//                return Error(parametersEvaluation.error, parametersEvaluation.range)
+//            }
+//            if (parametersEvaluation is Ok) {
+//                val parameters = parametersEvaluation.ok
+//
+//                val functionCall = FunctionCallEvaluation(functionName, parameters)
+//
+//                val functionCallEvaluation = when (functionName) {
+//                    "ref" -> continueStraight(it) { handleReferenceFunction(functionCall, currentGeneration) }
+//                    "print" -> continueStraight(it) { handlePrintFunction(functionCall, currentGeneration) }
+//                    "initGraphics" -> continueStraight(it) { handleGraphicsInit(functionCall, currentGeneration) }
+//                    else -> {
+//                        val (function, cFunction) = resolveFunction(functionCall, currentGeneration)
+//                            ?: return Error("unresolved function: " + functionCall.name, it.range)
+//
+//                        return Ok(
+//                            Pair(
+//                                cFunctionCall(cFunction.name, functionCall.parameters.map { it.first }),
+//                                function.returnType
+//                            )
+//                        )
+//                    }
+//                }
+//
+//                return functionCallEvaluation
+//            }
+//        }
+//        return Error("is not a function", this.range)
+//    }
+//}
 
 /***
  * @return a list of evaluated function parameters. first element is the evaluated output of the parameter
@@ -196,13 +202,13 @@ inline fun <T> List<T>.forEveryIndexed(onEach: (index: Int, item: T) -> Boolean)
     return true
 }
 
-fun functionSignaturesMatch(function: Function, anotherFunction: FunctionCallEvaluation): Boolean {
-    return function.name == anotherFunction.name && function.parameters.forEveryIndexed { index, parameter ->
-        anotherFunction.parameters[index].second == parameter.type
+fun functionSignaturesMatch(function: Function, anotherFunction: FunctionCallEvaluating): Boolean {
+    return function.name == anotherFunction.name.tokens && function.parameters.forEveryIndexed { index, parameter ->
+        anotherFunction.parameters[index].outputType == parameter.type
     }
 }
 
-fun resolveFunction(function: FunctionCallEvaluation, currentGeneration: CurrentGeneration): Pair<Function, CFunction>? {
+fun resolveFunction(function: FunctionCallEvaluating, currentGeneration: CurrentGeneration): Pair<Function, CFunction>? {
     currentGeneration.functionsInformation.functionsInformation.forEach { (functionDeclaration, cFunctionDeclaration) ->
         if (functionSignaturesMatch(functionDeclaration, function)) {
             return Pair(functionDeclaration, cFunctionDeclaration)
@@ -211,7 +217,7 @@ fun resolveFunction(function: FunctionCallEvaluation, currentGeneration: Current
     return null
 }
 
-fun ExpressionResultsHandlerContext.handlePrintFunction(functionCall: FunctionCallEvaluation, currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
+fun ExpressionResultsHandlerContext.handlePrintFunction(functionCall: FunctionCallEvaluating, currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
     with(this.expressionResult) {
         var output = ""
         if (functionCall.parameters.size > 1) {
@@ -220,18 +226,18 @@ fun ExpressionResultsHandlerContext.handlePrintFunction(functionCall: FunctionCa
         } else {
             with(functionCall.parameters[0]) {
 
-                println("printing: " + this.first)
-                println("its type is: " + this.second)
+                println("printing: " + this.cEvaluation)
+                println("its type is: " + this.outputType)
 
-                val parameterType = this.second
+                val parameterType = this.outputType
 
                 if (parameterType == outputStringType) {
-                    output += "printf" + "(" + this.first + ")"
+                    output += "printf" + "(" + this.cEvaluation + ")"
                     return Ok(Pair(output, norType))
                 }
 
                 else if (parameterType == outputIntType) {
-                    output += "printf" + "(" + "\"%d\\n\"" + ", " + this.first + ")"
+                    output += "printf" + "(" + "\"%d\\n\"" + ", " + this.cEvaluation + ")"
                     return Ok(Pair(output, norType))
                 } else {
                     return Error("this variable type could not be printed: " + parameterType, this@handlePrintFunction.expressionResult.range)

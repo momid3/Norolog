@@ -1,5 +1,7 @@
 package com.momid.compiler.output
 
+import com.momid.parser.expression.Parsing
+
 open class OutputType(val specifier: String = "") {
 }
 
@@ -62,5 +64,23 @@ class NorType() : OutputType() {
 
     override fun hashCode(): Int {
         return javaClass.hashCode()
+    }
+}
+
+/***
+ * represents the evaluation of a piece of norolog code.
+ * such as a function call or an expression or class initialization.
+ * @param cEvaluation the c code that is equivalent to this the norolog code and
+ * can be attached in place of the evaluated code.
+ * @param outputType the resolved type of the norolog code.
+ * @param parsing the Parsing Element of the related norolog code before evaluation.
+ */
+class Evaluation(val cEvaluation: String, val outputType: OutputType, val parsing: Parsing? = null) {
+    operator fun component1(): String {
+        return cEvaluation
+    }
+
+    operator fun component2(): OutputType {
+        return outputType
     }
 }

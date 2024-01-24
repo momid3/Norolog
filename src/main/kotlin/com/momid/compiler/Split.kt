@@ -22,6 +22,28 @@ fun splitBy(expression: Expression, splitBy: String): CustomExpressionValueic {
     }
 }
 
+/***
+ * splitBy without "wanting" for each element
+ */
+fun splitByNW(expression: Expression, splitBy: String): CustomExpressionValueic {
+    return CustomExpressionValueic { tokens, startIndex, endIndex ->
+        var nextTokenIndex = startIndex
+        val subExpressionResults = ArrayList<ExpressionResult>()
+        val splitExpression = ExactExpression(splitBy)
+        val firstEvaluation = evaluateExpressionValueic(expression, startIndex, tokens, endIndex) ?: return@CustomExpressionValueic null
+        nextTokenIndex = firstEvaluation.nextTokenIndex
+        subExpressionResults.add(firstEvaluation)
+        while (true) {
+            val splitEvaluation = evaluateExpressionValueic(ExactExpression(splitBy), nextTokenIndex, tokens, endIndex) ?: break
+            nextTokenIndex = splitEvaluation.nextTokenIndex
+            val nextEvaluation = evaluateExpressionValueic(expression, nextTokenIndex, tokens, endIndex) ?: return@CustomExpressionValueic null
+            nextTokenIndex = nextEvaluation.nextTokenIndex
+            subExpressionResults.add(nextEvaluation)
+        }
+        return@CustomExpressionValueic MultiExpressionResult(ExpressionResult(expression, startIndex..nextTokenIndex), subExpressionResults)
+    }
+}
+
 fun main() {
     val expression =
         splitBy(className["o"] + !":" + className, ",")

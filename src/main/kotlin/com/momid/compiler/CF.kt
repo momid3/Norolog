@@ -36,7 +36,7 @@ fun ExpressionResultsHandlerContext.handleCF(currentGeneration: CurrentGeneratio
         if (cfName[0].isUpperCase()) {
             return continueWithOne(it, ci) { handleCI(currentGeneration) }
         } else {
-            return continueWithOne(it, function) { handleFunction(currentGeneration) }
+            return continueWithOne(it, functionCall) { handleFunctionCall(currentGeneration) }
         }
     }
     return Error("is not cf", this.expressionResult.range)

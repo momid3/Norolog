@@ -8,7 +8,7 @@ import com.momid.parser.expression.ExpressionResultsHandlerContext
 import com.momid.parser.expression.Ok
 import com.momid.parser.expression.Result
 
-fun ExpressionResultsHandlerContext.handleReferenceFunction(functionCall: FunctionCallEvaluation, currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
+fun ExpressionResultsHandlerContext.handleReferenceFunction(functionCall: FunctionCallEvaluating, currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
     with(this.expressionResult) {
         var output = ""
         if (functionCall.parameters.size != 1) {

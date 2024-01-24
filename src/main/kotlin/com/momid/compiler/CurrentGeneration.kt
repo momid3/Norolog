@@ -1,8 +1,6 @@
 package com.momid.compiler
 
-import com.momid.compiler.output.ClassesInformation
-import com.momid.compiler.output.FunctionsInformation
-import com.momid.compiler.output.Scope
+import com.momid.compiler.output.*
 import com.momid.parser.expression.Error
 
 class CurrentGeneration {
@@ -60,5 +58,30 @@ class CurrentGeneration {
     fun createCFunctionName(): String {
         currentCFunctionNameNumber += 1
         return "function" + currentCFunctionNameNumber
+    }
+
+    fun addVariable(name: String, cName: String, outputType: OutputType) {
+        currentScope.variables += VariableInformation(cName, resolveType(outputType, this), 0, name, outputType)
+    }
+
+    /***
+     * @param name name of the variable
+     * @return c variable name of the created variable
+     */
+    fun createVariable(name: String, outputType: OutputType): String {
+        val cVariableName = createVariableName()
+        addVariable(name, cVariableName, outputType)
+        return cVariableName
+    }
+
+    /***
+     * @return a pair of created variable names. first
+     * is the norolog variable name and last is the c variable name
+     */
+    fun createVariable(outputType: OutputType): Pair<String, String> {
+        val variableName = createVariableName()
+        val cVariableName = createVariableName()
+        addVariable(variableName, cVariableName, outputType)
+        return Pair(variableName, cVariableName)
     }
 }

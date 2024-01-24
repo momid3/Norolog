@@ -2,12 +2,13 @@ package com.momid.compiler
 
 fun wholeProgram(programText: String, classDeclarations: String, functionDeclarations: String): String {
     return "#include <stdio.h>\n" +
+            "#include <SDL2/SDL.h>\n" +
             "\n" +
             classDeclarations +
             "\n" +
             functionDeclarations +
             "\n" +
-            "int main() {\n" +
+            "int main(int argc, char *argv[]) {\n" +
             programText +
             "\n" +
             "return 0;\n" +
