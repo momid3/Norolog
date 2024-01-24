@@ -1,10 +1,8 @@
 package com.momid.compiler
 
 import java.io.File
-import java.nio.file.FileSystems
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.StandardCopyOption
+import java.nio.file.*
+import java.nio.file.attribute.BasicFileAttributes
 import kotlin.io.path.Path
 import kotlin.io.path.pathString
 
@@ -14,6 +12,7 @@ fun runGeneratedSource() {
 //    val compileProcess = ProcessBuilder("gcc", "output.c", "-o", "output.exe").directory(File(directory)).redirectErrorStream(true).start()
 
     copyFromResources("CMakeLists.txt", directory)
+    copyFromResources("SDL", directory)
 
     val buildDirectory = Path(directory).resolve("build").toFile()
     if (!buildDirectory.exists()) {
@@ -63,11 +62,33 @@ fun copyFromResources(fileName: String, destinationDirectory: String) {
     // Specify the destination directory
     val destinationPath: Path = FileSystems.getDefault().getPath(destinationDirectory, fileName)
 
+//    if (destinationPath.toFile().exists()) {
+        try {
+            destinationPath.toFile().deleteRecursively()
+        } catch (t: Throwable) {
+            t.printStackTrace()
+        }
+//    }
+
     try {
         // Copy the file using Files.copy method
-        Files.copy(resourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING)
-        println("File copied successfully.")
+        copyRecursively(resourcePath, destinationPath)
     } catch (e: Exception) {
         println("Error copying file: ${e.message}")
     }
+}
+
+fun copyRecursively(source: Path, destination: Path) {
+    Files.walkFileTree(source, object : SimpleFileVisitor<Path>() {
+        override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult {
+            val targetDir = destination.resolve(source.relativize(dir))
+            Files.createDirectories(targetDir)
+            return FileVisitResult.CONTINUE
+        }
+
+        override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
+            Files.copy(file, destination.resolve(source.relativize(file)), StandardCopyOption.REPLACE_EXISTING)
+            return FileVisitResult.CONTINUE
+        }
+    })
 }
