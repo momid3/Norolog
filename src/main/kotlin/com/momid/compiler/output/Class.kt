@@ -96,6 +96,9 @@ class ClassesInformation(val classes: HashMap<Class, CStruct?> = HashMap())
 val outputInt = Class("Int", arrayListOf())
 val outputString = Class("String", arrayListOf())
 val outputNothing = Class("Nothing", arrayListOf())
+
+val window = Class("Window", listOf(), "norolog.graphics")
+val renderer = Class("Renderer", listOf(), "norolog.graphics")
 //val arrayClass = GenericClass("Array", arrayListOf(), "",  listOf(GenericTypeParameter("T", null, null))).apply {
 //    this.typeParameters.forEach {
 //        it.owningClass = this

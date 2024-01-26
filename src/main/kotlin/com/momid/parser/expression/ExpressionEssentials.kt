@@ -115,6 +115,9 @@ fun insideOf(name: String, parenthesesStart: Char, parenthesesEnd: Char): Custom
 
 fun insideOf(parenthesesStart: Char, parenthesesEnd: Char, expression: Expression): CustomExpressionValueic {
     return CustomExpressionValueic() { tokens, startIndex, endIndex ->
+        if (startIndex >= endIndex) {
+            return@CustomExpressionValueic null
+        }
         if (tokens[startIndex] != parenthesesStart) {
             return@CustomExpressionValueic null
         }
@@ -137,6 +140,9 @@ fun insideOf(parenthesesStart: Char, parenthesesEnd: Char, expression: Expressio
 
 fun insideOf(parenthesesStart: Char, parenthesesEnd: Char, expression: () -> Expression): CustomExpressionValueic {
     return CustomExpressionValueic() { tokens, startIndex, endIndex ->
+        if (startIndex >= endIndex) {
+            return@CustomExpressionValueic null
+        }
         if (tokens[startIndex] != parenthesesStart) {
             return@CustomExpressionValueic null
         }

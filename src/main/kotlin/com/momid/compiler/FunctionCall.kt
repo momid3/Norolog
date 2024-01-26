@@ -2,7 +2,7 @@ package com.momid.compiler
 
 import com.momid.compiler.output.Evaluation
 import com.momid.compiler.output.OutputType
-import com.momid.compiler.standard_library.handleGraphicsInit
+import com.momid.compiler.standard_library.*
 import com.momid.parser.expression.*
 
 val functionCallParameters by lazy {
@@ -60,7 +60,12 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
         val functionCallEvaluation = when (functionName) {
             "ref" -> continueStraight(this.parsing.expressionResult) { handleReferenceFunction(functionCall, currentGeneration) }
             "print" -> continueStraight(this.parsing.expressionResult) { handlePrintFunction(functionCall, currentGeneration) }
+            "sleep" -> continueStraight(this.parsing.expressionResult) { handleSleep(functionCall,  currentGeneration) }
             "initGraphics" -> continueStraight(this.parsing.expressionResult) { handleGraphicsInit(functionCall, currentGeneration) }
+            "createWindow" -> continueStraight(this.parsing.expressionResult) { handleCreateWindow(functionCall, currentGeneration) }
+            "createRenderer" -> continueStraight(this.parsing.expressionResult) { handleCreateRenderer(functionCall, currentGeneration) }
+            "drawLine" -> continueStraight(this.parsing.expressionResult) { handleDrawLine(functionCall, currentGeneration) }
+            "update" -> continueStraight(this.parsing.expressionResult) { handleUpdate(functionCall, currentGeneration) }
             else -> {
                 val (function, cFunction) = resolveFunction(functionCall, currentGeneration)
                     ?: return Error("unresolved function: " + functionCall.name.tokens, this.parsing.range)
