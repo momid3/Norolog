@@ -13,7 +13,7 @@ fun initGraphics(): String {
 }
 
 fun createWindow(width: String, height: String): String {
-    return "SDL_CreateWindow(\"SDL Line Drawing\", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, " + width + ", " + height + ", SDL_WINDOW_SHOWN)"
+    return "SDL_CreateWindow(\"Norolog\", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, " + width + ", " + height + ", SDL_WINDOW_RESIZABLE)"
 }
 
 fun sleep(seconds: String): String {
