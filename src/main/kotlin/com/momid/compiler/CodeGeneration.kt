@@ -119,3 +119,7 @@ fun cStruct(name: String, variablesNat: List<String>): String {
 fun assignment(variable: String, value: String): String {
     return variable + " = " + value + ";"
 }
+
+fun propertyAccess(variableName: String, propertyName: String): String {
+    return variableName + "." + propertyName
+}

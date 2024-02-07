@@ -12,6 +12,7 @@ class CurrentGeneration {
     var functionDeclarationsGeneratedSource = ""
     val classesInformation = ClassesInformation()
     val functionsInformation = FunctionsInformation(HashMap())
+    val infosInformation = InfosInformation(hashMapOf())
     val errors = ArrayList<Error<*>>()
 
     private var currentCStructNameNumber = 0
@@ -53,6 +54,11 @@ class CurrentGeneration {
     fun createCStructName(): String {
         currentCStructNameNumber += 1
         return "Struct" + currentCStructNameNumber
+    }
+
+    fun createCStructName(prefix: String): String {
+        currentCStructNameNumber += 1
+        return prefix + "Struct" + currentCStructNameNumber
     }
 
     fun createCFunctionName(): String {
