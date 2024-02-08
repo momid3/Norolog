@@ -3,6 +3,7 @@ package com.momid.compiler
 fun wholeProgram(programText: String, classDeclarations: String, functionDeclarations: String): String {
     return "#include <stdio.h>\n" +
             "#include <unistd.h>\n" +
+            "#include <stdbool.h>\n" +
             "#include <SDL2/SDL.h>\n" +
             "\n" +
             classDeclarations +

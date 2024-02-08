@@ -15,12 +15,12 @@ val info =
 fun ExpressionResultsHandlerContext.handleInfo(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
     with(this.expressionResult) {
         val name = this["infoName"]
-        val parameters = this["infoParameters"].asMulti().map {
+        val parameters = this["infoParameters"].continuing?.asMulti()?.map {
             val evaluation = continueWithOne(it, complexExpression) { handleComplexExpression(currentGeneration) }.okOrReport {
                 return it.to()
             }
             evaluation
-        }
+        }.orEmpty()
         val value = this["value"]
         val (valueEvaluation, valueOutputType) = continueWithOne(value, complexExpression) { handleComplexExpression(currentGeneration) }.okOrReport {
             return it.to()
@@ -44,11 +44,11 @@ fun ExpressionResultsHandlerContext.handleInfo(currentGeneration: CurrentGenerat
 
             val infoCStructInstanceVariableName = createVariableName()
 
-            currentGeneration.generatedSource += variableDeclaration(
+            currentGeneration.currentScope.generatedSource += variableDeclaration(
                 cTypeAndVariableName(Type(cStruct.name), infoCStructInstanceVariableName),
                 cStructInitialization(
                     cStruct.name,
-                    (cStruct.variables.mapIndexed { index, cStructVariable ->
+                    (cStruct.variables.dropLast(1).mapIndexed { index, cStructVariable ->
                         Pair(cStructVariable.name, parameters[index].first)
                     } as ArrayList).apply {
                         this.add(Pair("info_value", valueEvaluation))
@@ -59,7 +59,7 @@ fun ExpressionResultsHandlerContext.handleInfo(currentGeneration: CurrentGenerat
             currentGeneration.infosInformation.infosInformation[info] = Pair(cStruct, infoCStructInstanceVariableName)
         } else {
             val existingInfo = currentGeneration.infosInformation.infosInformation[info]!!
-            currentGeneration.generatedSource += assignment(propertyAccess(existingInfo.second, "info_value"), valueEvaluation)
+            currentGeneration.currentScope.generatedSource += assignment(propertyAccess(existingInfo.second, "info_value"), valueEvaluation)
         }
 
         return Ok(Pair("", norType))

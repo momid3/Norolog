@@ -8,6 +8,7 @@ open class OutputType(val specifier: String = "") {
 val norType = NorType()
 val outputIntType = ClassType(outputInt)
 val outputStringType = ClassType(outputString)
+val outputBooleanType = ClassType(outputBoolean)
 //val outputArrayType = ClassType(arrayClass)
 
 open class Type(val name: String, val declarationPackage: String = "") {
