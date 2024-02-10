@@ -18,9 +18,11 @@ class Info(val name: String, val parameters: List<InfoParameter>, val valueType:
     }
 }
 
-class InfoParameter(type: OutputType)
+class InfoParameter(val type: OutputType)
 
 /***
  * Map <Info, Pair<Corresponding C Struct, the C Struct instance variable>>
  */
-class InfosInformation(val infosInformation: HashMap<Info, Pair<CStruct, String>>)
+class InfosInformation(val infosInformation: HashMap<Info, InfoInformation>)
+
+class InfoInformation(val cStruct: CStruct, val cListInstanceVariableName: String, val listCurrentIndex: Int)

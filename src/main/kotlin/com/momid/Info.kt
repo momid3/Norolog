@@ -44,8 +44,27 @@ fun ExpressionResultsHandlerContext.handleInfo(currentGeneration: CurrentGenerat
 
             val infoCStructInstanceVariableName = createVariableName()
 
-            currentGeneration.currentScope.generatedSource += variableDeclaration(
-                cTypeAndVariableName(Type(cStruct.name), infoCStructInstanceVariableName),
+            currentGeneration.currentScope.generatedSource += memoryAllocateList(
+                cTypeAndVariableName(CReferenceType(Type(cStruct.name)), infoCStructInstanceVariableName),
+                cTypeName(Type(cStruct.name)),
+                cTypeName(CReferenceType(Type(cStruct.name))),
+                3
+            ) + "\n"
+
+//            currentGeneration.currentScope.generatedSource += variableDeclaration(
+//                cTypeAndVariableName(Type(cStruct.name), infoCStructInstanceVariableName),
+//                cStructInitialization(
+//                    cStruct.name,
+//                    (cStruct.variables.dropLast(1).mapIndexed { index, cStructVariable ->
+//                        Pair(cStructVariable.name, parameters[index].first)
+//                    } as ArrayList).apply {
+//                        this.add(Pair("info_value", valueEvaluation))
+//                    }
+//                )
+//            )
+
+            currentGeneration.currentScope.generatedSource += assignment(
+                arrayAccess(infoCStructInstanceVariableName, 0.toString()),
                 cStructInitialization(
                     cStruct.name,
                     (cStruct.variables.dropLast(1).mapIndexed { index, cStructVariable ->
@@ -54,12 +73,12 @@ fun ExpressionResultsHandlerContext.handleInfo(currentGeneration: CurrentGenerat
                         this.add(Pair("info_value", valueEvaluation))
                     }
                 )
-            )
+            ) + "\n"
 
-            currentGeneration.infosInformation.infosInformation[info] = Pair(cStruct, infoCStructInstanceVariableName)
+            currentGeneration.infosInformation.infosInformation[info] = InfoInformation(cStruct, infoCStructInstanceVariableName, 0)
         } else {
             val existingInfo = currentGeneration.infosInformation.infosInformation[info]!!
-            currentGeneration.currentScope.generatedSource += assignment(propertyAccess(existingInfo.second, "info_value"), valueEvaluation)
+            currentGeneration.currentScope.generatedSource += assignment(propertyAccess(existingInfo.cListInstanceVariableName, "info_value"), valueEvaluation)
         }
 
         return Ok(Pair("", norType))

@@ -124,3 +124,18 @@ fun assignment(variable: String, value: String): String {
 fun propertyAccess(variableName: String, propertyName: String): String {
     return variableName + "." + propertyName
 }
+
+/***
+ * @param referenceTypeAndVariableName the type should be reference applied to the desired type to be allocated such as:
+ * "CReference(TypeToBeAllocated)".
+ * @param typeName the type that has to be allocated (without reference applied to it)
+ * @param referenceTypeName the type that has to be allocated, with reference applied to it
+ *
+ * to get the name of the type and the "type and variable" use cTypeAndVariableName() and cTypeName()
+ * functions.
+ * @see cTypeAndVariableName
+ * @see cTypeName
+ */
+fun memoryAllocateList(referenceTypeAndVariableName: String, typeName: String, referenceTypeName: String, listSize: Int): String {
+    return referenceTypeAndVariableName + " = " + "(" + referenceTypeName + ") " + "malloc(" + listSize + " * sizeof(" + typeName + "));"
+}
