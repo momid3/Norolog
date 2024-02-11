@@ -1,6 +1,7 @@
 package com.momid.compiler.output
 
 import com.momid.compiler.forEveryIndexed
+import com.momid.compiler.typesMatch
 
 class Info(val name: String, val parameters: List<InfoParameter>, val valueType: OutputType, val declarationPackage: String = "") {
     override fun equals(other: Any?): Boolean {
@@ -18,11 +19,24 @@ class Info(val name: String, val parameters: List<InfoParameter>, val valueType:
     }
 }
 
-class InfoParameter(val type: OutputType)
+class InfoParameter(val type: OutputType) {
+    override fun equals(other: Any?): Boolean {
+        return other is InfoParameter && typesMatch(other.type, this.type).first
+    }
+
+    override fun hashCode(): Int {
+        return type.hashCode()
+    }
+}
 
 /***
  * Map <Info, Pair<Corresponding C Struct, the C Struct instance variable>>
  */
 class InfosInformation(val infosInformation: HashMap<Info, InfoInformation>)
 
-class InfoInformation(val cStruct: CStruct, val cListInstanceVariableName: String, val listCurrentIndex: Int)
+class InfoInformation(
+    val cStruct: CStruct,
+    val cListInstanceVariableName: String,
+    val listCurrentIndexVariableName: String,
+    val listSizeVariableName: String
+)

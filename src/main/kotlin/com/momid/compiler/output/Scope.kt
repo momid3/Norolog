@@ -18,4 +18,9 @@ fun createVariableName(): String {
     return "variable" + currentVariableNameNumber
 }
 
+fun createVariableName(prefix: String): String {
+    currentVariableNameNumber += 1
+    return prefix + "_variable" + currentVariableNameNumber
+}
+
 class VariableInformation(var name: String, var type: Type, var value: Any, var outputName: String, var outputType: OutputType)
