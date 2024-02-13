@@ -231,16 +231,25 @@ fun ExpressionResultsHandlerContext.handlePrintFunction(functionCall: FunctionCa
 
                 val parameterType = this.outputType
 
-                if (parameterType == outputStringType) {
-                    output += "printf" + "(" + this.cEvaluation + ")"
-                    return Ok(Pair(output, norType))
-                }
+                when (parameterType) {
+                    outputStringType -> {
+                        output += "printf" + "(" + this.cEvaluation + ")"
+                        return Ok(Pair(output, norType))
+                    }
 
-                else if (parameterType == outputIntType) {
-                    output += "printf" + "(" + "\"%d\\n\"" + ", " + this.cEvaluation + ")"
-                    return Ok(Pair(output, norType))
-                } else {
-                    return Error("this variable type could not be printed: " + parameterType, this@handlePrintFunction.expressionResult.range)
+                    outputIntType -> {
+                        output += "printf" + "(" + "\"%d\\n\"" + ", " + this.cEvaluation + ")"
+                        return Ok(Pair(output, norType))
+                    }
+
+                    outputBooleanType -> {
+                        output += "printf" + "(" + "\"%d\\n\"" + ", " + this.cEvaluation + ")"
+                        return Ok(Pair(output, norType))
+                    }
+
+                    else -> {
+                        return Error("this variable type could not be printed: " + parameterType, this@handlePrintFunction.expressionResult.range)
+                    }
                 }
             }
         }

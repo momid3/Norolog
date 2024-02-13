@@ -1,6 +1,5 @@
-package com.momid
+package com.momid.compiler
 
-import com.momid.compiler.*
 import com.momid.compiler.output.*
 import com.momid.parser.expression.*
 import com.momid.parser.not
@@ -11,7 +10,7 @@ val infoParameters =
 val info =
     !"#" + className["infoName"] + insideOf('(', ')') {
         infoParameters["infoParameters"]
-    } + spaces + "=" + spaces + complexExpression["value"]
+    } + spaces + "=" + spaces + complexExpression["value"] + spaces + !";"
 
 fun ExpressionResultsHandlerContext.handleInfo(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
     with(this.expressionResult) {
@@ -52,18 +51,6 @@ fun ExpressionResultsHandlerContext.handleInfo(currentGeneration: CurrentGenerat
                 3
             ) + "\n"
 
-//            currentGeneration.currentScope.generatedSource += variableDeclaration(
-//                cTypeAndVariableName(Type(cStruct.name), infoCStructInstanceVariableName),
-//                cStructInitialization(
-//                    cStruct.name,
-//                    (cStruct.variables.dropLast(1).mapIndexed { index, cStructVariable ->
-//                        Pair(cStructVariable.name, parameters[index].first)
-//                    } as ArrayList).apply {
-//                        this.add(Pair("info_value", valueEvaluation))
-//                    }
-//                )
-//            )
-
             currentGeneration.currentScope.generatedSource += assignment(
                 arrayAccess(infoListInstanceVariable, 0.toString()),
                 cStructInitialization(
@@ -103,6 +90,7 @@ fun ExpressionResultsHandlerContext.handleInfo(currentGeneration: CurrentGenerat
                     |}
                     |
                     |if (!$foundVariableName) {
+                    |    $listCurrentIndexVariableName += 1;
                     |    $cListInstanceVariable[$listCurrentIndexVariableName] = ${
                             cStructInitialization(
                                 existingInfo.cStruct.name, 
@@ -113,10 +101,9 @@ fun ExpressionResultsHandlerContext.handleInfo(currentGeneration: CurrentGenerat
                                 }
                             )
                         };
-                    |    $listCurrentIndexVariableName += 1;
-                    |    printf("not found");
+                    |    printf("not found\n");
                     |} else {
-                    |    printf("found");
+                    |    printf("found\n");
                     |}
                     |
                """.trimMargin()

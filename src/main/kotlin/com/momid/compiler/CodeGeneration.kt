@@ -87,6 +87,13 @@ fun variableDeclaration(variableTypeAndName: String, variableValue: String): Str
 }
 
 /***
+ * variable declaration without initialization
+ */
+fun variableDeclaration(variableTypeAndName: String): String {
+    return variableTypeAndName + ";"
+}
+
+/***
  * @param referenceTypeAndVariableName the type should be reference applied to the desired type to be allocated such as:
  * "CReference(TypeToBeAllocated)".
  * @param typeName the type that has to be allocated (without reference applied to it)

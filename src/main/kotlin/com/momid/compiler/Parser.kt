@@ -51,7 +51,7 @@ val number by lazy {
 }
 
 val atomicExp =
-    anyOf(builtinValues, variableNameO, number, cf, stringLiteral, arrayInitialization)["atomic"] + not(!".")
+    anyOf(builtinValues, variableNameO, number, cf, infoAccess, stringLiteral, arrayInitialization)["atomic"] + not(!".")
 
 val operator =
     anyOf('+', '-', '*', '/')
@@ -203,6 +203,14 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                                     type = outputBooleanType
                                     output += "false"
                                 }
+                            }
+
+                            it["atomic"].content.isOf(infoAccess) {
+                                val (evaluation, outputType) = continueStraight(it) { handleInfoAccess(currentGeneration) }.okOrReport {
+                                    return it.to()
+                                }
+                                type = outputType
+                                output += evaluation
                             }
                         }
 

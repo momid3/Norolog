@@ -1,8 +1,6 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.Scope
-import com.momid.handleInfo
-import com.momid.info
 import com.momid.parser.expression.*
 
 val text = "print(3 + 7 + 37)".toList()
