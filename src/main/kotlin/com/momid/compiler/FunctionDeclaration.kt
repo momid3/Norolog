@@ -111,7 +111,7 @@ fun ExpressionResultsHandlerContext.handleFunctionDeclaration(
             return it.to()
         }
 
-        currentGeneration.functionDeclarationsGeneratedSource += cFunction(cFunctionName, cFunctionParameters.map { cTypeAndVariableName(it.type, it.name) }, cTypeName(cFunctionReturnType), cFunctionBody) + "\n"
+        currentGeneration.functionDeclarationsGeneratedSource += cFunction(cFunctionName, cFunctionParameters.map { cTypeAndVariableName(it.type, it.name) }, cTypeName(cFunctionReturnType), cFunctionBody.trim()) + "\n"
 
         return Ok(true)
     }

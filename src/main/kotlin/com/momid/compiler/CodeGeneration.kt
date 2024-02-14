@@ -3,6 +3,7 @@ package com.momid.compiler
 fun wholeProgram(programText: String, classDeclarations: String, functionDeclarations: String): String {
     return "#include <stdio.h>\n" +
             "#include <unistd.h>\n" +
+            "#include <stdbool.h>\n" +
             "#include <SDL2/SDL.h>\n" +
             "\n" +
             classDeclarations +
@@ -10,9 +11,10 @@ fun wholeProgram(programText: String, classDeclarations: String, functionDeclara
             functionDeclarations +
             "\n" +
             "int main(int argc, char *argv[]) {\n" +
-            programText +
+            indent(programText) +
             "\n" +
-            "return 0;\n" +
+            indent("return 0;") +
+            "\n" +
             "}"
 }
 
@@ -86,6 +88,13 @@ fun variableDeclaration(variableTypeAndName: String, variableValue: String): Str
 }
 
 /***
+ * variable declaration without initialization
+ */
+fun variableDeclaration(variableTypeAndName: String): String {
+    return variableTypeAndName + ";"
+}
+
+/***
  * @param referenceTypeAndVariableName the type should be reference applied to the desired type to be allocated such as:
  * "CReference(TypeToBeAllocated)".
  * @param typeName the type that has to be allocated (without reference applied to it)
@@ -106,16 +115,39 @@ fun memoryAllocate(referenceTypeAndVariableName: String, typeName: String, refer
 @JvmName("cFunction1")
 fun cFunction(name: String, parametersNat: List<String>, returnType: String, functionBody: String): String {
     return returnType + " " + name + "(" + parametersNat.joinToString(", ") + ")" +
-            " {" + "\n" + functionBody + "\n" + "}"
+            " {" + "\n" + indent(functionBody) + "\n" + "}"
 }
 
 @JvmName("cStruct1")
 fun cStruct(name: String, variablesNat: List<String>): String {
     return "struct " + name + " {" + "\n" +
-            variablesNat.joinToString(";\n") +
+            indent(variablesNat.joinToString(";\n")) +
             ";\n" + "}" + ";"
 }
 
 fun assignment(variable: String, value: String): String {
     return variable + " = " + value + ";"
+}
+
+fun propertyAccess(variableName: String, propertyName: String): String {
+    return variableName + "." + propertyName
+}
+
+/***
+ * @param referenceTypeAndVariableName the type should be reference applied to the desired type to be allocated such as:
+ * "CReference(TypeToBeAllocated)".
+ * @param typeName the type that has to be allocated (without reference applied to it)
+ * @param referenceTypeName the type that has to be allocated, with reference applied to it
+ *
+ * to get the name of the type and the "type and variable" use cTypeAndVariableName() and cTypeName()
+ * functions.
+ * @see cTypeAndVariableName
+ * @see cTypeName
+ */
+fun memoryAllocateList(referenceTypeAndVariableName: String, typeName: String, referenceTypeName: String, listSize: Int): String {
+    return referenceTypeAndVariableName + " = " + "(" + referenceTypeName + ") " + "malloc(" + listSize + " * sizeof(" + typeName + "));"
+}
+
+fun indent(text: String, indentSize: Int = 4): String {
+    return text.lines().joinToString("\n") { (0 until indentSize).fold("") { acc, i -> acc + " " } + it }
 }

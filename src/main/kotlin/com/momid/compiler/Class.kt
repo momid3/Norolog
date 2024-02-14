@@ -109,6 +109,8 @@ fun resolveType(outputType: Class, currentGeneration: CurrentGeneration): Type {
         return Type.Int
     } else if (outputType == outputString) {
         return Type.CharArray
+    } else if (outputType == outputBoolean) {
+        return Type.Boolean
     } else {
         return Type(resolveClass(outputType, currentGeneration).name)
     }

@@ -96,6 +96,7 @@ class ClassesInformation(val classes: HashMap<Class, CStruct?> = HashMap())
 val outputInt = Class("Int", arrayListOf())
 val outputString = Class("String", arrayListOf())
 val outputNothing = Class("Nothing", arrayListOf())
+val outputBoolean = Class("Boolean", listOf())
 
 val window = Class("Window", listOf(), "norolog.graphics")
 val renderer = Class("Renderer", listOf(), "norolog.graphics")

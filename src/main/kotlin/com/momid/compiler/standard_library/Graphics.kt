@@ -81,7 +81,11 @@ fun ExpressionResultsHandlerContext.handleUpdate(
     return Ok(Pair(output, norType))
 }
 
-fun <T> continueGiven(tokens: String, currentGeneration: CurrentGeneration, vararg expressions: Expression, anotherHandler: ExpressionResultsHandlerContext.() -> Result<T>): Result<T> {
+fun <T> continueGiven(
+    tokens: String,
+    vararg expressions: Expression,
+    anotherHandler: ExpressionResultsHandlerContext.() -> Result<T>
+): Result<T> {
     val finder = ExpressionFinder()
     finder.registerExpressions(expressions.toList())
     finder.start(tokens.toList()).apply {
@@ -94,5 +98,5 @@ fun <T> continueGiven(tokens: String, currentGeneration: CurrentGeneration, vara
 }
 
 inline fun continueComplexExpression(tokens: String, currentGeneration: CurrentGeneration, report: (Error<*>) -> Unit): Pair<String, OutputType> {
-    return continueGiven(tokens, currentGeneration, complexExpression) { handleComplexExpression(currentGeneration) }.okOrReport(report)
+    return continueGiven(tokens, complexExpression) { handleComplexExpression(currentGeneration) }.okOrReport(report)
 }

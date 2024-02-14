@@ -1,9 +1,6 @@
 package com.momid.compiler
 
-import com.momid.compiler.output.ClassType
-import com.momid.compiler.output.OutputType
-import com.momid.compiler.output.ReferenceType
-import com.momid.compiler.output.TypeParameterType
+import com.momid.compiler.output.*
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -16,9 +13,10 @@ val propertyAccessVariable by lazy {
 }
 
 val propertyAccessElement by lazy {
-    ignoreParentheses(condition { it != '.'  && it != ')' && it != ' '})
+    ignoreParentheses(condition { it != '.'  && it != ')' && it != ' ' && it != ';'})
 }
 
+// Todo replace ignoreParentheses with something else because ignoreParentheses has bugs and has to be removed from anywhere it is
 val propertyAccess by lazy {
     spaces + propertyAccessFirstElement["firstExpression"] + inline(some(spaces + !"." + spaces + propertyAccessElement["element"])["otherElements"]) + spaces
 }
@@ -93,6 +91,15 @@ fun ExpressionResultsHandlerContext.handlePropertyAccess(currentGeneration: Curr
 
                 it.content.isOf(functionCall) {
                     println("is function call: " + it.tokens())
+
+                    val functionReceiver = Eval(output, currentType)
+
+                    val (evaluation, outputType) = continueWithOne(it, functionCall) { handleFunctionCall(currentGeneration, functionReceiver) }.okOrReport {
+                        return it.to()
+                    }
+
+                    currentType = outputType
+                    output = evaluation
                 }
             }
         }

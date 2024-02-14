@@ -1,5 +1,6 @@
 package com.momid.compiler
 
+import com.momid.compiler.output.Eval
 import com.momid.compiler.output.Evaluation
 import com.momid.compiler.output.OutputType
 import com.momid.compiler.standard_library.*
@@ -46,12 +47,16 @@ fun ExpressionResultsHandlerContext.handleFunctionCallEvaluating(currentGenerati
         Evaluation(evaluation, outputType, it)
     }
 
-    return Ok(FunctionCallEvaluating(functionCallParsing.functionName, parameterEvaluations, functionCallParsing.parsing))
+    return Ok(FunctionCallEvaluating(functionCallParsing.functionName, parameterEvaluations, null, functionCallParsing.parsing))
 }
 
-fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
+fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: CurrentGeneration, functionReceiver: Eval? = null): Result<Pair<String, OutputType>> {
     val functionCall = handleFunctionCallEvaluating(currentGeneration).okOrReport {
         return it.to()
+    }
+
+    if (functionReceiver != null) {
+        functionCall.receiver = functionReceiver
     }
 
     with(functionCall) {
@@ -72,7 +77,11 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
 
                 return Ok(
                     Pair(
-                        cFunctionCall(cFunction.name, functionCall.parameters.map { it.cEvaluation }),
+                        cFunctionCall(cFunction.name, (functionCall.parameters.map { it.cEvaluation } as ArrayList).apply {
+                            if (functionReceiver != null) {
+                                this.add(0, functionReceiver.cEvaluation)
+                            }
+                        }),
                         function.returnType
                     )
                 )
@@ -84,7 +93,7 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
 
 class FunctionCallParsingO(val functionName: Parsing, val functionParameters: List<Parsing>, val parsing: Parsing)
 
-class FunctionCallEvaluating(val name: Parsing, val parameters: List<Evaluation>, val parsing: Parsing)
+class FunctionCallEvaluating(val name: Parsing, val parameters: List<Evaluation>, var receiver: Eval?, val parsing: Parsing)
 
 fun main() {
     val currentGeneration = CurrentGeneration()

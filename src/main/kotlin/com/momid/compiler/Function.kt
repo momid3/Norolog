@@ -205,6 +205,10 @@ inline fun <T> List<T>.forEveryIndexed(onEach: (index: Int, item: T) -> Boolean)
 fun functionSignaturesMatch(function: Function, anotherFunction: FunctionCallEvaluating): Boolean {
     return function.name == anotherFunction.name.tokens && function.parameters.forEveryIndexed { index, parameter ->
         anotherFunction.parameters[index].outputType == parameter.type
+    } && if (function is ClassFunction) {
+        function.receiverType == anotherFunction.receiver!!.outputType
+    } else {
+        true
     }
 }
 
@@ -231,16 +235,25 @@ fun ExpressionResultsHandlerContext.handlePrintFunction(functionCall: FunctionCa
 
                 val parameterType = this.outputType
 
-                if (parameterType == outputStringType) {
-                    output += "printf" + "(" + this.cEvaluation + ")"
-                    return Ok(Pair(output, norType))
-                }
+                when (parameterType) {
+                    outputStringType -> {
+                        output += "printf" + "(" + this.cEvaluation + ")"
+                        return Ok(Pair(output, norType))
+                    }
 
-                else if (parameterType == outputIntType) {
-                    output += "printf" + "(" + "\"%d\\n\"" + ", " + this.cEvaluation + ")"
-                    return Ok(Pair(output, norType))
-                } else {
-                    return Error("this variable type could not be printed: " + parameterType, this@handlePrintFunction.expressionResult.range)
+                    outputIntType -> {
+                        output += "printf" + "(" + "\"%d\\n\"" + ", " + this.cEvaluation + ")"
+                        return Ok(Pair(output, norType))
+                    }
+
+                    outputBooleanType -> {
+                        output += "printf" + "(" + "\"%d\\n\"" + ", " + this.cEvaluation + ")"
+                        return Ok(Pair(output, norType))
+                    }
+
+                    else -> {
+                        return Error("this variable type could not be printed: " + parameterType, this@handlePrintFunction.expressionResult.range)
+                    }
                 }
             }
         }

@@ -30,6 +30,18 @@ val stringLiteral by lazy {
     }
 }
 
+val trueValue by lazy {
+    !"true"
+}
+
+val falseValue by lazy {
+    !"false"
+}
+
+val builtinValues by lazy {
+    anyOf(trueValue, falseValue)
+}
+
 val variableNameO by lazy {
     and(condition { it.isLetter() } + some0(condition { it.isLetterOrDigit() }) + not(condition { it == '(' }), not(anyOf(!"in", !"until")))
 }
@@ -39,7 +51,7 @@ val number by lazy {
 }
 
 val atomicExp =
-    anyOf(variableNameO, number, cf, stringLiteral, arrayInitialization)["atomic"] + not(!".")
+    anyOf(builtinValues, variableNameO, number, cf, infoAccess, stringLiteral, arrayInitialization)["atomic"] + not(!".")
 
 val operator =
     anyOf('+', '-', '*', '/')
@@ -175,6 +187,26 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
 
                             it["atomic"].content.isOf(arrayInitialization) {
                                 val (evaluation, outputType) = continueStraight(it) { handleArrayInitialization(currentGeneration) }.okOrReport {
+                                    return it.to()
+                                }
+                                type = outputType
+                                output += evaluation
+                            }
+
+                            it["atomic"].content.isOf(builtinValues) {
+                                it.content.isOf(trueValue) {
+                                    type = outputBooleanType
+                                    output += "true"
+                                }
+
+                                it.content.isOf(falseValue) {
+                                    type = outputBooleanType
+                                    output += "false"
+                                }
+                            }
+
+                            it["atomic"].content.isOf(infoAccess) {
+                                val (evaluation, outputType) = continueStraight(it) { handleInfoAccess(currentGeneration) }.okOrReport {
                                     return it.to()
                                 }
                                 type = outputType

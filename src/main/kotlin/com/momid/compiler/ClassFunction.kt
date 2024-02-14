@@ -8,7 +8,7 @@ val parameter =
     spaces + className["parameterName"] + spaces + !":" + spaces + outputTypeO["parameterType"] + spaces
 
 val functionReturnType =
-    oneOrZero(spaces + !":" + spaces + outputTypeO["returnType"])
+    oneOrZero(spaces + !":" + spaces + outputTypeO["returnType"], "functionReturnType")
 
 val classFunctionTypeParameters =
     oneOrZero(insideOf('<', '>') {
@@ -40,7 +40,7 @@ fun ExpressionResultsHandlerContext.handleClassFunctionParsing(): Result<ClassFu
             typeParameter.parsing
         }.orEmpty()
         val functionReturnType = this["functionReturnType"].continuing?.get("returnType")?.parsing
-        val functionInside = this["functionInside"].parsing
+        val functionInside = this["functionInside"].continuing!!.parsing
         return Ok(ClassFunctionParsing(functionName, functionParameters, typeParameters, functionReturnType, receiverType, functionInside))
     }
 }
@@ -81,28 +81,52 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                 functionInside.range
             )
 
-            val scope = Scope()
-            scope.scopeContext = FunctionContext(function)
-            val functionScope = currentGeneration.createScope(scope)
+            val functionScope = Scope()
+            functionScope.scopeContext = FunctionContext(function)
+
+            val cFunction = CFunction(
+                function.name,
+                (function.parameters.map {
+                    CFunctionParameter(it.name, resolveType(it.type, currentGeneration))
+                } as ArrayList).apply {
+                    this.add(0, CFunctionParameter("this_receiver", resolveType(function.receiverType, currentGeneration)))
+                },
+                resolveType(function.returnType, currentGeneration),
+                ""
+            )
+
+            function.parameters.forEachIndexed { index, functionParameter ->
+                val variableInformation = VariableInformation(
+                    cFunction.parameters[index + 1].name,
+                    cFunction.parameters[index + 1].type,
+                    "",
+                    functionParameter.name,
+                    functionParameter.type
+                )
+                functionScope.variables.add(variableInformation)
+            }
+
+            functionScope.variables.add(
+                VariableInformation(
+                    cFunction.parameters[0].name,
+                    cFunction.parameters[0].type,
+                    "",
+                    "this",
+                    function.receiverType
+                )
+            )
+
+            currentGeneration.functionsInformation.functionsInformation[function] = cFunction
 
             val cFunctionCode = continueStraight(functionInside.expressionResult) { handleCodeBlock(currentGeneration, functionScope) }.okOrReport {
                 return it.to()
             }
 
-            val cFunction = CFunction(
-                function.name,
-                function.parameters.map {
-                    CFunctionParameter(it.name, resolveType(it.type, currentGeneration))
-                },
-                resolveType(function.returnType, currentGeneration),
-                cFunctionCode
-            )
+            cFunction.codeText = cFunctionCode
 
-            currentGeneration.functionsInformation.functionsInformation[function] = cFunction
-
-            currentGeneration.currentScope.generatedSource += cFunction(cFunction.name, cFunction.parameters.map {
+            currentGeneration.functionDeclarationsGeneratedSource += cFunction(cFunction.name, cFunction.parameters.map {
                 cTypeAndVariableName(it.type, it.name)
-            }, cTypeName(cFunction.returnType), cFunction.codeText)
+            }, cTypeName(cFunction.returnType), cFunction.codeText.trim()) + "\n"
 
             return Ok(true)
         } else {

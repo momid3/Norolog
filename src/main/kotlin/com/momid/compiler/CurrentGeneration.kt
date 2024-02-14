@@ -12,6 +12,7 @@ class CurrentGeneration {
     var functionDeclarationsGeneratedSource = ""
     val classesInformation = ClassesInformation()
     val functionsInformation = FunctionsInformation(HashMap())
+    val infosInformation = InfosInformation(hashMapOf())
     val errors = ArrayList<Error<*>>()
 
     private var currentCStructNameNumber = 0
@@ -55,13 +56,22 @@ class CurrentGeneration {
         return "Struct" + currentCStructNameNumber
     }
 
+    fun createCStructName(prefix: String): String {
+        currentCStructNameNumber += 1
+        return prefix + "Struct" + currentCStructNameNumber
+    }
+
     fun createCFunctionName(): String {
         currentCFunctionNameNumber += 1
         return "function" + currentCFunctionNameNumber
     }
 
-    fun addVariable(name: String, cName: String, outputType: OutputType) {
+    private fun addVariable(name: String, cName: String, outputType: OutputType) {
         currentScope.variables += VariableInformation(cName, resolveType(outputType, this), 0, name, outputType)
+    }
+
+    private fun addVariable(name: String, cName: String, outputType: OutputType, scope: Scope) {
+        scope.variables += VariableInformation(cName, resolveType(outputType, this), 0, name, outputType)
     }
 
     /***
@@ -82,6 +92,27 @@ class CurrentGeneration {
         val variableName = createVariableName()
         val cVariableName = createVariableName()
         addVariable(variableName, cVariableName, outputType)
+        return Pair(variableName, cVariableName)
+    }
+
+    /***
+     * @param name name of the variable
+     * @return c variable name of the created variable
+     */
+    fun createVariable(name: String, outputType: OutputType, scope: Scope): String {
+        val cVariableName = createVariableName()
+        addVariable(name, cVariableName, outputType, scope)
+        return cVariableName
+    }
+
+    /***
+     * @return a pair of created variable names. first
+     * is the norolog variable name and last is the c variable name
+     */
+    fun createVariable(outputType: OutputType, scope: Scope): Pair<String, String> {
+        val variableName = createVariableName()
+        val cVariableName = createVariableName()
+        addVariable(variableName, cVariableName, outputType, scope)
         return Pair(variableName, cVariableName)
     }
 }
