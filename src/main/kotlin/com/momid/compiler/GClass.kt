@@ -104,7 +104,7 @@ fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: Cu
             cStructVariables.add(CStructVariable(classVariable.name, resolveType(classVariable.type, currentGeneration)))
         }
 
-        currentGeneration.globalDefinitionsGeneratedSource += cStruct(cStruct.name, cStruct.variables.map { cTypeAndVariableName(it.type, it.name) })
+        currentGeneration.globalDefinitionsGeneratedSource += cStruct(cStruct.name, cStruct.variables.map { cTypeAndVariableName(it.type, it.name) }) + "\n"
     }
 
     return Ok(true)
