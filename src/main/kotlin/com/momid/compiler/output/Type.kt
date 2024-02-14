@@ -76,7 +76,21 @@ class NorType() : OutputType() {
  * @param outputType the resolved type of the norolog code.
  * @param parsing the Parsing Element of the related norolog code before evaluation.
  */
-class Evaluation(val cEvaluation: String, val outputType: OutputType, val parsing: Parsing? = null) {
+class Evaluation(val cEvaluation: String, val outputType: OutputType, val parsing: Parsing) {
+    operator fun component1(): String {
+        return cEvaluation
+    }
+
+    operator fun component2(): OutputType {
+        return outputType
+    }
+}
+
+/***
+ * same as Evaluation but without "parsing"
+ * @see Evaluation
+ */
+class Eval(val cEvaluation: String, val outputType: OutputType) {
     operator fun component1(): String {
         return cEvaluation
     }

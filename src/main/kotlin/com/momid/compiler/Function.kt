@@ -205,6 +205,10 @@ inline fun <T> List<T>.forEveryIndexed(onEach: (index: Int, item: T) -> Boolean)
 fun functionSignaturesMatch(function: Function, anotherFunction: FunctionCallEvaluating): Boolean {
     return function.name == anotherFunction.name.tokens && function.parameters.forEveryIndexed { index, parameter ->
         anotherFunction.parameters[index].outputType == parameter.type
+    } && if (function is ClassFunction) {
+        function.receiverType == anotherFunction.receiver!!.outputType
+    } else {
+        true
     }
 }
 
