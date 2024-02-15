@@ -69,7 +69,7 @@ fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: Cu
 
     if (isGenericClass) {
         classDeclarationPE.typeVariables.forEach {
-            classTypeVariables.add(GenericTypeParameter(it.name.tokens, null, outputClass as GenericClass))
+            classTypeVariables.add(GenericTypeParameter(it.name.tokens, null))
         }
     }
 

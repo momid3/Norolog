@@ -26,18 +26,10 @@ class ClassVariable(val name: String, val type: OutputType) {
     }
 }
 
-class GenericTypeParameter(val name: String, var substitutionType: OutputType? = null, private val owningclass: GenericClass? = null) {
-
-    var owningClass: GenericClass = owningclass!!
-        get() {
-            return this.owningclass!!
-        }
-        set(value) {
-            field = value
-        }
+class GenericTypeParameter(val name: String, var substitutionType: OutputType? = null) {
 
     fun clone(): GenericTypeParameter {
-        return GenericTypeParameter(this.name, null, owningClass)
+        return GenericTypeParameter(this.name, null)
     }
 }
 

@@ -18,8 +18,8 @@ open class Function(
  * a function that is applied to a class or another type.
  * such as "someVariable.someFunction()".
  */
-class ClassFunction(name: String, val receiverType: OutputType, parameters: List<FunctionParameter>, returnType: OutputType, bodyRange: IntRange):
-    Function(name, parameters, returnType, bodyRange)
+class ClassFunction(val receiverType: OutputType, val function: Function):
+    Function(function.name, function.parameters, function.returnType, function.bodyRange)
 
 class FunctionParameter(val name: String, val type: OutputType, relatedCFunction: CFunction? = null)
 
@@ -28,3 +28,8 @@ class CFunction(val name: String, val parameters: List<CFunctionParameter>, val 
 class CFunctionParameter(val name: String, val type: Type)
 
 class FunctionsInformation(val functionsInformation: HashMap<Function, CFunction>)
+
+class GenericFunction(
+    val typeParameters: List<GenericTypeParameter>,
+    val function: Function
+): Function(function.name, function.parameters, function.returnType, function.bodyRange)
