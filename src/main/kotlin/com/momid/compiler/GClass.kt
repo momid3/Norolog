@@ -15,7 +15,7 @@ val classDeclarationParameters =
     )
 
 val typeParameters =
-    splitBy(className, ",")
+    splitBy(one(spaces + className["typeParameterName"] + spaces), ",")
 
 val gClass =
     !"class" + space + oneOrZero(insideOf('<', '>') {
@@ -115,3 +115,16 @@ class ClassTypeVariablePE(val name: Parsing)
 class ClassParameterPE(val name: Parsing, val outputTYpe: Parsing)
 
 class ClassPE(val name: Parsing, val parameters: List<ClassParameterPE>, val typeVariables: List<ClassTypeVariablePE>)
+
+fun main() {
+    val currentGeneration = CurrentGeneration()
+    val text = "class <T> someClass(someParameter: T)".toList()
+    val finder = ExpressionFinder()
+    finder.registerExpressions(listOf(gClass))
+    finder.start(text).forEach {
+        handleExpressionResult(finder, it, text) {
+            println("found " + it.tokens)
+            handleClassDeclaration(currentGeneration)
+        }
+    }
+}

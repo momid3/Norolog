@@ -16,11 +16,11 @@ fun space(): RecurringSomeExpression {
 }
 
 val variableDeclaration by lazy {
-    !"val" + space + variableNameO["variableName"] + spaces + "=" + spaces + complexExpression["assignmentExpression"] + ";"
+    !"val" + space + variableNameO["variableName"] + spaces + !"=" + spaces + complexExpression["assignmentExpression"] + !";"
 }
 
 val functionCallStatement =
-    spaces + functionCall["function"] + ";"
+    spaces + functionCall["function"] + !";"
 
 
 fun ExpressionResultsHandlerContext.handleVariableDeclaration(currentGeneration: CurrentGeneration): Result<String> {

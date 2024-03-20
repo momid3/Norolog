@@ -5,8 +5,9 @@ import com.momid.compiler.output.OutputType
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
-val arrayInitialization =
+val arrayInitialization by lazy {
     !"[" + spaces + wanting(anything["itemsValue"], !",") + spaces + !"," + spaces + number["size"] + !"]"
+}
 
 fun ExpressionResultsHandlerContext.handleArrayInitialization(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
     with(this.expressionResult) {

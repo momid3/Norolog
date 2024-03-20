@@ -5,11 +5,13 @@ import com.momid.parser.expression.*
 import com.momid.parser.isOf
 import com.momid.parser.not
 
-val dotInTheMiddleOfNumber = CustomExpression() { tokens, startIndex, endIndex ->
-    if (tokens[startIndex] == '.' && startIndex > 0 && tokens[startIndex - 1].isDigit() && startIndex < tokens.lastIndex && tokens[startIndex + 1].isDigit()) {
-        return@CustomExpression startIndex + 1
-    } else {
-        return@CustomExpression -1
+val dotInTheMiddleOfNumber by lazy {
+    CustomExpression() { tokens, startIndex, endIndex ->
+        if (tokens[startIndex] == '.' && startIndex > 0 && tokens[startIndex - 1].isDigit() && startIndex < tokens.lastIndex && tokens[startIndex + 1].isDigit()) {
+            return@CustomExpression startIndex + 1
+        } else {
+            return@CustomExpression -1
+        }
     }
 }
 
@@ -50,11 +52,13 @@ val number by lazy {
     condition { it.isDigit() } + some0(dotInTheMiddleOfNumber) + some0(condition { it.isDigit() })
 }
 
-val atomicExp =
+val atomicExp by lazy {
     anyOf(builtinValues, variableNameO, number, cf, infoAccess, stringLiteral, arrayInitialization)["atomic"] + not(!".")
+}
 
-val operator =
+val operator by lazy {
     anyOf('+', '-', '*', '/')
+}
 
 val simpleExpression: RecurringSomeExpression by lazy {
     some(inlineContent(anyOf(
@@ -65,11 +69,12 @@ val simpleExpression: RecurringSomeExpression by lazy {
     )))
 }
 
-val expressionInParentheses =
+val expressionInParentheses by lazy {
     insideParentheses
+}
 
 val simpleExpressionInParentheses by lazy {
-    !"(" + expressionInParentheses["insideParentheses"] + ")"
+    !"(" + expressionInParentheses["insideParentheses"] + !")"
 }
 
 val complexExpression by lazy {

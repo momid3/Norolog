@@ -11,10 +11,11 @@ val ciParameters =
         splitBy(anything, ",")
     )
 
-val ci =
+val ci by lazy {
     ciName["ciName"] + spaces + insideOf('(', ')') {
         ciParameters["ciParameters"]
     }
+}
 
 fun ExpressionResultsHandlerContext.handleCIParsing(): Result<CIParsing> {
     with(this.expressionResult) {
@@ -41,10 +42,9 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
         if (resolvedClass is GenericClass) {
             resolvedClass.unsubstituted = false
 
-            val cStructVariables = ArrayList<CStructVariable>()
             val parameterEvaluations = ArrayList<String>()
 
-            var cStruct = CStruct(currentGeneration.createCStructName(), cStructVariables)
+            var cStruct: CStruct
 
             this.parameters.forEachIndexed { index, parameter ->
                 val (evaluation, outputType) = continueWithOne(
@@ -62,23 +62,7 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
                 }
             }
 
-            val alreadyExists = currentGeneration.classesInformation.classes.entries.find {
-                it.key == resolvedClass
-            } != null
-
-            resolvedClass.variables.forEach {
-                cStructVariables.add(CStructVariable(it.name, resolveType(it.type, currentGeneration)))
-            }
-
-            if (alreadyExists) {
-                cStruct = currentGeneration.classesInformation.classes.entries.find {
-                    it.key == resolvedClass
-                }!!.value!!
-            } else {
-                currentGeneration.classesInformation.classes[resolvedClass] = cStruct
-
-                currentGeneration.globalDefinitionsGeneratedSource += cStruct(cStruct.name, cStruct.variables.map { Pair(it.name, cTypeName(it.type)) })
-            }
+            cStruct = createGenericClassIfNotExists(currentGeneration, resolvedClass)
 
             val output = cStructInitialization(cStruct.name, cStruct.variables.mapIndexed { index, cStructVariable ->
                 Pair(cStructVariable.name, parameterEvaluations[index])

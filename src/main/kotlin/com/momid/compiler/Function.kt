@@ -5,17 +5,24 @@ import com.momid.compiler.output.Function
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
-val functionName =
+val functionName by lazy {
     condition { it.isLetter() } + some0(condition { it.isLetterOrDigit() })
+}
 
-val functionParameter =
+val functionParameter by lazy {
     ignoreParentheses(condition { it != ',' && it != ')' })
+}
 
-val functionParameters =
-    anyOf(inline(inline(some(functionParameter["parameter"] + spaces + "," + spaces)) + functionParameter["parameter"]), functionParameter["parameter"])
+val functionParameters by lazy {
+    anyOf(
+        inline(inline(some(functionParameter["parameter"] + spaces + !"," + spaces)) + functionParameter["parameter"]),
+        functionParameter["parameter"]
+    )
+}
 
-val function =
+val function by lazy {
     functionName["functionName"] + !"(" + insideParentheses["parameters"] + !")"
+}
 
 fun ExpressionResult.isOf(name: String, then: (ExpressionResult) -> Unit) {
     if (this.expression.name == name) {

@@ -1,6 +1,7 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.*
+import com.momid.compiler.terminal.blue
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -31,15 +32,12 @@ val functionType by lazy {
     } + spaces + !"->" + spaces + anything["functionReturnType"]
 }
 
-val genericTypeParameters by lazy {
-    inline(
-        wanting(anything["typeParameterOutputType"], !",")
-                + some0(one(!"," + spaces + wanting(anything["typeParameterOutputType"], !",")))
-    )
+val genericTypeParameters: CustomExpressionValueic by lazy {
+    splitByNW(one(spaces + outputTypeO["typeParameterOutputType"] + spaces), ",")
 }
 
 val genericClassType by lazy {
-    classType["className"] + spaces + insideOf('<', '>') {
+    className["className"] + spaces + insideOf('<', '>') {
         genericTypeParameters["genericTypes"]
     }
 }
@@ -81,26 +79,28 @@ fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentG
         }
 
         content.isOf(genericClassType) {
-            val className = it["className"]["className"]
-            val classNameText = it["className"]["className"].tokens()
+            println(blue("generic class type " + it.tokens))
+            val className = it["className"]
+            val classNameText = it["className"].tokens()
+
             val outputType = ClassType(resolveType(classNameText, currentGeneration) ?:
             return Error("unresolved class: " + className, it["className"].range))
-            val typeParametersOutputType = it["genericTypes"].asMulti().map {
-                val typeParameter = it.continuing {
-                    println("expected type Parameter, found: " + it.tokens())
-                    return Error("expected type parameter, found: " + it.tokens(), it.range)
-                }
-                val parameterOutputType = continueWithOne(typeParameter["typeParameterOutputType"], outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
+
+            val typeParametersOutputType = it["genericTypes"].continuing?.asMulti()?.map {
+                val typeParameter = it
+                val parameterOutputType = continueWithOne(typeParameter, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
                     println(it.error)
                     return it.to()
                 }
                 parameterOutputType
-            }
+            } ?: return Error("expected type parameters", it["genericTypes"].range)
             val outputClass = outputType.outputClass
             if (outputClass is GenericClass) {
                 outputClass.typeParameters.forEachIndexed { index, genericTypeParameter ->
                     genericTypeParameter.substitutionType = typeParametersOutputType[index]
                 }
+                outputClass.unsubstituted = false
+                createGenericClassIfNotExists(currentGeneration, outputClass)
                 return Ok(outputType)
             } else {
                 return Error("this class does not have any type variables", className.range)
@@ -121,11 +121,12 @@ fun ExpressionResult.asMulti(): MultiExpressionResult {
 
 fun main() {
     val currentGeneration = CurrentGeneration()
-    val text = "SomeClass".toList()
+    val text = "SomeClass<Int, Int>".toList()
     val finder = ExpressionFinder()
-    finder.registerExpressions(listOf(classType))
+    finder.registerExpressions(listOf(outputTypeO))
     finder.start(text).forEach {
         handleExpressionResult(finder, it, text) {
+            println("found " + it.tokens)
             handleOutputType(currentGeneration)
         }
     }
