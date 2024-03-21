@@ -1,8 +1,6 @@
 package com.momid.compiler
 
-import com.momid.compiler.output.Eval
-import com.momid.compiler.output.Evaluation
-import com.momid.compiler.output.OutputType
+import com.momid.compiler.output.*
 import com.momid.compiler.standard_library.*
 import com.momid.parser.expression.*
 
@@ -75,16 +73,47 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
                 val (function, cFunction) = resolveFunction(functionCall, currentGeneration)
                     ?: return Error("unresolved function: " + functionCall.name.tokens, this.parsing.range)
 
-                return Ok(
-                    Pair(
-                        cFunctionCall(cFunction.name, (functionCall.parameters.map { it.cEvaluation } as ArrayList).apply {
-                            if (functionReceiver != null) {
-                                this.add(0, functionReceiver.cEvaluation)
-                            }
-                        }),
-                        function.returnType
+                if (function is GenericFunction) {
+                    functionCall.parameters.forEachIndexed { index, parameter ->
+                        val (typesMatch, substitutions) = typesMatch(parameter.outputType, function.parameters[index].type)
+
+                        if (!typesMatch) {
+                            return Error(
+                                "type mismatch expected " + function.parameters[index].type + " got " + parameter,
+                                parameter.parsing.range
+                            )
+                        }
+                    }
+
+                    val resolvedCFunction = createGenericFunctionIfNotExists(currentGeneration, function).okOrReport {
+                        return it.to()
+                    }
+
+                    return Ok(
+                        Pair(
+                            cFunctionCall(resolvedCFunction.name, (functionCall.parameters.map { it.cEvaluation } as ArrayList).apply {
+                                if (functionReceiver != null) {
+                                    this.add(0, functionReceiver.cEvaluation)
+                                }
+                            }),
+                            function.returnType
+                        )
                     )
-                )
+                } else {
+                    if (cFunction == null) {
+                        throw (Throwable("function is not a generic function and so c function should not have been null"))
+                    }
+                    return Ok(
+                        Pair(
+                            cFunctionCall(cFunction.name, (functionCall.parameters.map { it.cEvaluation } as ArrayList).apply {
+                                if (functionReceiver != null) {
+                                    this.add(0, functionReceiver.cEvaluation)
+                                }
+                            }),
+                            function.returnType
+                        )
+                    )
+                }
             }
         }
         return functionCallEvaluation

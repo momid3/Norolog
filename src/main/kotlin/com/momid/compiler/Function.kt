@@ -210,19 +210,33 @@ inline fun <T> List<T>.forEveryIndexed(onEach: (index: Int, item: T) -> Boolean)
 }
 
 fun functionSignaturesMatch(function: Function, anotherFunction: FunctionCallEvaluating): Boolean {
-    return function.name == anotherFunction.name.tokens && function.parameters.forEveryIndexed { index, parameter ->
-        anotherFunction.parameters[index].outputType == parameter.type
-    } && if (function is ClassFunction) {
-        function.receiverType == anotherFunction.receiver!!.outputType
+    return if (function !is GenericFunction) {
+        function.name == anotherFunction.name.tokens && function.parameters.forEveryIndexed { index, parameter ->
+            anotherFunction.parameters[index].outputType == parameter.type
+        } && if (function is ClassFunction) {
+            function.receiverType == anotherFunction.receiver!!.outputType
+        } else {
+            true
+        }
     } else {
-        true
+        function.name == anotherFunction.name.tokens && function.parameters.forEveryIndexed { index, parameter ->
+            anotherFunction.parameters[index].outputType == parameter.type || parameter.type is TypeParameterType
+        } && if (function is ClassFunction) {
+            function.receiverType == anotherFunction.receiver!!.outputType || function.receiverType is TypeParameterType
+        } else {
+            true
+        }
     }
 }
 
-fun resolveFunction(function: FunctionCallEvaluating, currentGeneration: CurrentGeneration): Pair<Function, CFunction>? {
+fun resolveFunction(function: FunctionCallEvaluating, currentGeneration: CurrentGeneration): Pair<Function, CFunction?>? {
     currentGeneration.functionsInformation.functionsInformation.forEach { (functionDeclaration, cFunctionDeclaration) ->
         if (functionSignaturesMatch(functionDeclaration, function)) {
-            return Pair(functionDeclaration, cFunctionDeclaration)
+            if (functionDeclaration is GenericFunction) {
+                return Pair(functionDeclaration.clone(), cFunctionDeclaration)
+            } else {
+                return Pair(functionDeclaration, cFunctionDeclaration)
+            }
         }
     }
     return null

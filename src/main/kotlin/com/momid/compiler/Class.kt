@@ -6,7 +6,7 @@ import com.momid.parser.expression.*
 import com.momid.parser.not
 
 val classVariableExp by lazy {
-    variableNameO["variableName"] + spaces + ":" + spaces + outputTypeO["variableType"]
+    variableNameO["variableName"] + spaces + !":" + spaces + outputTypeO["variableType"]
 }
 
 val classVariable by lazy {
@@ -246,7 +246,13 @@ fun resolveGenericParameter(genericParameterName: String, currentGeneration: Cur
             }
 
             is FunctionContext -> {
-
+                if (scopeContext.function is GenericFunction) {
+                    scopeContext.function.typeParameters.forEach {
+                        if (it.name == genericParameterName) {
+                            return TypeParameterType(it)
+                        }
+                    }
+                }
             }
         }
 
