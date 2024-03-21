@@ -221,11 +221,19 @@ fun functionSignaturesMatch(function: Function, anotherFunction: FunctionCallEva
     } else {
         function.name == anotherFunction.name.tokens && function.parameters.forEveryIndexed { index, parameter ->
             anotherFunction.parameters[index].outputType == parameter.type || parameter.type is TypeParameterType
-        } && if (function is ClassFunction) {
-            function.receiverType == anotherFunction.receiver!!.outputType || function.receiverType is TypeParameterType
+        } && if (function.function is ClassFunction) {
+            anotherFunction.receiver != null && function.function.receiverType == anotherFunction.receiver!!.outputType || function.function.receiverType is TypeParameterType
         } else {
             true
         }
+    }
+}
+
+fun functionParametersMatch(functionCallParameterType: OutputType, functionParameterType: OutputType): Boolean {
+    if (functionParameterType is TypeParameterType) {
+        return true
+    } else {
+        return functionCallParameterType == functionParameterType
     }
 }
 

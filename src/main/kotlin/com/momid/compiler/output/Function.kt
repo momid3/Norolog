@@ -38,9 +38,9 @@ class GenericFunction(
 
     override fun equals(other: Any?): Boolean {
         return other is GenericFunction && this.name == other.name && this.function.parameters.forEveryIndexed { index, parameter ->
-            parameter.type == other.function.parameters[index].type
+            genericFunctionParametersMatch(parameter, other.function.parameters[index])
         } && this.function.returnType == other.returnType && if (this.function is ClassFunction) {
-            other.function is ClassFunction && this.function.receiverType == other.function.receiverType
+            other.function is ClassFunction && genericFunctionTypesMatch(this.function.receiverType, other.function.receiverType)
         } else {
             true
         }
@@ -64,5 +64,23 @@ class GenericFunction(
         var result = typeParameters.hashCode()
         result = 31 * result + function.hashCode()
         return result
+    }
+}
+
+fun genericFunctionParametersMatch(givenFunctionParameter: FunctionParameter, functionParameter: FunctionParameter): Boolean {
+    return if (givenFunctionParameter.type is TypeParameterType) {
+        functionParameter.type is TypeParameterType && givenFunctionParameter.type.genericTypeParameter.substitutionType ==
+                functionParameter.type.genericTypeParameter.substitutionType
+    } else {
+        return givenFunctionParameter.type == functionParameter.type
+    }
+}
+
+fun genericFunctionTypesMatch(givenFunctionType: OutputType, functionType: OutputType): Boolean {
+    return if (givenFunctionType is TypeParameterType) {
+        functionType is TypeParameterType && givenFunctionType.genericTypeParameter.substitutionType ==
+                functionType.genericTypeParameter.substitutionType
+    } else {
+        return givenFunctionType == functionType
     }
 }
