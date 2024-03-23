@@ -26,14 +26,14 @@ class ClassVariable(val name: String, val type: OutputType) {
     }
 }
 
-class GenericTypeParameter(val name: String, var substitutionType: OutputType? = null) {
+class GenericTypeParameter(var name: String, var substitutionType: OutputType? = null) {
 
     fun clone(): GenericTypeParameter {
         return GenericTypeParameter(this.name, null)
     }
 }
 
-class GenericClass(name: String, variables: List<ClassVariable>, declarationPackage: String, val typeParameters: List<GenericTypeParameter>, var unsubstituted: Boolean = true): Class(name, variables, declarationPackage) {
+class GenericClass(name: String, variables: List<ClassVariable>, declarationPackage: String, val typeParameters: MutableList<GenericTypeParameter>, var unsubstituted: Boolean = true): Class(name, variables, declarationPackage) {
 
     override fun equals(other: Any?): Boolean {
         return other is GenericClass && other.name == this.name && other.declarationPackage == this.declarationPackage
@@ -44,7 +44,7 @@ class GenericClass(name: String, variables: List<ClassVariable>, declarationPack
     }
 
     override fun clone(): GenericClass {
-        val clonedTypeParameters = typeParameters.map { it.clone() }
+        val clonedTypeParameters = typeParameters.map { it.clone() } as MutableList
         val clonedVariables = variables.map {
             ClassVariable(it.name, cloneOutputType(it.type, clonedTypeParameters))
         }
@@ -63,17 +63,45 @@ fun cloneOutputType(outputType: OutputType, typeParameters: List<GenericTypePara
     if (outputType is ClassType) {
         if (outputType.outputClass is GenericClass) {
             val genericClass = outputType.outputClass
-            return ClassType(GenericClass(genericClass.name, genericClass.variables, genericClass.declarationPackage, genericClass.typeParameters.map {
-                (cloneOutputType(it.substitutionType!!, typeParameters) as TypeParameterType).genericTypeParameter
-            }, genericClass.unsubstituted))
+            return ClassType(GenericClass(genericClass.name, genericClass.variables.map {
+                                                                                        ClassVariable(it.name, cloneOutputType(it.type, typeParameters))
+            }, genericClass.declarationPackage, genericClass.typeParameters.map {
+                if (it.substitutionType == null) {
+                    (cloneOutputType(TypeParameterType(it), typeParameters) as TypeParameterType).genericTypeParameter
+                } else {
+                    val clonedSubstitution = cloneOutputType(it.substitutionType!!, typeParameters)
+                    val clonedGenericTypeParameter = (cloneOutputType(TypeParameterType(it), typeParameters) as TypeParameterType).genericTypeParameter
+                    clonedGenericTypeParameter.substitutionType = clonedSubstitution
+                    clonedGenericTypeParameter
+                }
+            } as MutableList, genericClass.unsubstituted))
         }
     } else if (outputType is TypeParameterType) {
         val correspondingTypeParameter = typeParameters.find { it.name == outputType.genericTypeParameter.name }
         if (correspondingTypeParameter != null) {
             return TypeParameterType(correspondingTypeParameter)
+        } else {
+            throw (Throwable("type parameters should contain it" + outputType.genericTypeParameter.name))
         }
     } else if (outputType is ReferenceType) {
         return ReferenceType(cloneOutputType(outputType.actualType, typeParameters), outputType.underlyingCReferenceName)
+    }
+
+    return outputType
+}
+
+fun cloneOutputType(outputType: OutputType): OutputType {
+    if (outputType is ClassType) {
+        if (outputType.outputClass is GenericClass) {
+            val genericClass = outputType.outputClass
+            return ClassType(GenericClass(genericClass.name, genericClass.variables, genericClass.declarationPackage, genericClass.typeParameters.map {
+                (cloneOutputType(it.substitutionType!!) as TypeParameterType).genericTypeParameter
+            } as MutableList, genericClass.unsubstituted))
+        }
+    } else if (outputType is TypeParameterType) {
+        return TypeParameterType(outputType.genericTypeParameter.clone())
+    } else if (outputType is ReferenceType) {
+        return ReferenceType(cloneOutputType(outputType.actualType), outputType.underlyingCReferenceName)
     }
 
     return outputType

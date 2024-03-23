@@ -70,10 +70,44 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
             "drawLine" -> continueStraight(this.parsing.expressionResult) { handleDrawLine(functionCall, currentGeneration) }
             "update" -> continueStraight(this.parsing.expressionResult) { handleUpdate(functionCall, currentGeneration) }
             else -> {
-                val (function, cFunction) = resolveFunction(functionCall, currentGeneration)
-                    ?: return Error("unresolved function: " + functionCall.name.tokens, this.parsing.range)
+//                val (function, cFunction) = resolveFunction(functionCall, currentGeneration)
+//                    ?: return Error("unresolved function: " + functionCall.name.tokens, this.parsing.range)
+
+                val resolvedFunctions = findMatchingFunctions(functionCall, currentGeneration)
+
+                val resolvedBaseFunctions = resolvedFunctions.filter {
+                    if (it.first is GenericFunction) {
+                        (it.first as GenericFunction).unsubstituted
+                    } else {
+                        true
+                    }
+                }
+
+                if (resolvedBaseFunctions.isEmpty()) {
+                    return Error("unresolved function " + functionCall.parsing.tokens, functionCall.parsing.range)
+                }
+
+                if (resolvedBaseFunctions.size > 1) {
+                    return Error("multiple functions available with the provided parameters", functionCall.parsing.range)
+                }
+
+                val resolvedNonBaseFunctions = resolvedFunctions.filter {
+                    if (it.first is GenericFunction) {
+                        !(it.first as GenericFunction).unsubstituted
+                    } else {
+                        false
+                    }
+                }
+                val chosenFunction = if (resolvedNonBaseFunctions.isNotEmpty()) {
+                    resolvedNonBaseFunctions[0]
+                } else {
+                    resolvedBaseFunctions[0]
+                }
+
+                var (function, cFunction) = chosenFunction
 
                 if (function is GenericFunction) {
+                    function = function.clone()
                     functionCall.parameters.forEachIndexed { index, parameter ->
                         val (typesMatch, substitutions) = typesMatch(parameter.outputType, function.parameters[index].type)
 

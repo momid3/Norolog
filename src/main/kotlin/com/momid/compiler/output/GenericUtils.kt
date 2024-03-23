@@ -40,11 +40,18 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
         cFunctionParameters.add(CFunctionParameter(it.name, resolveType(it.type, currentGeneration)))
     }
 
+//    println("substituted parameter is " + genericFunction.typeParameters[0].substitutionType)
+//    println((currentGeneration.functionsInformation.functionsInformation.entries.find {
+//        it.key == genericFunction
+//    }!!.key as GenericFunction).typeParameters[0].substitutionType)
+
     if (alreadyExists) {
+        println("already")
         cFunction = currentGeneration.functionsInformation.functionsInformation.entries.find {
             it.key == genericFunction
         }!!.value!!
     } else {
+        println("not already")
         if (genericFunction.function is ClassFunction) {
             val functionScope = Scope()
             functionScope.scopeContext = FunctionContext(genericFunction)
@@ -93,6 +100,8 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
                 resolveType(genericFunction.returnType, currentGeneration),
                 cFunctionCode
             )
+
+            genericFunction.unsubstituted = false
             currentGeneration.functionsInformation.functionsInformation[genericFunction] = cFunction
 
             currentGeneration.functionDeclarationsGeneratedSource += cFunction(
@@ -132,6 +141,8 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
                 resolveType(genericFunction.returnType, currentGeneration),
                 cFunctionCode
             )
+
+            genericFunction.unsubstituted = false
             currentGeneration.functionsInformation.functionsInformation[genericFunction] = cFunction
 
             currentGeneration.functionDeclarationsGeneratedSource += cFunction(
@@ -158,4 +169,41 @@ fun actualOutputType(outputType: OutputType): OutputType {
     } else {
         return outputType
     }
+}
+
+fun classEquals(thisClass: Class, otherClass: Class): Boolean {
+    return thisClass.name == otherClass.name && thisClass.declarationPackage == otherClass.declarationPackage
+}
+
+fun main() {
+    val someClass = GenericClass(
+        "SomeClass",
+        listOf(),
+        "",
+        mutableListOf(GenericTypeParameter("T"))
+    )
+
+    val otherClass = GenericClass(
+        "SomeClass",
+        listOf(),
+        "",
+        mutableListOf(GenericTypeParameter("T", outputIntType.apply {
+            this.specifier = "Integer"
+        }))
+    )
+
+    println(someClass == otherClass)
+
+    val (typesMatch, substitutions) = typesMatch(ClassType(otherClass), ClassType(someClass))
+    substitutions.forEach {
+        println(it.key.name + " with " + it.value)
+    }
+    println("substitution " + someClass.typeParameters[0].substitutionType!!.specifier)
+
+    val clonedTypeParameters = otherClass.typeParameters.map { it.clone() }
+    val clonedOtherClass = (cloneOutputType(ClassType(otherClass), clonedTypeParameters) as ClassType).outputClass as GenericClass
+    otherClass.typeParameters[0].substitutionType = OutputType("ooo")
+    println("cloned type parameter " + clonedOtherClass.typeParameters[0].substitutionType!!.specifier)
+
+    println(typesMatch)
 }

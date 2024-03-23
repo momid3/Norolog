@@ -98,7 +98,8 @@ class CIParsing(val className: Parsing, val parameters: List<Parsing>)
 fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, HashMap<GenericTypeParameter, OutputType>> {
     if (expectedType is ClassType && expectedType.outputClass is GenericClass) {
         if (outputType is ClassType && outputType.outputClass is GenericClass) {
-            if (outputType.outputClass != expectedType.outputClass) {
+            println("here")
+            if (!classEquals(outputType.outputClass, expectedType.outputClass)) {
                 return Pair(false, hashMapOf())
             }
             if (outputType.outputClass.typeParameters.size != expectedType.outputClass.typeParameters.size) {
@@ -107,18 +108,30 @@ fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, 
 
             val substitutions = HashMap<GenericTypeParameter, OutputType>()
             outputType.outputClass.typeParameters.forEachIndexed { index, parameter ->
-                val (typesMatch, substitution) = typesMatch(
-                    parameter.substitutionType!!,
-                    expectedType.outputClass.typeParameters[index].substitutionType!!
-                )
-                if (!typesMatch) {
-                    return Pair(false, hashMapOf())
-                }
-                substitution.forEach { (genericTypeParameter, outputType) ->
-                    if (substitutions[genericTypeParameter] != null && substitutions[genericTypeParameter] != outputType) {
+                if (expectedType.outputClass.typeParameters[index].substitutionType != null) {
+                    val (typesMatch, substitution) = typesMatch(
+                        parameter.substitutionType!!,
+                        expectedType.outputClass.typeParameters[index].substitutionType!!
+                    )
+                    if (!typesMatch) {
+                        return Pair(false, hashMapOf())
+                    }
+                    substitution.forEach { (genericTypeParameter, outputType) ->
+                        if (substitutions[genericTypeParameter] != null && substitutions[genericTypeParameter] != outputType) {
+                            return Pair(false, hashMapOf())
+                        } else {
+                            substitutions[genericTypeParameter] = outputType
+                        }
+                    }
+                } else {
+                    val genericTypeParameter = expectedType.outputClass.typeParameters[index]
+                    val substitutionType = parameter.substitutionType
+                    substitutions[genericTypeParameter] = substitutionType ?: throw (Throwable("provided outputType should have had a substituted type"))
+                    expectedType.outputClass.typeParameters[index].substitutionType = substitutionType
+                    if (substitutions[genericTypeParameter] != null && substitutions[genericTypeParameter] != substitutionType) {
                         return Pair(false, hashMapOf())
                     } else {
-                        substitutions[genericTypeParameter] = outputType
+                        substitutions[genericTypeParameter] = substitutionType
                     }
                 }
             }

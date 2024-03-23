@@ -18,7 +18,7 @@ val classFunctionTypeParameters =
 
 val classFunction =
     !"fun" + space + classFunctionTypeParameters["typeParameters"] + spaces + oneOrZero(
-        one(outputTypeO["receiverType"] + !"."),
+        (!"Keep<T>.")["receiverType"],
         "receiverType"
     ) + className["functionName"] + insideOf('(', ')') {
         oneOrZero(splitBy(parameter, ","))["functionParameters"]
@@ -65,40 +65,37 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
     with(classFunctionParsing) {
         val isGeneric = typeParameters.isNotEmpty()
 
-        val receiverType = if (this.receiverType != null) {
-            continueWithOne(
-                this.receiverType.expressionResult,
-                outputTypeO
-            ) { handleOutputType(currentGeneration) }.okOrReport {
-                return it.to()
-            }
-        } else {
-            null
-        }
-
-        val functionParameters = parameters.map {
-            val parameterType = continueWithOne(
-                it.type.expressionResult,
-                outputTypeO
-            ) { handleOutputType(currentGeneration) }.okOrReport {
-                return it.to()
-            }
-            FunctionParameter(it.name.tokens, parameterType)
-        }
-
-        val returnType = if (returnType != null) {
-            continueWithOne(
-                returnType.expressionResult,
-                outputTypeO
-            ) { handleOutputType(currentGeneration) }.okOrReport {
-                return it.to()
-            }
-        } else {
-            norType
-        }
-
         if (!isGeneric) {
-            if (receiverType != null) {
+            if (this.receiverType != null) {
+
+                val receiverType = continueWithOne(
+                    this.receiverType.expressionResult,
+                    outputTypeO
+                ) { handleOutputType(currentGeneration) }.okOrReport {
+                    return it.to()
+                }
+
+                val functionParameters = parameters.map {
+                    val parameterType = continueWithOne(
+                        it.type.expressionResult,
+                        outputTypeO
+                    ) { handleOutputType(currentGeneration) }.okOrReport {
+                        return it.to()
+                    }
+                    FunctionParameter(it.name.tokens, parameterType)
+                }
+
+                val returnType = if (returnType != null) {
+                    continueWithOne(
+                        returnType.expressionResult,
+                        outputTypeO
+                    ) { handleOutputType(currentGeneration) }.okOrReport {
+                        return it.to()
+                    }
+                } else {
+                    norType
+                }
+
                 val function = ClassFunction(
                     receiverType,
                     Function(
@@ -171,6 +168,28 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
 
                 return Ok(true)
             } else {
+
+                val functionParameters = parameters.map {
+                    val parameterType = continueWithOne(
+                        it.type.expressionResult,
+                        outputTypeO
+                    ) { handleOutputType(currentGeneration) }.okOrReport {
+                        return it.to()
+                    }
+                    FunctionParameter(it.name.tokens, parameterType)
+                }
+
+                val returnType = if (returnType != null) {
+                    continueWithOne(
+                        returnType.expressionResult,
+                        outputTypeO
+                    ) { handleOutputType(currentGeneration) }.okOrReport {
+                        return it.to()
+                    }
+                } else {
+                    norType
+                }
+
                 val function = Function(
                     name.tokens,
                     functionParameters,
@@ -226,29 +245,72 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                 return Ok(true)
             }
         } else {
-            if (receiverType != null) {
+            if (this.receiverType != null) {
+                println("receiver is not null")
                 val classFunction = ClassFunction(
-                    receiverType,
+                    norType,
                     Function(
                         name.tokens,
-                        functionParameters,
-                        returnType,
+                        listOf(),
+                        norType,
                         functionInside.range
                     )
                 )
+
                 val function = GenericFunction(
                     typeParameters.map { GenericTypeParameter(it.tokens) },
                     classFunction
                 )
 
+                val functionScope = Scope()
+                functionScope.scopeContext = FunctionContext(function)
+                currentGeneration.createScope(functionScope)
+
                 currentGeneration.functionsInformation.functionsInformation[function] = null
+
+                val receiverType = continueWithOne(
+                    this.receiverType.expressionResult.also {
+                                                            println("the receiver type is " + it.tokens)
+                    },
+                    outputTypeO
+                ) { handleOutputType(currentGeneration) }.okOrReport {
+                    return it.to()
+                }
+
+                val functionParameters = parameters.map {
+                    val parameterType = continueWithOne(
+                        it.type.expressionResult,
+                        outputTypeO
+                    ) { handleOutputType(currentGeneration) }.okOrReport {
+                        return it.to()
+                    }
+                    FunctionParameter(it.name.tokens, parameterType)
+                }
+
+                val returnType = if (this.returnType != null) {
+                    continueWithOne(
+                        this.returnType.expressionResult,
+                        outputTypeO
+                    ) { handleOutputType(currentGeneration) }.okOrReport {
+                        return it.to()
+                    }
+                } else {
+                    norType
+                }
+
+                classFunction.receiverType = receiverType
+                function.parameters = functionParameters
+                function.returnType = returnType
+
+                currentGeneration.goOutOfScope()
 
                 return Ok(true)
             } else {
+                println("receiver is null")
                 val function = Function(
                     name.tokens,
-                    functionParameters,
-                    returnType,
+                    listOf(),
+                    norType,
                     functionInside.range
                 )
                 val genericFunction = GenericFunction(
@@ -256,7 +318,44 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     function
                 )
 
+                val functionScope = Scope()
+                functionScope.scopeContext = FunctionContext(genericFunction)
+                currentGeneration.createScope(functionScope)
+
                 currentGeneration.functionsInformation.functionsInformation[genericFunction] = null
+
+                val functionParameters = parameters.map {
+                    val parameterType = continueWithOne(
+                        it.type.expressionResult,
+                        outputTypeO
+                    ) { handleOutputType(currentGeneration) }.okOrReport {
+                        return it.to()
+                    }
+                    FunctionParameter(it.name.tokens, parameterType)
+                }
+
+                val returnType = if (this.returnType != null) {
+                    continueWithOne(
+                        this.returnType.expressionResult,
+                        outputTypeO
+                    ) { handleOutputType(currentGeneration) }.okOrReport {
+                        return it.to()
+                    }
+                } else {
+                    norType
+                }
+
+                genericFunction.parameters = functionParameters.also {
+                    println("parameters of function " + function.name + " are " + it.size)
+                }
+                function.name = "o"
+                println(function.parameters.size)
+                println(genericFunction.function.parameters.size)
+                println(currentGeneration.functionsInformation.functionsInformation.keys.find { it === genericFunction }!!.parameters.size)
+                println(currentGeneration.functionsInformation.functionsInformation.keys.find { it === genericFunction }!!.name)
+                genericFunction.returnType = returnType
+
+                currentGeneration.goOutOfScope()
 
                 return Ok(true)
             }

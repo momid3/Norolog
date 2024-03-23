@@ -10,9 +10,9 @@ import com.momid.compiler.forEveryIndexed
  * @param bodyRange index range of the body of the function in the source code.
  */
 open class Function(
-    val name: String,
-    val parameters: List<FunctionParameter>,
-    val returnType: OutputType,
+    var name: String,
+    var parameters: List<FunctionParameter>,
+    var returnType: OutputType,
     val bodyRange: IntRange
 )
 
@@ -20,7 +20,7 @@ open class Function(
  * a function that is applied to a class or another type.
  * such as "someVariable.someFunction()".
  */
-class ClassFunction(val receiverType: OutputType, val function: Function):
+class ClassFunction(var receiverType: OutputType, val function: Function):
     Function(function.name, function.parameters, function.returnType, function.bodyRange)
 
 class FunctionParameter(val name: String, val type: OutputType, relatedCFunction: CFunction? = null)
@@ -33,14 +33,15 @@ class FunctionsInformation(val functionsInformation: HashMap<Function, CFunction
 
 class GenericFunction(
     val typeParameters: List<GenericTypeParameter>,
-    val function: Function
+    val function: Function,
+    var unsubstituted: Boolean = true
 ) : Function(function.name, function.parameters, function.returnType, function.bodyRange) {
 
     override fun equals(other: Any?): Boolean {
-        return other is GenericFunction && this.name == other.name && this.function.parameters.forEveryIndexed { index, parameter ->
-            genericFunctionParametersMatch(parameter, other.function.parameters[index])
-        } && this.function.returnType == other.returnType && if (this.function is ClassFunction) {
-            other.function is ClassFunction && genericFunctionTypesMatch(this.function.receiverType, other.function.receiverType)
+        return other is GenericFunction && this.name == other.name && this.parameters.forEveryIndexed { index, parameter ->
+            parameter.type == other.parameters[index].type
+        } && this.returnType == other.returnType && if (this.function is ClassFunction) {
+            other.function is ClassFunction && this.function.receiverType == other.function.receiverType
         } else {
             true
         }

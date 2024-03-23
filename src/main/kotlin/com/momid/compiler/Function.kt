@@ -229,12 +229,36 @@ fun functionSignaturesMatch(function: Function, anotherFunction: FunctionCallEva
     }
 }
 
-fun functionParametersMatch(functionCallParameterType: OutputType, functionParameterType: OutputType): Boolean {
-    if (functionParameterType is TypeParameterType) {
-        return true
-    } else {
-        return functionCallParameterType == functionParameterType
-    }
+fun findMatchingFunctions(
+    function: FunctionCallEvaluating,
+    currentGeneration: CurrentGeneration
+): List<Pair<Function, CFunction?>> {
+    return currentGeneration.functionsInformation.functionsInformation.filter { (functionDeclaration, cFunctionDeclaration) ->
+        println("functions are ")
+        currentGeneration.functionsInformation.functionsInformation.forEach {
+            println(it.key.name + " is generic " + (it.key is GenericFunction))
+        }
+        val clonedFunction = if (functionDeclaration is GenericFunction) {
+            functionDeclaration.clone()
+        } else {
+            functionDeclaration
+        }
+        function.name.tokens == functionDeclaration.name && function.parameters.size == functionDeclaration.parameters.size &&
+                function.parameters.forEveryIndexed { index, parameter ->
+                    println("here functions are " + functionDeclaration.name)
+                    if (functionDeclaration is GenericFunction) {
+                        val (typesMatch, substitutions) = typesMatch(parameter.outputType, clonedFunction.parameters[index].type)
+                        println("matching for this function is " + typesMatch + function.name + " and " + functionDeclaration.name)
+                        typesMatch
+                    } else {
+                        parameter.outputType == functionDeclaration.parameters[index].type
+                    }
+                } && if (functionDeclaration is ClassFunction) {
+                    function.receiver != null && function.receiver!!.outputType == functionDeclaration.receiverType
+                } else {
+                    true
+                }
+    }.toList()
 }
 
 fun resolveFunction(function: FunctionCallEvaluating, currentGeneration: CurrentGeneration): Pair<Function, CFunction?>? {

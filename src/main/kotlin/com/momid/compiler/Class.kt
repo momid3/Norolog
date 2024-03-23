@@ -1,6 +1,7 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.*
+import com.momid.compiler.terminal.blue
 import com.momid.compiler.terminal.printError
 import com.momid.parser.expression.*
 import com.momid.parser.not
@@ -218,6 +219,11 @@ fun cTypeAndVariableName(outputType: OutputType, variableName: String, currentGe
 
 fun resolveOutputType(outputTypeName: String, currentGeneration: CurrentGeneration): OutputType? {
     val genericParameter = resolveGenericParameter(outputTypeName, currentGeneration)
+    if (genericParameter == null) {
+        println(blue("is null"))
+    } else {
+        println(blue("in not null"))
+    }
     if (genericParameter != null) {
         return genericParameter
     }
@@ -232,10 +238,12 @@ fun resolveOutputType(outputTypeName: String, currentGeneration: CurrentGenerati
 
 fun resolveGenericParameter(genericParameterName: String, currentGeneration: CurrentGeneration): TypeParameterType? {
     var currentScope = currentGeneration.currentScope
+    println(blue("here"))
     while (true) {
         val scopeContext = currentScope.scopeContext
         when (scopeContext) {
             is ClassContext -> {
+                println("class context")
                 if (scopeContext.outputClass is GenericClass) {
                     scopeContext.outputClass.typeParameters.forEach {
                         if (it.name == genericParameterName) {
@@ -246,6 +254,7 @@ fun resolveGenericParameter(genericParameterName: String, currentGeneration: Cur
             }
 
             is FunctionContext -> {
+                println("function context")
                 if (scopeContext.function is GenericFunction) {
                     scopeContext.function.typeParameters.forEach {
                         if (it.name == genericParameterName) {

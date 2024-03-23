@@ -97,10 +97,19 @@ fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentG
             val outputClass = outputType.outputClass
             if (outputClass is GenericClass) {
                 outputClass.typeParameters.forEachIndexed { index, genericTypeParameter ->
-                    genericTypeParameter.substitutionType = typeParametersOutputType[index]
+                    if (typeParametersOutputType[index] !is TypeParameterType) {
+                        println("is not type parameter " + this.tokens)
+                        genericTypeParameter.substitutionType = typeParametersOutputType[index]
+                    } else {
+                        println("is type parameter " + this.tokens)
+                        outputClass.typeParameters[index].name = (typeParametersOutputType[index] as TypeParameterType).genericTypeParameter.name
+                    }
                 }
                 outputClass.unsubstituted = false
-                createGenericClassIfNotExists(currentGeneration, outputClass)
+                if (!isUnsubstitutedGenericClassType(outputClass)) {
+                    println(blue("is not unsubstituted"))
+                    createGenericClassIfNotExists(currentGeneration, outputClass)
+                }
                 return Ok(outputType)
             } else {
                 return Error("this class does not have any type variables", className.range)
@@ -116,6 +125,19 @@ fun ExpressionResult.asMulti(): MultiExpressionResult {
         return this
     } else {
         throw (Throwable("this expression result is not a multi expression result"))
+    }
+}
+
+fun isUnsubstitutedType(outputType: OutputType): Boolean {
+    return (
+            outputType is TypeParameterType && (outputType.genericTypeParameter.substitutionType == null ||
+                    (outputType.genericTypeParameter.substitutionType != null && isUnsubstitutedType(outputType.genericTypeParameter.substitutionType!!)))
+            )
+}
+
+fun isUnsubstitutedGenericClassType(genericClass: GenericClass): Boolean {
+    return genericClass.typeParameters.any {
+        it.substitutionType == null || isUnsubstitutedType(it.substitutionType!!)
     }
 }
 
