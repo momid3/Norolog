@@ -11,10 +11,11 @@ val ciParameters =
         splitBy(anything, ",")
     )
 
-val ci =
+val ci by lazy {
     ciName["ciName"] + spaces + insideOf('(', ')') {
         ciParameters["ciParameters"]
     }
+}
 
 fun ExpressionResultsHandlerContext.handleCIParsing(): Result<CIParsing> {
     with(this.expressionResult) {
@@ -41,10 +42,9 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
         if (resolvedClass is GenericClass) {
             resolvedClass.unsubstituted = false
 
-            val cStructVariables = ArrayList<CStructVariable>()
             val parameterEvaluations = ArrayList<String>()
 
-            var cStruct = CStruct(currentGeneration.createCStructName(), cStructVariables)
+            var cStruct: CStruct
 
             this.parameters.forEachIndexed { index, parameter ->
                 val (evaluation, outputType) = continueWithOne(
@@ -62,23 +62,7 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
                 }
             }
 
-            val alreadyExists = currentGeneration.classesInformation.classes.entries.find {
-                it.key == resolvedClass
-            } != null
-
-            resolvedClass.variables.forEach {
-                cStructVariables.add(CStructVariable(it.name, resolveType(it.type, currentGeneration)))
-            }
-
-            if (alreadyExists) {
-                cStruct = currentGeneration.classesInformation.classes.entries.find {
-                    it.key == resolvedClass
-                }!!.value!!
-            } else {
-                currentGeneration.classesInformation.classes[resolvedClass] = cStruct
-
-                currentGeneration.globalDefinitionsGeneratedSource += cStruct(cStruct.name, cStruct.variables.map { Pair(it.name, cTypeName(it.type)) })
-            }
+            cStruct = createGenericClassIfNotExists(currentGeneration, resolvedClass)
 
             val output = cStructInitialization(cStruct.name, cStruct.variables.mapIndexed { index, cStructVariable ->
                 Pair(cStructVariable.name, parameterEvaluations[index])
@@ -114,7 +98,8 @@ class CIParsing(val className: Parsing, val parameters: List<Parsing>)
 fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, HashMap<GenericTypeParameter, OutputType>> {
     if (expectedType is ClassType && expectedType.outputClass is GenericClass) {
         if (outputType is ClassType && outputType.outputClass is GenericClass) {
-            if (outputType.outputClass != expectedType.outputClass) {
+            println("here")
+            if (!classEquals(outputType.outputClass, expectedType.outputClass)) {
                 return Pair(false, hashMapOf())
             }
             if (outputType.outputClass.typeParameters.size != expectedType.outputClass.typeParameters.size) {
@@ -123,18 +108,30 @@ fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, 
 
             val substitutions = HashMap<GenericTypeParameter, OutputType>()
             outputType.outputClass.typeParameters.forEachIndexed { index, parameter ->
-                val (typesMatch, substitution) = typesMatch(
-                    parameter.substitutionType!!,
-                    expectedType.outputClass.typeParameters[index].substitutionType!!
-                )
-                if (!typesMatch) {
-                    return Pair(false, hashMapOf())
-                }
-                substitution.forEach { (genericTypeParameter, outputType) ->
-                    if (substitutions[genericTypeParameter] != null && substitutions[genericTypeParameter] != outputType) {
+                if (expectedType.outputClass.typeParameters[index].substitutionType != null) {
+                    val (typesMatch, substitution) = typesMatch(
+                        parameter.substitutionType!!,
+                        expectedType.outputClass.typeParameters[index].substitutionType!!
+                    )
+                    if (!typesMatch) {
+                        return Pair(false, hashMapOf())
+                    }
+                    substitution.forEach { (genericTypeParameter, outputType) ->
+                        if (substitutions[genericTypeParameter] != null && substitutions[genericTypeParameter] != outputType) {
+                            return Pair(false, hashMapOf())
+                        } else {
+                            substitutions[genericTypeParameter] = outputType
+                        }
+                    }
+                } else {
+                    val genericTypeParameter = expectedType.outputClass.typeParameters[index]
+                    val substitutionType = parameter.substitutionType
+                    substitutions[genericTypeParameter] = substitutionType ?: throw (Throwable("provided outputType should have had a substituted type"))
+                    expectedType.outputClass.typeParameters[index].substitutionType = substitutionType
+                    if (substitutions[genericTypeParameter] != null && substitutions[genericTypeParameter] != substitutionType) {
                         return Pair(false, hashMapOf())
                     } else {
-                        substitutions[genericTypeParameter] = outputType
+                        substitutions[genericTypeParameter] = substitutionType
                     }
                 }
             }

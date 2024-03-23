@@ -2,7 +2,7 @@ package com.momid.compiler.output
 
 import com.momid.parser.expression.Parsing
 
-open class OutputType(val specifier: String = "") {
+open class OutputType(var specifier: String = "") {
 }
 
 val norType = NorType()
@@ -54,7 +54,16 @@ class ReferenceType(val actualType: OutputType, val underlyingCReferenceName: St
     }
 }
 
-class TypeParameterType(val genericTypeParameter: GenericTypeParameter): OutputType()
+class TypeParameterType(val genericTypeParameter: GenericTypeParameter) : OutputType() {
+    override fun equals(other: Any?): Boolean {
+        return other is TypeParameterType && (other.genericTypeParameter.name == this.genericTypeParameter.name ||
+                other.genericTypeParameter.substitutionType == this.genericTypeParameter.substitutionType)
+    }
+
+    override fun hashCode(): Int {
+        return genericTypeParameter.hashCode()
+    }
+}
 
 class ArrayType(val itemsType: OutputType, val size: Int): OutputType()
 

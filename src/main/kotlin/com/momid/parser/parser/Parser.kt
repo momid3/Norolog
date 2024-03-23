@@ -22,7 +22,7 @@ val expressionInParentheses =
     insideParentheses
 
 val simpleExpressionInParentheses =
-    !"(" + expressionInParentheses["insideParentheses"] + ")"
+    !"(" + expressionInParentheses["insideParentheses"] + !")"
 
 val complexExpression =
     some(anyOf(simpleExpression, simpleExpressionInParentheses))

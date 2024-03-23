@@ -1,6 +1,7 @@
 package com.momid.parser.expression
 
 import com.momid.parser.match
+import com.momid.parser.not
 import com.momid.parser.printExpressionResult
 
 infix fun Expression.withName(name: String): Expression {
@@ -60,28 +61,77 @@ fun MultiExpressionResult.getForName(name: String): IntRange? {
 }
 
 operator fun Expression.plus(expression: Expression): MultiExpression {
-    if (this is MultiExpression) {
+    if (this is MultiExpression && expression !is MultiExpression) {
         if (this.name == null && expression.name == null) {
             return this + expression
-        } else {
+        }
+        else if (this.name == null && expression.name != null) {
+            return this + expression
+        }
+        else if (this.name != null && expression.name == null) {
             return MultiExpression(arrayListOf(this, expression))
         }
-    } else {
+        else if (this.name != null && expression.name != null) {
+            return MultiExpression(arrayListOf(this, expression))
+        }
+    }
+    else if (this is MultiExpression && expression is MultiExpression) {
+        if (this.name == null && expression.name == null) {
+            return this.apply {
+                expression.forEach {
+                    this.expressions.add(it)
+                }
+            }
+        }
+        else if (this.name == null && expression.name != null) {
+            return this.apply {
+                this.expressions.add(expression)
+            }
+        }
+        else if (this.name != null && expression.name == null) {
+            expression.expressions.add(0, this)
+            return expression
+        }
+        else if (this.name != null && expression.name != null) {
+            return MultiExpression(arrayListOf(this, expression))
+        }
+    }
+    else if (this !is MultiExpression && expression is MultiExpression) {
+        if (this.name == null && expression.name == null) {
+            return this + expression
+        }
+        else if (this.name == null && expression.name != null) {
+            return MultiExpression(arrayListOf(this, expression))
+        }
+        else if (this.name != null && expression.name == null) {
+            return this + expression
+        }
+        else if (this.name != null && expression.name != null) {
+            return MultiExpression(arrayListOf(this, expression))
+        }
+    }
+    else {
         return MultiExpression(arrayListOf(this, expression))
     }
+    throw (Throwable("should not have reached here"))
 }
 
-operator fun Expression.plus(any: Any): MultiExpression {
-    if (this is MultiExpression) {
-        return this + any.asExpression()
-    } else {
-        return MultiExpression(arrayListOf(this, any.asExpression()))
-    }
-}
+//operator fun Expression.plus(any: Any): MultiExpression {
+//    if (this is MultiExpression) {
+//        return this + any.asExpression()
+//    } else {
+//        return MultiExpression(arrayListOf(this, any.asExpression()))
+//    }
+//}
 
 operator fun MultiExpression.plus(expression: Expression): MultiExpression {
     this.expressions.add(expression)
     return this
+}
+
+operator fun Expression.plus(multiExpression: MultiExpression): MultiExpression {
+    multiExpression.expressions.add(0, this)
+    return multiExpression
 }
 
 operator fun Expression.times(value: Int): RecurringExpression {
@@ -162,7 +212,7 @@ fun main() {
     val text = "hello! my friend. how are you today ?"
     val side = condition { it != 'a' }
 
-    val expression = side["side before"] + "friend" + side["side after"]
+    val expression = side["side before"] + !"friend" + side["side after"]
     val matches = match(expression, text.toList())
     matches.forEach {
         if (it is MultiExpressionResult) {

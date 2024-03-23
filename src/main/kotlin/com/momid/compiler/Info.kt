@@ -7,10 +7,11 @@ import com.momid.parser.not
 val infoParameters =
     splitByNW(complexExpression["infoParameter"], ",")
 
-val info =
+val info by lazy {
     !"#" + className["infoName"] + insideOf('(', ')') {
         infoParameters["infoParameters"]
-    } + spaces + "=" + spaces + complexExpression["value"] + spaces + !";"
+    } + spaces + !"=" + spaces + complexExpression["value"] + spaces + !";"
+}
 
 fun ExpressionResultsHandlerContext.handleInfo(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
     with(this.expressionResult) {

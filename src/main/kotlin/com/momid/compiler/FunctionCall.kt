@@ -1,8 +1,6 @@
 package com.momid.compiler
 
-import com.momid.compiler.output.Eval
-import com.momid.compiler.output.Evaluation
-import com.momid.compiler.output.OutputType
+import com.momid.compiler.output.*
 import com.momid.compiler.standard_library.*
 import com.momid.parser.expression.*
 
@@ -72,19 +70,84 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
             "drawLine" -> continueStraight(this.parsing.expressionResult) { handleDrawLine(functionCall, currentGeneration) }
             "update" -> continueStraight(this.parsing.expressionResult) { handleUpdate(functionCall, currentGeneration) }
             else -> {
-                val (function, cFunction) = resolveFunction(functionCall, currentGeneration)
-                    ?: return Error("unresolved function: " + functionCall.name.tokens, this.parsing.range)
+//                val (function, cFunction) = resolveFunction(functionCall, currentGeneration)
+//                    ?: return Error("unresolved function: " + functionCall.name.tokens, this.parsing.range)
 
-                return Ok(
-                    Pair(
-                        cFunctionCall(cFunction.name, (functionCall.parameters.map { it.cEvaluation } as ArrayList).apply {
-                            if (functionReceiver != null) {
-                                this.add(0, functionReceiver.cEvaluation)
-                            }
-                        }),
-                        function.returnType
+                val resolvedFunctions = findMatchingFunctions(functionCall, currentGeneration)
+
+                val resolvedBaseFunctions = resolvedFunctions.filter {
+                    if (it.first is GenericFunction) {
+                        (it.first as GenericFunction).unsubstituted
+                    } else {
+                        true
+                    }
+                }
+
+                if (resolvedBaseFunctions.isEmpty()) {
+                    return Error("unresolved function " + functionCall.parsing.tokens, functionCall.parsing.range)
+                }
+
+                if (resolvedBaseFunctions.size > 1) {
+                    return Error("multiple functions available with the provided parameters", functionCall.parsing.range)
+                }
+
+                val resolvedNonBaseFunctions = resolvedFunctions.filter {
+                    if (it.first is GenericFunction) {
+                        !(it.first as GenericFunction).unsubstituted
+                    } else {
+                        false
+                    }
+                }
+                val chosenFunction = if (resolvedNonBaseFunctions.isNotEmpty()) {
+                    resolvedNonBaseFunctions[0]
+                } else {
+                    resolvedBaseFunctions[0]
+                }
+
+                var (function, cFunction) = chosenFunction
+
+                if (function is GenericFunction) {
+                    function = function.clone()
+                    functionCall.parameters.forEachIndexed { index, parameter ->
+                        val (typesMatch, substitutions) = typesMatch(parameter.outputType, function.parameters[index].type)
+
+                        if (!typesMatch) {
+                            return Error(
+                                "type mismatch expected " + function.parameters[index].type + " got " + parameter,
+                                parameter.parsing.range
+                            )
+                        }
+                    }
+
+                    val resolvedCFunction = createGenericFunctionIfNotExists(currentGeneration, function).okOrReport {
+                        return it.to()
+                    }
+
+                    return Ok(
+                        Pair(
+                            cFunctionCall(resolvedCFunction.name, (functionCall.parameters.map { it.cEvaluation } as ArrayList).apply {
+                                if (functionReceiver != null) {
+                                    this.add(0, functionReceiver.cEvaluation)
+                                }
+                            }),
+                            function.returnType
+                        )
                     )
-                )
+                } else {
+                    if (cFunction == null) {
+                        throw (Throwable("function is not a generic function and so c function should not have been null"))
+                    }
+                    return Ok(
+                        Pair(
+                            cFunctionCall(cFunction.name, (functionCall.parameters.map { it.cEvaluation } as ArrayList).apply {
+                                if (functionReceiver != null) {
+                                    this.add(0, functionReceiver.cEvaluation)
+                                }
+                            }),
+                            function.returnType
+                        )
+                    )
+                }
             }
         }
         return functionCallEvaluation

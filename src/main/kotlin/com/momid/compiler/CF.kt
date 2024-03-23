@@ -2,7 +2,6 @@ package com.momid.compiler
 
 import com.momid.compiler.output.OutputType
 import com.momid.parser.expression.*
-import com.momid.parser.not
 
 /***
  * CF is for "class initialization or function call"
@@ -20,14 +19,8 @@ class CF()
 
 //val variableName = variableName0()
 
-val cf =
+val cf by lazy {
     className["cfName"] + spaces + insideOf("classInside", '(', ')')
-
-val space0 =
-    some(condition { it.isWhitespace() })
-
-fun cf(): MultiExpression {
-    return !"class" + space + variableNameO["cfName"] + spaces + insideOf("classInside", '(', ')')
 }
 
 fun ExpressionResultsHandlerContext.handleCF(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {

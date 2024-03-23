@@ -11,18 +11,21 @@ import com.momid.parser.not
  */
 class CI()
 
-val className =
+val className by lazy {
     condition { it.isLetter() } + some0(condition { it.isLetterOrDigit() })
+}
 
 val ciVariableExp by lazy {
     spaces + complexExpression["parameter"] + spaces
 }
 
-val ciVariable =
+val ciVariable by lazy {
     ignoreParentheses(condition { it != ',' && it != ')' })
+}
 
-val ciVariables =
+val ciVariables by lazy {
     spaces + inline(ciVariable["classVariable"] + inline(some0(spaces + !"," + spaces + ciVariable["classVariable"])) + spaces) + spaces
+}
 
 val classInitialization by lazy {
     className["className"] + spaces + insideOf("ciInside", '(', ')')

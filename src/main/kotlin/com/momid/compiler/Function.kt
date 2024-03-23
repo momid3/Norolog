@@ -5,17 +5,24 @@ import com.momid.compiler.output.Function
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
-val functionName =
+val functionName by lazy {
     condition { it.isLetter() } + some0(condition { it.isLetterOrDigit() })
+}
 
-val functionParameter =
+val functionParameter by lazy {
     ignoreParentheses(condition { it != ',' && it != ')' })
+}
 
-val functionParameters =
-    anyOf(inline(inline(some(functionParameter["parameter"] + spaces + "," + spaces)) + functionParameter["parameter"]), functionParameter["parameter"])
+val functionParameters by lazy {
+    anyOf(
+        inline(inline(some(functionParameter["parameter"] + spaces + !"," + spaces)) + functionParameter["parameter"]),
+        functionParameter["parameter"]
+    )
+}
 
-val function =
+val function by lazy {
     functionName["functionName"] + !"(" + insideParentheses["parameters"] + !")"
+}
 
 fun ExpressionResult.isOf(name: String, then: (ExpressionResult) -> Unit) {
     if (this.expression.name == name) {
@@ -203,19 +210,65 @@ inline fun <T> List<T>.forEveryIndexed(onEach: (index: Int, item: T) -> Boolean)
 }
 
 fun functionSignaturesMatch(function: Function, anotherFunction: FunctionCallEvaluating): Boolean {
-    return function.name == anotherFunction.name.tokens && function.parameters.forEveryIndexed { index, parameter ->
-        anotherFunction.parameters[index].outputType == parameter.type
-    } && if (function is ClassFunction) {
-        function.receiverType == anotherFunction.receiver!!.outputType
+    return if (function !is GenericFunction) {
+        function.name == anotherFunction.name.tokens && function.parameters.forEveryIndexed { index, parameter ->
+            anotherFunction.parameters[index].outputType == parameter.type
+        } && if (function is ClassFunction) {
+            function.receiverType == anotherFunction.receiver!!.outputType
+        } else {
+            true
+        }
     } else {
-        true
+        function.name == anotherFunction.name.tokens && function.parameters.forEveryIndexed { index, parameter ->
+            anotherFunction.parameters[index].outputType == parameter.type || parameter.type is TypeParameterType
+        } && if (function.function is ClassFunction) {
+            anotherFunction.receiver != null && function.function.receiverType == anotherFunction.receiver!!.outputType || function.function.receiverType is TypeParameterType
+        } else {
+            true
+        }
     }
 }
 
-fun resolveFunction(function: FunctionCallEvaluating, currentGeneration: CurrentGeneration): Pair<Function, CFunction>? {
+fun findMatchingFunctions(
+    function: FunctionCallEvaluating,
+    currentGeneration: CurrentGeneration
+): List<Pair<Function, CFunction?>> {
+    return currentGeneration.functionsInformation.functionsInformation.filter { (functionDeclaration, cFunctionDeclaration) ->
+        println("functions are ")
+        currentGeneration.functionsInformation.functionsInformation.forEach {
+            println(it.key.name + " is generic " + (it.key is GenericFunction))
+        }
+        val clonedFunction = if (functionDeclaration is GenericFunction) {
+            functionDeclaration.clone()
+        } else {
+            functionDeclaration
+        }
+        function.name.tokens == functionDeclaration.name && function.parameters.size == functionDeclaration.parameters.size &&
+                function.parameters.forEveryIndexed { index, parameter ->
+                    println("here functions are " + functionDeclaration.name)
+                    if (functionDeclaration is GenericFunction) {
+                        val (typesMatch, substitutions) = typesMatch(parameter.outputType, clonedFunction.parameters[index].type)
+                        println("matching for this function is " + typesMatch + function.name + " and " + functionDeclaration.name)
+                        typesMatch
+                    } else {
+                        parameter.outputType == functionDeclaration.parameters[index].type
+                    }
+                } && if (functionDeclaration is ClassFunction) {
+                    function.receiver != null && function.receiver!!.outputType == functionDeclaration.receiverType
+                } else {
+                    true
+                }
+    }.toList()
+}
+
+fun resolveFunction(function: FunctionCallEvaluating, currentGeneration: CurrentGeneration): Pair<Function, CFunction?>? {
     currentGeneration.functionsInformation.functionsInformation.forEach { (functionDeclaration, cFunctionDeclaration) ->
         if (functionSignaturesMatch(functionDeclaration, function)) {
-            return Pair(functionDeclaration, cFunctionDeclaration)
+            if (functionDeclaration is GenericFunction) {
+                return Pair(functionDeclaration.clone(), cFunctionDeclaration)
+            } else {
+                return Pair(functionDeclaration, cFunctionDeclaration)
+            }
         }
     }
     return null

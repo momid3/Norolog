@@ -5,26 +5,34 @@ import com.momid.compiler.output.Function
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
-val anything =
+val anything by lazy {
     some0(condition { true })
+}
 
-val functionDeclarationParameter =
+val functionDeclarationParameter by lazy {
     spaces + className["parameterName"] + spaces + !":" + spaces + outputTypeO["parameterType"] + spaces
+}
 
-val fdp = functionDeclarationParameter
+val fdp by lazy {
+    functionDeclarationParameter
+}
 
-val functionDeclarationParameters =
+val functionDeclarationParameters by lazy {
     oneOrZero(
-        splitBy(fdp, ",")
+        splitByNW(fdp, ",")
     )
+}
 
-val functionDeclaration =
+val functionDeclaration by lazy {
     !"fun" + space + functionName["functionName"] + insideOf('(', ')') {
         functionDeclarationParameters["functionDeclarationParameters"]
-    } + spaces + oneOrZero(one(spaces + !":" + spaces + outputTypeO["functionReturnType"] + spaces), "functionReturnType") + spaces +
-            insideOf('{', '}') {
+    } + spaces + oneOrZero(
+        one(spaces + !":" + spaces + outputTypeO["functionReturnType"] + spaces),
+        "functionReturnType"
+    ) + spaces + insideOf('{', '}') {
         anything["functionInside"]
     }
+}
 
 fun ExpressionResultsHandlerContext.handleFunctionDeclarationParsing(currentGeneration: CurrentGeneration): Result<FunctionDeclarationParsing> {
     this.expressionResult.isOf(functionDeclaration) {
@@ -33,10 +41,7 @@ fun ExpressionResultsHandlerContext.handleFunctionDeclarationParsing(currentGene
 
         val functionParameters = fdps?.asMulti()?.map {
             println("function parameter: " + it.tokens())
-            val fdp = it.continuing {
-                println("expected function parameter, got: " + it.tokens())
-                return Error("expected function parameters, got: " + it.tokens(), it.range)
-            }
+            val fdp = it
             FunctionParameterParsing(parsing(fdp["parameterName"]), parsing(fdp["parameterType"]))
         }
 
