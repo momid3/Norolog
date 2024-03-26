@@ -6,7 +6,7 @@ import com.momid.parser.expression.*
 fun createGenericClassIfNotExists(currentGeneration: CurrentGeneration, genericClass: GenericClass): CStruct {
     val alreadyExists = currentGeneration.classesInformation.classes.entries.find {
         it.key == genericClass
-    } != null
+    }?.value != null
 
     val cStructVariables = ArrayList<CStructVariable>()
     var cStruct = CStruct(currentGeneration.createCStructName(), cStructVariables)
@@ -31,7 +31,7 @@ fun createGenericClassIfNotExists(currentGeneration: CurrentGeneration, genericC
 fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGeneration: CurrentGeneration, genericFunction: GenericFunction): Result<CFunction> {
     val alreadyExists = currentGeneration.functionsInformation.functionsInformation.entries.find {
         it.key == genericFunction
-    } != null
+    }?.value != null
 
     val cFunctionParameters = ArrayList<CFunctionParameter>()
     val cFunction: CFunction
@@ -67,10 +67,27 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
                 functionScope.variables.add(variableInformation)
             }
 
+            println("ooo classes are ")
+            currentGeneration.classesInformation.classes.entries.forEach {
+                println(
+                    it.key.name + " " + (it.value != null) + if (it.key is GenericClass) {
+                        if ((it.key as GenericClass).unsubstituted) {
+                            true
+                        } else {
+                            false
+                        }
+                    } else {
+                        "_"
+                    }
+                )
+            }
+
             functionScope.variables.add(
                 VariableInformation(
                     "this_receiver",
-                    resolveType(genericFunction.function.receiverType, currentGeneration),
+                    resolveType(genericFunction.function.receiverType.also {
+                                                                           println(it.text)
+                    }, currentGeneration),
                     "",
                     "this",
                     actualOutputType(genericFunction.function.receiverType)
@@ -174,6 +191,41 @@ fun actualOutputType(outputType: OutputType): OutputType {
 fun classEquals(thisClass: Class, otherClass: Class): Boolean {
     return thisClass.name == otherClass.name && thisClass.declarationPackage == otherClass.declarationPackage
 }
+
+val OutputType.text: String
+    get() {
+        return when (this) {
+            is ClassType -> {
+                if (this.outputClass is GenericClass) {
+                    this.outputClass.name + "<" + this.outputClass.typeParameters.joinToString(", ") {
+                        TypeParameterType(it).text
+                    } + ">"
+                } else {
+                    this.outputClass.name
+                }
+            }
+
+            is TypeParameterType -> {
+                if (this.genericTypeParameter.substitutionType != null) {
+                    this.genericTypeParameter!!.substitutionType!!.text
+                } else {
+                    this.genericTypeParameter.name
+                }
+            }
+
+            is ReferenceType -> {
+                "ref " + this.actualType.text
+            }
+
+            is ArrayType -> {
+                "[" + this.itemsType.text + ", " + this.size + "]"
+            }
+
+            else -> {
+                "this type is not allowed to be converted to text yet"
+            }
+        }
+    }
 
 fun main() {
     val someClass = GenericClass(

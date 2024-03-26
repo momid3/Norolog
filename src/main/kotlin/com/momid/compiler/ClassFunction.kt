@@ -9,31 +9,30 @@ val parameter =
     spaces + className["parameterName"] + spaces + !":" + spaces + outputTypeO["parameterType"] + spaces
 
 val functionReturnType =
-    oneOrZero(spaces + !":" + spaces + outputTypeO["returnType"], "functionReturnType")
+    oneOrZero((spaces + !":" + spaces + outputTypeO["returnType"])["functionReturnType"])
 
 val classFunctionTypeParameters =
     oneOrZero(insideOf('<', '>') {
-        typeParameters["typeParameter"]
-    }, "typeParameters")
+        typeParameters["typeParameters"]
+    }["typeParameters"], "typeParameters")
 
 val classFunction =
     !"fun" + space + classFunctionTypeParameters["typeParameters"] + spaces + oneOrZero(
-        (!"Keep<T>.")["receiverType"],
+        one(wanting(outputTypeO["receiverType"], !".") + !"."),
         "receiverType"
     ) + className["functionName"] + insideOf('(', ')') {
-        oneOrZero(splitBy(parameter, ","))["functionParameters"]
+        oneOrZero(splitByNW(parameter, ","))["functionParameters"]
     } + spaces + functionReturnType["functionReturnType"] + spaces + insideOf('{', '}') {
         anything["functionInside"]
     }
 
 fun ExpressionResultsHandlerContext.handleClassFunctionParsing(): Result<ClassFunctionParsing> {
+    println("here")
     with(this.expressionResult) {
         val functionName = this["functionName"].parsing
         val receiverType = this["receiverType"].continuing?.parsing
         val functionParameters = this["functionParameters"].continuing?.continuing?.asMulti()?.map {
-            val parameter = it.continuing {
-                return Error("expected function parameter, found " + it.tokens, it.range)
-            }
+            val parameter = it
             ClassFunctionParameterParsing(parameter["parameterName"].parsing, parameter["parameterType"].parsing)
         }.orEmpty()
         val typeParameters = this["typeParameters"].continuing?.continuing?.asMulti()?.map {
@@ -373,3 +372,19 @@ class ClassFunctionParsing(
     val receiverType: Parsing?,
     val functionInside: Parsing
 )
+
+fun main() {
+    val currentGeneration = CurrentGeneration()
+    val text = ("fun <T> Keep<T>.genericFunction() {\n" +
+            "    print(\"the parameter is\");\n" +
+            "    print(this.keepValue);\n" +
+            "}").toList()
+    val finder = ExpressionFinder()
+    finder.registerExpressions(listOf(classFunction))
+    finder.start(text).forEach {
+        handleExpressionResult(finder, it, text) {
+            println("found " + it.tokens)
+            handleClassFunction(currentGeneration)
+        }
+    }
+}

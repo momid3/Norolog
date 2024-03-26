@@ -107,15 +107,28 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
                 var (function, cFunction) = chosenFunction
 
                 if (function is GenericFunction) {
-                    function = function.clone()
-                    functionCall.parameters.forEachIndexed { index, parameter ->
-                        val (typesMatch, substitutions) = typesMatch(parameter.outputType, function.parameters[index].type)
+                    if (function.unsubstituted) {
+                        function = function.clone()
+                        functionCall.parameters.forEachIndexed { index, parameter ->
+                            val (typesMatch, substitutions) = typesMatch(parameter.outputType, function.parameters[index].type)
 
-                        if (!typesMatch) {
-                            return Error(
-                                "type mismatch expected " + function.parameters[index].type + " got " + parameter,
-                                parameter.parsing.range
-                            )
+                            if (!typesMatch) {
+                                return Error(
+                                    "type mismatch expected " + function.parameters[index].type + " got " + parameter,
+                                    parameter.parsing.range
+                                )
+                            }
+                        }
+
+                        if (function.function is ClassFunction) {
+                            val (typesMatch, substitutions) = typesMatch(functionCall.receiver!!.outputType, (function.function as ClassFunction).receiverType)
+
+                            if (!typesMatch) {
+                                return Error(
+                                    "type mismatch expected " + (function.function as ClassFunction).receiverType + " got " + functionCall.receiver!!.outputType,
+                                    functionCall.parsing.range
+                                )
+                            }
                         }
                     }
 

@@ -27,7 +27,7 @@ val functionDeclaration by lazy {
     !"fun" + space + functionName["functionName"] + insideOf('(', ')') {
         functionDeclarationParameters["functionDeclarationParameters"]
     } + spaces + oneOrZero(
-        one(spaces + !":" + spaces + outputTypeO["functionReturnType"] + spaces),
+        one(spaces + !":" + spaces + outputTypeO["functionReturnType"] + spaces)["functionReturnType"],
         "functionReturnType"
     ) + spaces + insideOf('{', '}') {
         anything["functionInside"]
@@ -137,36 +137,22 @@ class FunctionDeclarationParsing(
 
 fun oneOrZero(expression: Expression): CustomExpressionValueic {
     return CustomExpressionValueic { tokens, startIndex, endIndex ->
-        val evaluation = evaluateExpressionValueic(some0(expression), startIndex, tokens, endIndex)
-        if (evaluation is MultiExpressionResult) {
-            if (evaluation.size > 1) {
-                return@CustomExpressionValueic null
-            }
-            if (evaluation.isEmpty()) {
-                return@CustomExpressionValueic ContinueExpressionResult(evaluation, null)
-            } else {
-                return@CustomExpressionValueic ContinueExpressionResult(evaluation, evaluation.expressionResults[0])
-            }
+        val evaluation = evaluateExpressionValueic(expression, startIndex, tokens, endIndex)
+        if (evaluation == null) {
+            return@CustomExpressionValueic ContinueExpressionResult(ExpressionResult(expression, startIndex..startIndex), null)
         } else {
-            throw (Throwable("some0 should have returned MultiExpressionResult but returned something else"))
+            return@CustomExpressionValueic ContinueExpressionResult(evaluation, evaluation)
         }
     }
 }
 
 fun oneOrZero(expression: Expression, name: String): CustomExpressionValueic {
     return CustomExpressionValueic { tokens, startIndex, endIndex ->
-        val evaluation = evaluateExpressionValueic(some0(expression)[name], startIndex, tokens, endIndex)
-        if (evaluation is MultiExpressionResult) {
-            if (evaluation.size > 1) {
-                return@CustomExpressionValueic null
-            }
-            if (evaluation.isEmpty()) {
-                return@CustomExpressionValueic ContinueExpressionResult(evaluation, null)
-            } else {
-                return@CustomExpressionValueic ContinueExpressionResult(evaluation, evaluation.expressionResults[0])
-            }
+        val evaluation = evaluateExpressionValueic(expression, startIndex, tokens, endIndex)
+        if (evaluation == null) {
+            return@CustomExpressionValueic ContinueExpressionResult(ExpressionResult(expression, startIndex..startIndex), null)
         } else {
-            throw (Throwable("some0 should have returned MultiExpressionResult but returned something else"))
+            return@CustomExpressionValueic ContinueExpressionResult(evaluation, evaluation)
         }
     }
 }
@@ -188,7 +174,9 @@ fun one(expression: Expression): CustomExpressionValueic {
             if (namedExpressionResult == null) {
                 throw (Throwable("there should be one named expression but yours has none"))
             } else {
-                return@CustomExpressionValueic namedExpressionResult!!.apply { this.nextTokenIndex = evaluation.nextTokenIndex }
+                return@CustomExpressionValueic namedExpressionResult!!.apply {
+                    this.nextTokenIndex = evaluation.nextTokenIndex
+                }
             }
         } else {
             evaluation
