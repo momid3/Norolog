@@ -227,6 +227,22 @@ val OutputType.text: String
         }
     }
 
+fun genericClassAlreadyExists(genericClass: GenericClass, currentGeneration: CurrentGeneration): Boolean {
+    val alreadyExists = currentGeneration.classesInformation.classes.entries.find {
+        it.key == genericClass
+    }?.value != null
+
+    return alreadyExists
+}
+
+fun findGenericClassIfAlreadyExists(genericClass: GenericClass, currentGeneration: CurrentGeneration): CStruct? {
+    val cStruct = currentGeneration.classesInformation.classes.entries.find {
+        it.key == genericClass
+    }?.value
+
+    return cStruct
+}
+
 fun main() {
     val someClass = GenericClass(
         "SomeClass",

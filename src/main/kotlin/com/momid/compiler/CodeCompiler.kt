@@ -17,6 +17,7 @@ fun compile(codeText: String): String {
     val currentGeneration = CurrentGeneration().apply {
         this.classesInformation.classes[Class(outputInt.name, arrayListOf())] = CStruct(Type.Int.name, arrayListOf())
         this.classesInformation.classes[Class(outputString.name, arrayListOf())] = CStruct(Type.CharArray.name, arrayListOf())
+        this.classesInformation.classes[listClass] = null
         this.classesInformation.classes[window] = CStruct("SDL_Window", listOf())
         this.classesInformation.classes[renderer] = CStruct("SDL_Renderer", listOf())
     }

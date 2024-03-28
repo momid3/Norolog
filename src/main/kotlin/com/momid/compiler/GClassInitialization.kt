@@ -1,18 +1,23 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.*
+import com.momid.compiler.standard_library.handleBuiltInClassInitialization
 import com.momid.parser.expression.*
 
-val ciName =
+val ciName by lazy {
     condition { it.isLetter() } + some0(condition { it.isLetterOrDigit() })
+}
 
-val ciParameters =
+val ciParameters by lazy {
     oneOrZero(
-        splitBy(anything, ",")
+        splitByNW(complexExpression, ",")
     )
+}
 
 val ci by lazy {
-    ciName["ciName"] + spaces + insideOf('(', ')') {
+    ciName["ciName"] + spaces + oneOrZero(insideOf('<', '>') {
+        typeParameters["ciTypeParameters"]
+    }["ciTypeParameters"])["ciTypeParameters"] + insideOf('(', ')') {
         ciParameters["ciParameters"]
     }
 }
@@ -21,11 +26,16 @@ fun ExpressionResultsHandlerContext.handleCIParsing(): Result<CIParsing> {
     with(this.expressionResult) {
         val className = this["ciName"]
         val ciParameters = this["ciParameters"].continuing?.continuing?.asMulti()?.map {
-            val parameter = it.continuing!!
+            val parameter = it
             parameter
         }.orEmpty()
 
-        return Ok(CIParsing(parsing(className), ciParameters.map { parsing(it) }))
+        val ciTypeParameters = this["ciTypeParameters"].continuing?.continuing?.asMulti()?.map {
+            val typeParameter = it.continuing!!
+            typeParameter
+        }.orEmpty()
+
+        return Ok(CIParsing(parsing(className), ciParameters.map { parsing(it) }, ciTypeParameters.map { parsing(it) }))
     }
 }
 
@@ -35,12 +45,36 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
     }
 
     with(ciParsing) {
+        println("ci " + this@handleCI.expressionResult.tokens)
         val className = this.className.tokens
         val resolvedClass = resolveType(className, currentGeneration) ?:
         return Error("unresolved class: " + className, this.className.range)
 
+        val existingTypeParameterMappings = HashMap<GenericTypeParameter, OutputType>()
+
         if (resolvedClass is GenericClass) {
             resolvedClass.unsubstituted = false
+
+            if (this.typeParameters.isNotEmpty()) {
+                val typeParameterEvaluations = this.typeParameters.map {
+                    val outputType = continueWithOne(
+                        it.expressionResult,
+                        outputTypeO
+                    ) { handleOutputType(currentGeneration) }.okOrReport {
+                        return it.to()
+                    }
+                    outputType
+                }
+
+                if (typeParameterEvaluations.size != resolvedClass.typeParameters.size) {
+                    return Error("expected " + resolvedClass.typeParameters.size + " type parameters ", this@handleCI.expressionResult.range)
+                }
+
+                typeParameterEvaluations.forEachIndexed { index, outputType ->
+                    existingTypeParameterMappings[GenericTypeParameter(this.typeParameters[index].tokens)] = outputType
+                    resolvedClass.typeParameters[index].substitutionType = outputType
+                }
+            }
 
             val parameterEvaluations = ArrayList<String>()
 
@@ -62,6 +96,12 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
                 }
             }
 
+            with(handleBuiltInClassInitialization(resolvedClass, parameterEvaluations, currentGeneration)) {
+                if (this != null) {
+                    return this
+                }
+            }
+
             cStruct = createGenericClassIfNotExists(currentGeneration, resolvedClass)
 
             val output = cStructInitialization(cStruct.name, cStruct.variables.mapIndexed { index, cStructVariable ->
@@ -71,6 +111,7 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
             return Ok(Pair(output, ClassType(resolvedClass)))
         } else {
             val cStruct = resolveClass(resolvedClass, currentGeneration)
+
             val parameterEvaluations = ArrayList<String>()
             this.parameters.forEachIndexed { index, parameter ->
                 val (evaluation, outputType) = continueWithOne(parameter.expressionResult!!, complexExpression) { handleComplexExpression(currentGeneration) }.okOrReport {
@@ -84,6 +125,12 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
                 }
             }
 
+            with(handleBuiltInClassInitialization(resolvedClass, parameterEvaluations, currentGeneration)) {
+                if (this != null) {
+                    return this
+                }
+            }
+
             val output = cStructInitialization(cStruct.name, cStruct.variables.mapIndexed { index, cStructVariable ->
                 Pair(cStructVariable.name, parameterEvaluations[index])
             })
@@ -93,7 +140,7 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
     }
 }
 
-class CIParsing(val className: Parsing, val parameters: List<Parsing>)
+class CIParsing(val className: Parsing, val parameters: List<Parsing>, val typeParameters: List<Parsing>)
 
 fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, HashMap<GenericTypeParameter, OutputType>> {
     if (expectedType is ClassType && expectedType.outputClass is GenericClass) {
@@ -174,4 +221,17 @@ fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, 
     }
 
     return Pair(false, hashMapOf())
+}
+
+fun main() {
+    val currentGeneration = CurrentGeneration()
+    val text = ("List<Int>(0);").toList()
+    val finder = ExpressionFinder()
+    finder.registerExpressions(listOf(ci))
+    finder.start(text).forEach {
+        handleExpressionResult(finder, it, text) {
+            println("found " + it.tokens)
+            handleCI(currentGeneration)
+        }
+    }
 }

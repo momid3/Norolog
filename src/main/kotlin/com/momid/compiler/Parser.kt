@@ -53,7 +53,7 @@ val number by lazy {
 }
 
 val atomicExp by lazy {
-    anyOf(builtinValues, variableNameO, number, cf, infoAccess, stringLiteral, arrayInitialization)["atomic"] + not(!".")
+    anyOf(builtinValues, number, cf, infoAccess, stringLiteral, arrayInitialization, variableNameO)["atomic"] + not(!".")
 }
 
 val operator by lazy {

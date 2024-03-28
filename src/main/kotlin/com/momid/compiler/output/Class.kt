@@ -2,7 +2,7 @@ package com.momid.compiler.output
 
 import com.momid.compiler.forEveryIndexed
 
-open class Class(val name: String, val variables: List<ClassVariable>, val declarationPackage: String = "") {
+open class Class(val name: String, var variables: List<ClassVariable>, val declarationPackage: String = "") {
 
     override fun equals(other: Any?): Boolean {
         return other is Class && other.name == this.name && other.declarationPackage == this.declarationPackage
@@ -33,7 +33,7 @@ class GenericTypeParameter(var name: String, var substitutionType: OutputType? =
     }
 }
 
-class GenericClass(name: String, variables: List<ClassVariable>, declarationPackage: String, val typeParameters: MutableList<GenericTypeParameter>, var unsubstituted: Boolean = true): Class(name, variables, declarationPackage) {
+open class GenericClass(name: String, variables: List<ClassVariable>, declarationPackage: String, val typeParameters: MutableList<GenericTypeParameter>, var unsubstituted: Boolean = true): Class(name, variables, declarationPackage) {
 
     override fun equals(other: Any?): Boolean {
         return other is GenericClass && other.name == this.name && other.declarationPackage == this.declarationPackage
@@ -117,6 +117,8 @@ val outputInt = Class("Int", arrayListOf())
 val outputString = Class("String", arrayListOf())
 val outputNothing = Class("Nothing", arrayListOf())
 val outputBoolean = Class("Boolean", listOf())
+
+val listClass = GenericClass("List", listOf(ClassVariable("size", outputIntType)), "norolog", mutableListOf(GenericTypeParameter("T")))
 
 val window = Class("Window", listOf(), "norolog.graphics")
 val renderer = Class("Renderer", listOf(), "norolog.graphics")
