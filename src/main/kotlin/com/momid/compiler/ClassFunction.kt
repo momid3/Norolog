@@ -56,7 +56,7 @@ fun ExpressionResultsHandlerContext.handleClassFunctionParsing(): Result<ClassFu
     }
 }
 
-fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: CurrentGeneration): Result<Boolean> {
+fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: CurrentGeneration): Result<Function> {
     val classFunctionParsing = handleClassFunctionParsing().okOrReport {
         return it.to()
     }
@@ -165,7 +165,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     cFunction.codeText.trim()
                 ) + "\n"
 
-                return Ok(true)
+                return Ok(function)
             } else {
 
                 val functionParameters = parameters.map {
@@ -241,7 +241,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     cFunction.codeText.trim()
                 ) + "\n"
 
-                return Ok(true)
+                return Ok(function)
             }
         } else {
             if (this.receiverType != null) {
@@ -303,7 +303,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
 
                 currentGeneration.goOutOfScope()
 
-                return Ok(true)
+                return Ok(function)
             } else {
                 println("receiver is null")
                 val function = Function(
@@ -344,19 +344,12 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     norType
                 }
 
-                genericFunction.parameters = functionParameters.also {
-                    println("parameters of function " + function.name + " are " + it.size)
-                }
-                function.name = "o"
-                println(function.parameters.size)
-                println(genericFunction.function.parameters.size)
-                println(currentGeneration.functionsInformation.functionsInformation.keys.find { it === genericFunction }!!.parameters.size)
-                println(currentGeneration.functionsInformation.functionsInformation.keys.find { it === genericFunction }!!.name)
+                genericFunction.parameters = functionParameters
                 genericFunction.returnType = returnType
 
                 currentGeneration.goOutOfScope()
 
-                return Ok(true)
+                return Ok(genericFunction)
             }
         }
     }

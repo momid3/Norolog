@@ -171,12 +171,12 @@ fun evaluateExpressionValueic(multiExpression: MultiExpression, startIndex: Int,
             tokensEndIndex = nextIndex
             multiExpressionIndex += 1
             if (multiExpressionIndex == multiExpression.size) {
-                if (expressionResults.isEmpty()) {
-                    throw(Throwable("multiExpression subs should not be empty"))
-//                    return ExpressionResult(multiExpression, startIndex .. endIndex)
-                } else {
+//                if (expressionResults.isEmpty()) {
+//                    throw(Throwable("multiExpression subs should not be empty"))
+////                    return ExpressionResult(multiExpression, startIndex .. endIndex)
+//                } else {
                     return MultiExpressionResult(ExpressionResult(multiExpression, startIndex .. tokensEndIndex), expressionResults)
-                }
+//                }
             }
             if (tokensEndIndex > endIndex) {
                 break

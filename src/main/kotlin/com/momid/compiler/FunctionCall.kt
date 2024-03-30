@@ -106,6 +106,10 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
 
                 var (function, cFunction) = chosenFunction
 
+                if (function == listSetFunction) {
+
+                }
+
                 if (function is GenericFunction) {
                     if (function.unsubstituted) {
                         function = function.clone()

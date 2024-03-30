@@ -21,6 +21,9 @@ fun compile(codeText: String): String {
         this.classesInformation.classes[window] = CStruct("SDL_Window", listOf())
         this.classesInformation.classes[renderer] = CStruct("SDL_Renderer", listOf())
     }
+
+    listSetFunction(currentGeneration)
+
     finder.start(text).forEach {
         handleExpressionResult(finder, it, text) {
             handleStatements(currentGeneration)

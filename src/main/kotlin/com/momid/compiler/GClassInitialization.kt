@@ -92,7 +92,7 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
 
                 val (typesMatch, substitutions) = typesMatch(outputType, resolvedClass.variables[index].type)
                 if (!typesMatch) {
-                    return Error("type mismatch: " + parameter.tokens + ". expected " + resolvedClass.variables[index].type + " got " + outputType, parameter.range)
+                    return Error("type mismatch: " + parameter.tokens + ". expected " + resolvedClass.variables[index].type.text + " got " + outputType.text, parameter.range)
                 }
             }
 
@@ -208,13 +208,18 @@ fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, 
         }
     }
 
+    else if (expectedType is ArrayType) {
+        if (outputType is ArrayType) {
+            val typesMatch = typesMatch(outputType.itemsType, expectedType.itemsType)
+            return Pair(typesMatch.first && outputType.size == expectedType.size, typesMatch.second)
+        }
+    }
+
     else if (expectedType is ClassType) {
         if (outputType is ClassType) {
             return Pair(outputType.outputClass == expectedType.outputClass, hashMapOf())
         }
-    }
-
-    else if (expectedType == norType) {
+    } else if (expectedType == norType) {
         if (outputType == norType) {
             return Pair(true, hashMapOf())
         }

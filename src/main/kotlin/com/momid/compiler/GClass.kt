@@ -11,7 +11,7 @@ val cdp = classDeclarationParameter
 
 val classDeclarationParameters =
     oneOrZero(
-        splitBy(cdp, ",")
+        splitByNW(cdp, ",")
     )
 
 val typeParameters =
@@ -20,7 +20,7 @@ val typeParameters =
 val gClass =
     !"class" + space + oneOrZero(insideOf('<', '>') {
         typeParameters["typeParameters"]
-    }, "typeParameters") + spaces + className["className"] + insideOf('(', ')') {
+    }["typeParameters"], "typeParameters")["typeParameters"] + spaces + className["className"] + insideOf('(', ')') {
         classDeclarationParameters["classDeclarationParameters"]
     }
 
@@ -30,9 +30,7 @@ fun ExpressionResultsHandlerContext.handleClassDeclarationParsing(): Result<Clas
         val classNameText = className.tokens()
         val classParameters = this["classDeclarationParameters"].continuing?.continuing?.asMulti()?.map {
             println(it.tokens())
-            val cdp = it.continuing {
-                return Error("expected class parameter, found: " + it.tokens(), it.range)
-            }
+            val cdp = it
             val parameterName = cdp["parameterName"]
             val parameterType = cdp["parameterType"]
             ClassParameterPE(parsing(parameterName), parsing(parameterType))

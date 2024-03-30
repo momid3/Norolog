@@ -22,7 +22,7 @@ fun createGenericClassIfNotExists(currentGeneration: CurrentGeneration, genericC
     } else {
         currentGeneration.classesInformation.classes[genericClass] = cStruct
 
-        currentGeneration.globalDefinitionsGeneratedSource += cStruct(cStruct.name, cStruct.variables.map { Pair(it.name, cTypeName(it.type)) })
+        currentGeneration.globalDefinitionsGeneratedSource += cStruct(cStruct.name, cStruct.variables.map { cTypeAndVariableName(it.type, it.name) })
     }
 
     return cStruct

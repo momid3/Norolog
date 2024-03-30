@@ -6,15 +6,15 @@ import com.momid.parser.expression.*
 import com.momid.parser.not
 
 val classType by lazy {
-    not(spaces + !"ref" + space) + className["className"] + not(spaces + anyOf(!"<", !"["))
+    not(spaces + anyOf(!"ref", !"[") + space) + className["className"] + not(spaces + anyOf(!"<", !"["))
 }
 
 val referenceType by lazy {
     !"ref" + space + anything["actualType"]
 }
 
-val arrayType by lazy {
-    !"[" + spaces + outputTypeO["actualType"] + spaces + !"," + spaces + number["size"] + spaces + !"]"
+val arrayType: MultiExpression by lazy {
+    !"[" + spaces + wanting(anything["actualType"], !",") + !"," + spaces + number["size"] + spaces + !"]"
 }
 
 val functionTypeParameters: CustomExpressionValueic by lazy {
@@ -43,7 +43,7 @@ val genericClassType by lazy {
 }
 
 val outputTypeO by lazy {
-    spaces + anyOf(classType, referenceType, functionType, genericClassType)["outputType"] + spaces
+    spaces + anyOf(classType, referenceType, functionType, genericClassType, arrayType)["outputType"] + spaces
 }
 
 fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentGeneration): Result<OutputType> {
@@ -69,8 +69,9 @@ fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentG
         }
 
         content.isOf(arrayType) {
+            println("arrayType")
             val actualType = it["actualType"]
-            val actualOutputType = continueStraight(actualType) { handleOutputType(currentGeneration) }.okOrReport {
+            val actualOutputType = continueWithOne(actualType, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
                 return it.to()
             }
             val size = it["size"].tokens.toInt()

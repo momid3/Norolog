@@ -20,3 +20,21 @@ fun createCListStruct(type: OutputType, size: Int, currentGeneration: CurrentGen
         )
     )
 }
+
+val listSetFunctionText = """
+    |fun <T> List<T>.set(item: T) {
+    |
+    |}
+""".trimIndent()
+
+var listSetFunction: GenericFunction? = null
+fun listSetFunction(currentGeneration: CurrentGeneration) {
+//    listSetFunction = continueGiven(
+//        listSetFunctionText,
+//        classFunction
+//    ) {
+//        handleClassFunction(currentGeneration)
+//    }.okOrReport {
+//        throw (Throwable("list set function has issues " + it.error))
+//    } as GenericFunction
+}
