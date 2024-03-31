@@ -1,7 +1,7 @@
 package com.momid.compiler.output
 
-import com.momid.compiler.CurrentGeneration
-import com.momid.compiler.resolveType
+import com.momid.compiler.*
+import com.momid.compiler.standard_library.continueGiven
 
 class ListClass(listClass: GenericClass): GenericClass(
     listClass.name,
@@ -22,19 +22,19 @@ fun createCListStruct(type: OutputType, size: Int, currentGeneration: CurrentGen
 }
 
 val listSetFunctionText = """
-    |fun <T> List<T>.set(item: T) {
-    |
-    |}
+    fun <T> List<T>.set(index: Int, item: T) {
+    
+    }
 """.trimIndent()
 
 var listSetFunction: GenericFunction? = null
 fun listSetFunction(currentGeneration: CurrentGeneration) {
-//    listSetFunction = continueGiven(
-//        listSetFunctionText,
-//        classFunction
-//    ) {
-//        handleClassFunction(currentGeneration)
-//    }.okOrReport {
-//        throw (Throwable("list set function has issues " + it.error))
-//    } as GenericFunction
+    listSetFunction = continueGiven(
+        listSetFunctionText,
+        classFunction
+    ) {
+        handleClassFunction(currentGeneration)
+    }.okOrReport {
+        throw (Throwable("list set function has issues " + it.error))
+    } as GenericFunction
 }

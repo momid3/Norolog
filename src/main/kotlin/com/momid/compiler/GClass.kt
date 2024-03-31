@@ -105,6 +105,8 @@ fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: Cu
         currentGeneration.globalDefinitionsGeneratedSource += cStruct(cStruct.name, cStruct.variables.map { cTypeAndVariableName(it.type, it.name) }) + "\n"
     }
 
+    currentGeneration.goOutOfScope()
+
     return Ok(true)
 }
 

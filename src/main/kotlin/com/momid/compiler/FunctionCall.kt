@@ -107,7 +107,7 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
                 var (function, cFunction) = chosenFunction
 
                 if (function == listSetFunction) {
-
+                    return handleListSetFunction(functionCall, currentGeneration)
                 }
 
                 if (function is GenericFunction) {
