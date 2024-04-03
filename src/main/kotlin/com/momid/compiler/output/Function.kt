@@ -13,8 +13,28 @@ open class Function(
     var name: String,
     var parameters: List<FunctionParameter>,
     var returnType: OutputType,
-    val bodyRange: IntRange
-)
+    val bodyRange: IntRange,
+    val discover: Boolean = false
+) {
+    override fun equals(other: Any?): Boolean {
+        return other is Function && this.name == other.name && this.parameters.forEveryIndexed { index, parameter ->
+            parameter.type == other.parameters[index].type
+        } && this.returnType == other.returnType && if (this is ClassFunction) {
+            other is ClassFunction && this.receiverType == other.function
+        } else {
+            true
+        }
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + parameters.hashCode()
+        result = 31 * result + returnType.hashCode()
+        result = 31 * result + bodyRange.hashCode()
+        result = 31 * result + discover.hashCode()
+        return result
+    }
+}
 
 /***
  * a function that is applied to a class or another type.

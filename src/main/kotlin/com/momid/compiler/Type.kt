@@ -9,7 +9,7 @@ val classType by lazy {
     not(spaces + anyOf(!"ref", !"[") + space) + className["className"] + not(spaces + anyOf(!"<", !"["))
 }
 
-val referenceType by lazy {
+val referenceType: MultiExpression by lazy {
     !"ref" + space + anything["actualType"]
 }
 
@@ -45,6 +45,7 @@ val genericClassType by lazy {
 val outputTypeO by lazy {
     spaces + anyOf(classType, referenceType, functionType, genericClassType, arrayType)["outputType"] + spaces
 }
+
 
 fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentGeneration): Result<OutputType> {
     with(this.expressionResult["outputType"]) {

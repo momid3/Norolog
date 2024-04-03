@@ -1,5 +1,6 @@
 package com.momid.compiler
 
+import com.momid.compiler.discover.discoverFunction
 import com.momid.compiler.output.*
 import com.momid.compiler.standard_library.*
 import com.momid.parser.expression.*
@@ -73,13 +74,25 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
 //                val (function, cFunction) = resolveFunction(functionCall, currentGeneration)
 //                    ?: return Error("unresolved function: " + functionCall.name.tokens, this.parsing.range)
 
-                val resolvedFunctions = findMatchingFunctions(functionCall, currentGeneration)
+                var resolvedFunctions = findMatchingFunctions(functionCall, currentGeneration)
 
-                val resolvedBaseFunctions = resolvedFunctions.filter {
+                var resolvedBaseFunctions = resolvedFunctions.filter {
                     if (it.first is GenericFunction) {
                         (it.first as GenericFunction).unsubstituted
                     } else {
                         true
+                    }
+                }
+
+                if (resolvedBaseFunctions.isEmpty()) {
+                    discoverFunction(functionCall, currentGeneration)
+                    resolvedFunctions = findMatchingFunctions(functionCall, currentGeneration)
+                    resolvedBaseFunctions = resolvedFunctions.filter {
+                        if (it.first is GenericFunction) {
+                            (it.first as GenericFunction).unsubstituted
+                        } else {
+                            true
+                        }
                     }
                 }
 
