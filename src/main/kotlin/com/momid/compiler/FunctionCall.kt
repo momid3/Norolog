@@ -1,5 +1,6 @@
 package com.momid.compiler
 
+import com.momid.compiler.discover.discoverFunction
 import com.momid.compiler.output.*
 import com.momid.compiler.standard_library.*
 import com.momid.parser.expression.*
@@ -73,13 +74,25 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
 //                val (function, cFunction) = resolveFunction(functionCall, currentGeneration)
 //                    ?: return Error("unresolved function: " + functionCall.name.tokens, this.parsing.range)
 
-                val resolvedFunctions = findMatchingFunctions(functionCall, currentGeneration)
+                var resolvedFunctions = findMatchingFunctions(functionCall, currentGeneration)
 
-                val resolvedBaseFunctions = resolvedFunctions.filter {
+                var resolvedBaseFunctions = resolvedFunctions.filter {
                     if (it.first is GenericFunction) {
                         (it.first as GenericFunction).unsubstituted
                     } else {
                         true
+                    }
+                }
+
+                if (resolvedBaseFunctions.isEmpty()) {
+                    discoverFunction(functionCall, currentGeneration)
+                    resolvedFunctions = findMatchingFunctions(functionCall, currentGeneration)
+                    resolvedBaseFunctions = resolvedFunctions.filter {
+                        if (it.first is GenericFunction) {
+                            (it.first as GenericFunction).unsubstituted
+                        } else {
+                            true
+                        }
                     }
                 }
 
@@ -106,16 +119,33 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
 
                 var (function, cFunction) = chosenFunction
 
-                if (function is GenericFunction) {
-                    function = function.clone()
-                    functionCall.parameters.forEachIndexed { index, parameter ->
-                        val (typesMatch, substitutions) = typesMatch(parameter.outputType, function.parameters[index].type)
+                if (function == listSetFunction) {
+                    return handleListSetFunction(functionCall, currentGeneration)
+                }
 
-                        if (!typesMatch) {
-                            return Error(
-                                "type mismatch expected " + function.parameters[index].type + " got " + parameter,
-                                parameter.parsing.range
-                            )
+                if (function is GenericFunction) {
+                    if (function.unsubstituted) {
+                        function = function.clone()
+                        functionCall.parameters.forEachIndexed { index, parameter ->
+                            val (typesMatch, substitutions) = typesMatch(parameter.outputType, function.parameters[index].type)
+
+                            if (!typesMatch) {
+                                return Error(
+                                    "type mismatch expected " + function.parameters[index].type + " got " + parameter,
+                                    parameter.parsing.range
+                                )
+                            }
+                        }
+
+                        if (function.function is ClassFunction) {
+                            val (typesMatch, substitutions) = typesMatch(functionCall.receiver!!.outputType, (function.function as ClassFunction).receiverType)
+
+                            if (!typesMatch) {
+                                return Error(
+                                    "type mismatch expected " + (function.function as ClassFunction).receiverType + " got " + functionCall.receiver!!.outputType,
+                                    functionCall.parsing.range
+                                )
+                            }
                         }
                     }
 

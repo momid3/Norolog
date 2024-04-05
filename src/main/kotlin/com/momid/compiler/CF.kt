@@ -20,16 +20,20 @@ class CF()
 //val variableName = variableName0()
 
 val cf by lazy {
-    className["cfName"] + spaces + insideOf("classInside", '(', ')')
+    anyOf(className["cfName"] + spaces + insideOf("classInside", '(', ')'), ci)
 }
 
 fun ExpressionResultsHandlerContext.handleCF(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
     this.expressionResult.isOf(cf) {
-        val cfName = it["cfName"].tokens()
-        if (cfName[0].isUpperCase()) {
+        it.content.isOf(ci) {
             return continueWithOne(it, ci) { handleCI(currentGeneration) }
+        }
+        val cf = it.content
+        val cfName = cf["cfName"].tokens()
+        if (cfName[0].isUpperCase()) {
+            return continueWithOne(cf, ci) { handleCI(currentGeneration) }
         } else {
-            return continueWithOne(it, functionCall) { handleFunctionCall(currentGeneration) }
+            return continueWithOne(cf, functionCall) { handleFunctionCall(currentGeneration) }
         }
     }
     return Error("is not cf", this.expressionResult.range)

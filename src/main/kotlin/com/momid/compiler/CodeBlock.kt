@@ -12,7 +12,6 @@ val statements = listOf(
     propertyAccessStatement,
     info,
     gClass,
-    functionDeclaration,
     returnStatement,
     assignment,
     classFunction

@@ -40,7 +40,7 @@ fun ExpressionResultsHandlerContext.handlePropertyAccess(currentGeneration: Curr
         val firstElementValue = firstElementEvaluation.first
         val firstElementType = firstElementEvaluation.second
 
-        println("first element: " + it["firstExpression"].tokens())
+        println("first element: " + it["firstExpression"].tokens + " of type " + firstElementType.text)
 
         var currentType = firstElementType
         output += firstElementValue

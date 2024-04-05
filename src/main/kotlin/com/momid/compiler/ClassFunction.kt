@@ -9,19 +9,19 @@ val parameter =
     spaces + className["parameterName"] + spaces + !":" + spaces + outputTypeO["parameterType"] + spaces
 
 val functionReturnType =
-    oneOrZero(spaces + !":" + spaces + outputTypeO["returnType"], "functionReturnType")
+    oneOrZero((spaces + !":" + spaces + outputTypeO["returnType"])["functionReturnType"])
 
 val classFunctionTypeParameters =
     oneOrZero(insideOf('<', '>') {
-        typeParameters["typeParameter"]
-    }, "typeParameters")
+        typeParameters["typeParameters"]
+    }["typeParameters"], "typeParameters")
 
 val classFunction =
     !"fun" + space + classFunctionTypeParameters["typeParameters"] + spaces + oneOrZero(
-        (!"Keep<T>.")["receiverType"],
+        one(wanting(outputTypeO["receiverType"], !".") + !".")["receiverType"],
         "receiverType"
-    ) + className["functionName"] + insideOf('(', ')') {
-        oneOrZero(splitBy(parameter, ","))["functionParameters"]
+    )["receiverType"] + className["functionName"] + insideOf('(', ')') {
+        oneOrZero(splitByNW(parameter, ","))["functionParameters"]
     } + spaces + functionReturnType["functionReturnType"] + spaces + insideOf('{', '}') {
         anything["functionInside"]
     }
@@ -31,9 +31,7 @@ fun ExpressionResultsHandlerContext.handleClassFunctionParsing(): Result<ClassFu
         val functionName = this["functionName"].parsing
         val receiverType = this["receiverType"].continuing?.parsing
         val functionParameters = this["functionParameters"].continuing?.continuing?.asMulti()?.map {
-            val parameter = it.continuing {
-                return Error("expected function parameter, found " + it.tokens, it.range)
-            }
+            val parameter = it
             ClassFunctionParameterParsing(parameter["parameterName"].parsing, parameter["parameterType"].parsing)
         }.orEmpty()
         val typeParameters = this["typeParameters"].continuing?.continuing?.asMulti()?.map {
@@ -57,7 +55,7 @@ fun ExpressionResultsHandlerContext.handleClassFunctionParsing(): Result<ClassFu
     }
 }
 
-fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: CurrentGeneration): Result<Boolean> {
+fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: CurrentGeneration, discover: Boolean = false): Result<Function> {
     val classFunctionParsing = handleClassFunctionParsing().okOrReport {
         return it.to()
     }
@@ -102,7 +100,8 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                         name.tokens,
                         functionParameters,
                         returnType,
-                        functionInside.range
+                        functionInside.range,
+                        discover
                     )
                 )
 
@@ -144,6 +143,14 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     )
                 )
 
+                val discovered = checkIfFunctionAlreadyExists(function, currentGeneration).okOrReport {
+                    return it.to()
+                }
+
+                if (discovered != null) {
+                    return Ok(discovered)
+                }
+
                 currentGeneration.functionsInformation.functionsInformation[function] = cFunction
 
                 val cFunctionCode = continueStraight(functionInside.expressionResult) {
@@ -166,7 +173,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     cFunction.codeText.trim()
                 ) + "\n"
 
-                return Ok(true)
+                return Ok(function)
             } else {
 
                 val functionParameters = parameters.map {
@@ -194,7 +201,8 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     name.tokens,
                     functionParameters,
                     returnType,
-                    functionInside.range
+                    functionInside.range,
+                    discover
                 )
 
                 val functionScope = Scope()
@@ -220,6 +228,14 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     functionScope.variables.add(variableInformation)
                 }
 
+                val discovered = checkIfFunctionAlreadyExists(function, currentGeneration).okOrReport {
+                    return it.to()
+                }
+
+                if (discovered != null) {
+                    return Ok(discovered)
+                }
+
                 currentGeneration.functionsInformation.functionsInformation[function] = cFunction
 
                 val cFunctionCode = continueStraight(functionInside.expressionResult) {
@@ -242,7 +258,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     cFunction.codeText.trim()
                 ) + "\n"
 
-                return Ok(true)
+                return Ok(function)
             }
         } else {
             if (this.receiverType != null) {
@@ -253,7 +269,8 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                         name.tokens,
                         listOf(),
                         norType,
-                        functionInside.range
+                        functionInside.range,
+                        discover
                     )
                 )
 
@@ -266,11 +283,9 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                 functionScope.scopeContext = FunctionContext(function)
                 currentGeneration.createScope(functionScope)
 
-                currentGeneration.functionsInformation.functionsInformation[function] = null
-
                 val receiverType = continueWithOne(
                     this.receiverType.expressionResult.also {
-                                                            println("the receiver type is " + it.tokens)
+                        println("the receiver type is " + it.tokens)
                     },
                     outputTypeO
                 ) { handleOutputType(currentGeneration) }.okOrReport {
@@ -302,16 +317,27 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                 function.parameters = functionParameters
                 function.returnType = returnType
 
+                val discovered = checkIfFunctionAlreadyExists(function, currentGeneration).okOrReport {
+                    return it.to()
+                }
+
+                if (discovered != null) {
+                    return Ok(discovered)
+                }
+
+                currentGeneration.functionsInformation.functionsInformation[function] = null
+
                 currentGeneration.goOutOfScope()
 
-                return Ok(true)
+                return Ok(function)
             } else {
                 println("receiver is null")
                 val function = Function(
                     name.tokens,
                     listOf(),
                     norType,
-                    functionInside.range
+                    functionInside.range,
+                    discover
                 )
                 val genericFunction = GenericFunction(
                     typeParameters.map { GenericTypeParameter(it.tokens) },
@@ -321,8 +347,6 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                 val functionScope = Scope()
                 functionScope.scopeContext = FunctionContext(genericFunction)
                 currentGeneration.createScope(functionScope)
-
-                currentGeneration.functionsInformation.functionsInformation[genericFunction] = null
 
                 val functionParameters = parameters.map {
                     val parameterType = continueWithOne(
@@ -345,19 +369,22 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     norType
                 }
 
-                genericFunction.parameters = functionParameters.also {
-                    println("parameters of function " + function.name + " are " + it.size)
-                }
-                function.name = "o"
-                println(function.parameters.size)
-                println(genericFunction.function.parameters.size)
-                println(currentGeneration.functionsInformation.functionsInformation.keys.find { it === genericFunction }!!.parameters.size)
-                println(currentGeneration.functionsInformation.functionsInformation.keys.find { it === genericFunction }!!.name)
+                genericFunction.parameters = functionParameters
                 genericFunction.returnType = returnType
+
+                val discovered = checkIfFunctionAlreadyExists(genericFunction, currentGeneration).okOrReport {
+                    return it.to()
+                }
+
+                if (discovered != null) {
+                    return Ok(discovered)
+                }
+
+                currentGeneration.functionsInformation.functionsInformation[genericFunction] = null
 
                 currentGeneration.goOutOfScope()
 
-                return Ok(true)
+                return Ok(genericFunction)
             }
         }
     }
@@ -373,3 +400,36 @@ class ClassFunctionParsing(
     val receiverType: Parsing?,
     val functionInside: Parsing
 )
+
+fun ExpressionResultsHandlerContext.checkIfFunctionAlreadyExists(function: Function, currentGeneration: CurrentGeneration): Result<Function?> {
+    val existingFunction = currentGeneration.functionsInformation.functionsInformation.entries.find {
+        val currentFunction = it.key
+        (it.key == function).also {
+            println("expected function " + function.name + " current function " + currentFunction.name + " " + it)
+        }
+    }
+    if (existingFunction != null && !existingFunction.key.discover) {
+        return Error("function is already declared " + this.expressionResult.tokens, this.expressionResult.range)
+    }
+    if (existingFunction?.key?.discover == true) {
+        return Ok(existingFunction.key)
+    } else {
+        return Ok(null)
+    }
+}
+
+fun main() {
+    val currentGeneration = CurrentGeneration()
+    val text = ("fun <T> Keep<T>.genericFunction() {\n" +
+            "    print(\"the parameter is\");\n" +
+            "    print(this.keepValue);\n" +
+            "}").toList()
+    val finder = ExpressionFinder()
+    finder.registerExpressions(listOf(classFunction))
+    finder.start(text).forEach {
+        handleExpressionResult(finder, it, text) {
+            println("found " + it.tokens)
+            handleClassFunction(currentGeneration)
+        }
+    }
+}

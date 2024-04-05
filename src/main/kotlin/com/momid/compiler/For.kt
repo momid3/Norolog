@@ -8,8 +8,8 @@ val forStatement =
     spaced {
         !"for" + insideOf('(', ')') {
             spaced {
-                (wanting(variableNameO["variableName"], !"in") + "in"
-                        + wanting(complexExpression["rangeStart"], !"until") + "until"
+                (wanting(variableNameO["variableName"], !"in") + !"in"
+                        + wanting(complexExpression["rangeStart"], !"until") + !"until"
                         + wanting(complexExpression["rangeEnd"]))
             }["forRange"]
         } + (insideOf("forInside", '{', '}'))["forInside"]

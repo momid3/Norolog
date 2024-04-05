@@ -98,13 +98,15 @@ operator fun Expression.plus(expression: Expression): MultiExpression {
     }
     else if (this !is MultiExpression && expression is MultiExpression) {
         if (this.name == null && expression.name == null) {
-            return this + expression
+            expression.expressions.add(0, this)
+            return expression
         }
         else if (this.name == null && expression.name != null) {
             return MultiExpression(arrayListOf(this, expression))
         }
         else if (this.name != null && expression.name == null) {
-            return this + expression
+            expression.expressions.add(0, this)
+            return expression
         }
         else if (this.name != null && expression.name != null) {
             return MultiExpression(arrayListOf(this, expression))
@@ -127,11 +129,6 @@ operator fun Expression.plus(expression: Expression): MultiExpression {
 operator fun MultiExpression.plus(expression: Expression): MultiExpression {
     this.expressions.add(expression)
     return this
-}
-
-operator fun Expression.plus(multiExpression: MultiExpression): MultiExpression {
-    multiExpression.expressions.add(0, this)
-    return multiExpression
 }
 
 operator fun Expression.times(value: Int): RecurringExpression {

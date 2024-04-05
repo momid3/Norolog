@@ -83,6 +83,10 @@ fun arrayInitialization(initializeWith: String, arraySize: Int): String {
     return "{" + "[" + "0" + " ... " + arraySize + "]" + " = " + initializeWith + "}"
 }
 
+fun arraySet(array: String, index: String, value: String): String {
+    return array + "[" + index + "]" + " = " + value
+}
+
 fun variableDeclaration(variableTypeAndName: String, variableValue: String): String {
     return variableTypeAndName + " = " + variableValue + ";"
 }

@@ -6,12 +6,12 @@ open class ExpressionResult(val expression: Expression, var range: IntRange, var
 
 class MultiExpressionResult(val mainExpressionResult: ExpressionResult, val expressionResults: ArrayList<ExpressionResult> = arrayListOf()): List<ExpressionResult> by expressionResults, ExpressionResult(mainExpressionResult.expression, mainExpressionResult.range)
 
-class ContentExpressionResult(val mainExpressionResult: ExpressionResult, val content: ExpressionResult): ExpressionResult(mainExpressionResult.expression, mainExpressionResult.range)
+class ContentExpressionResult(val mainExpressionResult: ExpressionResult, val content: ExpressionResult): ExpressionResult(mainExpressionResult.expression, mainExpressionResult.range, mainExpressionResult.nextTokenIndex)
 
 /***
  * same as ContentExpressionResult but its content may be null because after continuing no further results have been found
  */
-class ContinueExpressionResult(val mainExpressionResult: ExpressionResult, val content: ExpressionResult?): ExpressionResult(mainExpressionResult.expression, mainExpressionResult.range)
+class ContinueExpressionResult(val mainExpressionResult: ExpressionResult, val content: ExpressionResult?): ExpressionResult(mainExpressionResult.expression, mainExpressionResult.range, mainExpressionResult.nextTokenIndex)
 
 //fun ExpressionResult.getRange(): IntRange? {
 //    when (this) {
