@@ -6,7 +6,7 @@ import com.momid.parser.expression.*
 import com.momid.parser.not
 
 val parameter =
-    spaces + className["parameterName"] + spaces + !":" + spaces + outputTypeO["parameterType"] + spaces
+    spaces + className["parameterName"] + spaces + !":" + spaces + oneOrZero((!"*")["isReferenceParameter"]) + outputTypeO["parameterType"] + spaces
 
 val functionReturnType =
     oneOrZero((spaces + !":" + spaces + outputTypeO["returnType"])["functionReturnType"])
@@ -32,7 +32,8 @@ fun ExpressionResultsHandlerContext.handleClassFunctionParsing(): Result<ClassFu
         val receiverType = this["receiverType"].continuing?.parsing
         val functionParameters = this["functionParameters"].continuing?.continuing?.asMulti()?.map {
             val parameter = it
-            ClassFunctionParameterParsing(parameter["parameterName"].parsing, parameter["parameterType"].parsing)
+            val isReferenceParameter = parameter["isReferenceParameter"].continuing != null
+            ClassFunctionParameterParsing(parameter["parameterName"].parsing, parameter["parameterType"].parsing, isReferenceParameter)
         }.orEmpty()
         val typeParameters = this["typeParameters"].continuing?.continuing?.asMulti()?.map {
             val typeParameter = it.continuing {
@@ -80,7 +81,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     ) { handleOutputType(currentGeneration) }.okOrReport {
                         return it.to()
                     }
-                    FunctionParameter(it.name.tokens, parameterType)
+                    FunctionParameter(it.name.tokens, parameterType, it.isReferenceParameter)
                 }
 
                 val returnType = if (returnType != null) {
@@ -111,7 +112,11 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                 val cFunction = CFunction(
                     function.name,
                     (function.parameters.map {
-                        CFunctionParameter(it.name, resolveType(it.type, currentGeneration))
+                        if (it.isReferenceParameter) {
+                            CFunctionParameter(it.name, CReferenceType(resolveType(it.type, currentGeneration)))
+                        } else {
+                            CFunctionParameter(it.name, resolveType(it.type, currentGeneration))
+                        }
                     } as ArrayList).apply {
                         this.add(
                             0,
@@ -128,7 +133,8 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                         cFunction.parameters[index + 1].type,
                         "",
                         functionParameter.name,
-                        functionParameter.type
+                        functionParameter.type,
+                        functionParameter
                     )
                     functionScope.variables.add(variableInformation)
                 }
@@ -183,7 +189,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     ) { handleOutputType(currentGeneration) }.okOrReport {
                         return it.to()
                     }
-                    FunctionParameter(it.name.tokens, parameterType)
+                    FunctionParameter(it.name.tokens, parameterType, it.isReferenceParameter)
                 }
 
                 val returnType = if (returnType != null) {
@@ -211,7 +217,11 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                 val cFunction = CFunction(
                     function.name,
                     (function.parameters.map {
-                        CFunctionParameter(it.name, resolveType(it.type, currentGeneration))
+                        if (it.isReferenceParameter) {
+                            CFunctionParameter(it.name, CReferenceType(resolveType(it.type, currentGeneration)))
+                        } else {
+                            CFunctionParameter(it.name, resolveType(it.type, currentGeneration))
+                        }
                     } as ArrayList),
                     resolveType(function.returnType, currentGeneration),
                     ""
@@ -223,7 +233,8 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                         cFunction.parameters[index].type,
                         "",
                         functionParameter.name,
-                        functionParameter.type
+                        functionParameter.type,
+                        functionParameter
                     )
                     functionScope.variables.add(variableInformation)
                 }
@@ -299,7 +310,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     ) { handleOutputType(currentGeneration) }.okOrReport {
                         return it.to()
                     }
-                    FunctionParameter(it.name.tokens, parameterType)
+                    FunctionParameter(it.name.tokens, parameterType, it.isReferenceParameter)
                 }
 
                 val returnType = if (this.returnType != null) {
@@ -355,7 +366,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     ) { handleOutputType(currentGeneration) }.okOrReport {
                         return it.to()
                     }
-                    FunctionParameter(it.name.tokens, parameterType)
+                    FunctionParameter(it.name.tokens, parameterType, it.isReferenceParameter)
                 }
 
                 val returnType = if (this.returnType != null) {
@@ -390,7 +401,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
     }
 }
 
-class ClassFunctionParameterParsing(val name: Parsing, val type: Parsing)
+class ClassFunctionParameterParsing(val name: Parsing, val type: Parsing, val isReferenceParameter: Boolean)
 
 class ClassFunctionParsing(
     val name: Parsing,

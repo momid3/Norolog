@@ -43,7 +43,7 @@ open class Function(
 class ClassFunction(var receiverType: OutputType, val function: Function):
     Function(function.name, function.parameters, function.returnType, function.bodyRange)
 
-class FunctionParameter(val name: String, val type: OutputType, relatedCFunction: CFunction? = null)
+class FunctionParameter(val name: String, val type: OutputType, val isReferenceParameter: Boolean = false)
 
 class CFunction(val name: String, val parameters: List<CFunctionParameter>, val returnType: Type, var codeText: String)
 

@@ -169,7 +169,11 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                                 }
                                 if (outputVariable is Ok<VariableInformation>) {
                                     type = outputVariable.ok.outputType
-                                    output += outputVariable.ok.name
+                                    if (outputVariable.ok.isParameter != null && outputVariable.ok.isParameter.isReferenceParameter) {
+                                        output += "*(" + outputVariable.ok.name + ")"
+                                    } else {
+                                        output += outputVariable.ok.name
+                                    }
                                 }
                                 if (outputVariable is Error<*>) {
                                     currentGeneration.errors.add(outputVariable)

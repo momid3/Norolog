@@ -27,7 +27,7 @@ class ExpressionFinder {
             }
             println(
                 red("no more expressions found from here " + tokens.joinToString("")
-                    .slice(currentTokenIndex..min(currentTokenIndex + 10, maxTokenIndex))) + "..."
+                    .slice(currentTokenIndex..min(currentTokenIndex + 10, maxTokenIndex - 1))) + "..."
             )
             break
         }

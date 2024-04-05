@@ -23,4 +23,4 @@ fun createVariableName(prefix: String): String {
     return prefix + "_variable" + currentVariableNameNumber
 }
 
-class VariableInformation(var name: String, var type: Type, var value: Any, var outputName: String, var outputType: OutputType)
+class VariableInformation(var name: String, var type: Type, var value: Any, var outputName: String, var outputType: OutputType, val isParameter: FunctionParameter? = null)

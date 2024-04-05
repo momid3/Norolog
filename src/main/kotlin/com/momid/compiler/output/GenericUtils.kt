@@ -62,7 +62,8 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
                     cFunctionParameters[index].type,
                     "",
                     functionParameter.name,
-                    actualOutputType(functionParameter.type)
+                    actualOutputType(functionParameter.type),
+                    functionParameter
                 )
                 functionScope.variables.add(variableInformation)
             }
@@ -123,8 +124,17 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
 
             currentGeneration.functionDeclarationsGeneratedSource += cFunction(
                 cFunction.name,
-                cFunction.parameters.map {
-                    cTypeAndVariableName(it.type, it.name)
+                cFunction.parameters.mapIndexed { index, parameter ->
+                    if (index != 0) {
+                        val functionParameter = genericFunction.parameters[index - 1]
+                        if (functionParameter.isReferenceParameter) {
+                            cTypeAndVariableName(CReferenceType(parameter.type), parameter.name)
+                        } else {
+                            cTypeAndVariableName(parameter.type, parameter.name)
+                        }
+                    } else {
+                        cTypeAndVariableName(parameter.type, parameter.name)
+                    }
                 },
                 cTypeName(cFunction.returnType),
                 cFunction.codeText.trim()
@@ -139,7 +149,8 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
                     cFunctionParameters[index].type,
                     "",
                     functionParameter.name,
-                    actualOutputType(functionParameter.type)
+                    actualOutputType(functionParameter.type),
+                    functionParameter
                 )
                 functionScope.variables.add(variableInformation)
             }
@@ -164,8 +175,12 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
 
             currentGeneration.functionDeclarationsGeneratedSource += cFunction(
                 cFunction.name,
-                cFunction.parameters.map {
-                    cTypeAndVariableName(it.type, it.name)
+                cFunction.parameters.mapIndexed { index, parameter ->
+                    if (genericFunction.parameters[index].isReferenceParameter) {
+                        cTypeAndVariableName(parameter.type, parameter.name)
+                    } else {
+                        cTypeAndVariableName(parameter.type, parameter.name)
+                    }
                 },
                 cTypeName(cFunction.returnType),
                 cFunction.codeText.trim()

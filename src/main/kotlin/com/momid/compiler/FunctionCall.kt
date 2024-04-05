@@ -155,7 +155,13 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
 
                     return Ok(
                         Pair(
-                            cFunctionCall(resolvedCFunction.name, (functionCall.parameters.map { it.cEvaluation } as ArrayList).apply {
+                            cFunctionCall(resolvedCFunction.name, (functionCall.parameters.mapIndexed { index, evaluation ->
+                                if (function.parameters[index].isReferenceParameter) {
+                                    "&(" + evaluation.cEvaluation + ")"
+                                } else {
+                                    evaluation.cEvaluation
+                                }
+                            } as ArrayList).apply {
                                 if (functionReceiver != null) {
                                     this.add(0, functionReceiver.cEvaluation)
                                 }
@@ -169,7 +175,13 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
                     }
                     return Ok(
                         Pair(
-                            cFunctionCall(cFunction.name, (functionCall.parameters.map { it.cEvaluation } as ArrayList).apply {
+                            cFunctionCall(cFunction.name, (functionCall.parameters.mapIndexed { index, evaluation ->
+                                if (function.parameters[index].isReferenceParameter) {
+                                    "&(" + evaluation.cEvaluation + ")"
+                                } else {
+                                    evaluation.cEvaluation
+                                }
+                            } as ArrayList).apply {
                                 if (functionReceiver != null) {
                                     this.add(0, functionReceiver.cEvaluation)
                                 }
