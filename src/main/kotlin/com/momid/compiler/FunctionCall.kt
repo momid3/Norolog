@@ -74,6 +74,10 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
 //                val (function, cFunction) = resolveFunction(functionCall, currentGeneration)
 //                    ?: return Error("unresolved function: " + functionCall.name.tokens, this.parsing.range)
 
+                if (isLambdaInvokeFunction(functionCall)) {
+                    return handleLambdaInvokeFunction(functionCall, currentGeneration)
+                }
+
                 var resolvedFunctions = findMatchingFunctions(functionCall, currentGeneration)
 
                 var resolvedBaseFunctions = resolvedFunctions.filter {
@@ -121,6 +125,8 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
 
                 if (function == listSetFunction) {
                     return handleListSetFunction(functionCall, currentGeneration)
+                } else if (isLambdaInvokeFunction(functionCall)) {
+                    return handleLambdaInvokeFunction(functionCall, currentGeneration)
                 }
 
                 functionCall.parameters.forEachIndexed { index, parameter ->

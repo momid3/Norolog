@@ -152,6 +152,10 @@ fun memoryAllocateList(referenceTypeAndVariableName: String, typeName: String, r
     return referenceTypeAndVariableName + " = " + "(" + referenceTypeName + ") " + "malloc(" + listSize + " * sizeof(" + typeName + "));"
 }
 
+fun cFunctionPointerCall(functionName: String, parameters: List<String>): String {
+    return "(" + "*" + functionName + ")" + "(" + parameters.joinToString(", ") + ")"
+}
+
 fun indent(text: String, indentSize: Int = 4): String {
     return text.lines().joinToString("\n") { (0 until indentSize).fold("") { acc, i -> acc + " " } + it }
 }

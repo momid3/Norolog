@@ -18,7 +18,7 @@ val classFunctionTypeParameters =
 
 val classFunction =
     !"fun" + space + classFunctionTypeParameters["typeParameters"] + spaces + oneOrZero(
-        one(wanting(outputTypeO["receiverType"], !".") + !".")["receiverType"],
+        one(outputTypeO["receiverType"] + !".")["receiverType"],
         "receiverType"
     )["receiverType"] + className["functionName"] + insideOf('(', ')') {
         oneOrZero(splitByNW(parameter, ","))
