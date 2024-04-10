@@ -6,7 +6,7 @@ import com.momid.parser.expression.*
 import com.momid.parser.not
 
 val lambdaParameters =
-    oneOrZero((splitByNW(one(spaces + className["parameterName"] + spaces)["parameters"], ",") + spaces + !"#")["lambdaParameters"])
+    oneOrZero((splitByNW(one(spaces + className["parameterName"] + spaces)["parameters"], ",") + spaces + !"->")["lambdaParameters"])
 
 val lambda =
     insideOf('{', '}') {
