@@ -85,6 +85,34 @@ fun cloneOutputType(outputType: OutputType, typeParameters: List<GenericTypePara
         }
     } else if (outputType is ReferenceType) {
         return ReferenceType(cloneOutputType(outputType.actualType, typeParameters), outputType.underlyingCReferenceName)
+    } else if (outputType is FunctionType) {
+        val function = outputType.outputFunction
+        if (function is ClassFunction) {
+            return FunctionType(
+                ClassFunction(
+                    cloneOutputType(function.receiverType, typeParameters),
+                    Function(
+                        function.name,
+                        function.parameters.map { FunctionParameter(it.name, cloneOutputType(it.type, typeParameters)) },
+                        cloneOutputType(function.returnType),
+                        function.bodyRange,
+                        function.discover
+                    )
+                ),
+                outputType.cFunction
+            )
+        } else {
+            return FunctionType(
+                Function(
+                    function.name,
+                    function.parameters.map { FunctionParameter(it.name, cloneOutputType(it.type, typeParameters)) },
+                    cloneOutputType(function.returnType),
+                    function.bodyRange,
+                    function.discover
+                ),
+                outputType.cFunction
+            )
+        }
     }
 
     return outputType

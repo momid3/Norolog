@@ -21,10 +21,10 @@ val classFunction =
         one(wanting(outputTypeO["receiverType"], !".") + !".")["receiverType"],
         "receiverType"
     )["receiverType"] + className["functionName"] + insideOf('(', ')') {
-        oneOrZero(splitByNW(parameter, ","))["functionParameters"]
-    } + spaces + functionReturnType["functionReturnType"] + spaces + insideOf('{', '}') {
-        anything["functionInside"]
-    }
+        oneOrZero(splitByNW(parameter, ","))
+    }["functionParameters"] + spaces + functionReturnType["functionReturnType"] + spaces + insideOf('{', '}') {
+        anything
+    }["functionInside"]
 
 fun ExpressionResultsHandlerContext.handleClassFunctionParsing(): Result<ClassFunctionParsing> {
     with(this.expressionResult) {

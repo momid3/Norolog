@@ -1,6 +1,8 @@
 package com.momid.compiler
 
+import com.momid.compiler.output.OutputType
 import com.momid.compiler.output.Scope
+import com.momid.compiler.output.norType
 import com.momid.parser.expression.*
 
 val text = "print(3 + 7 + 37)".toList()
@@ -20,7 +22,8 @@ val statements = listOf(
 val statementsExp =
     some(spaces + anyOf(*statements.toTypedArray())["statement"] + spaces)
 
-fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentGeneration): Result<String> {
+fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
+    var outputType: OutputType = norType
     this.expressionResult.isOf(statementsExp) {
         it.forEach {
             println("is statement: " + it.tokens())
@@ -83,7 +86,7 @@ fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentG
                     }.handle({
                         currentGeneration.errors.add(it)
                     }, {
-
+                        outputType = it
                     })
                 }
 
@@ -129,7 +132,7 @@ fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentG
             }
         }
     }
-    return Ok("")
+    return Ok(Pair("", outputType))
 }
 
 fun ExpressionResultsHandlerContext.handleCodeBlock(currentGeneration: CurrentGeneration): Result<String> {
@@ -148,6 +151,20 @@ fun ExpressionResultsHandlerContext.handleCodeBlock(currentGeneration: CurrentGe
     }
     currentGeneration.goOutOfScope()
     return Ok(scope.generatedSource)
+}
+
+/***
+ * @return the c output code and the outputType of the code block.
+ */
+fun ExpressionResultsHandlerContext.handleCodeBlockWithOutputType(currentGeneration: CurrentGeneration, scope: Scope): Result<Pair<String, OutputType>> {
+    currentGeneration.createScope(scope)
+    val (evaluation, outputType) = continueWithOne(this.expressionResult, statementsExp) {
+        handleStatements(currentGeneration)
+    }.okOrReport {
+        return it.to()
+    }
+    currentGeneration.goOutOfScope()
+    return Ok(Pair(scope.generatedSource, outputType))
 }
 
 fun main() {

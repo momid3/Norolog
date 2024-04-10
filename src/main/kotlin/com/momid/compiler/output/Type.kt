@@ -22,6 +22,8 @@ open class Type(val name: String, val declarationPackage: String = "") {
 
 class CReferenceType(val actualType: Type): Type("")
 
+class CFunctionReferenceType(val cFunction: CFunction): Type("")
+
 class CArrayType(val itemsType: Type, val size: Int): Type("")
 
 class ClassType(val outputClass: Class) : OutputType() {
@@ -34,7 +36,7 @@ class ClassType(val outputClass: Class) : OutputType() {
     }
 }
 
-class FunctionType(val outputFunction: Function) : OutputType() {
+class FunctionType(val outputFunction: Function, val cFunction: CFunction?) : OutputType() {
     override fun equals(other: Any?): Boolean {
         return other is FunctionType && other.outputFunction == this.outputFunction
     }
@@ -85,7 +87,7 @@ class NorType() : OutputType() {
  * @param outputType the resolved type of the norolog code.
  * @param parsing the Parsing Element of the related norolog code before evaluation.
  */
-class Evaluation(val cEvaluation: String, val outputType: OutputType, val parsing: Parsing) {
+class Evaluation(var cEvaluation: String, val outputType: OutputType, val parsing: Parsing) {
     operator fun component1(): String {
         return cEvaluation
     }

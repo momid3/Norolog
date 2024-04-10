@@ -16,10 +16,10 @@ val ciParameters by lazy {
 
 val ci by lazy {
     ciName["ciName"] + spaces + oneOrZero(insideOf('<', '>') {
-        typeParameters["ciTypeParameters"]
+        typeParameters
     }["ciTypeParameters"])["ciTypeParameters"] + insideOf('(', ')') {
-        ciParameters["ciParameters"]
-    }
+        ciParameters
+    }["ciParameters"]
 }
 
 fun ExpressionResultsHandlerContext.handleCIParsing(): Result<CIParsing> {
@@ -208,14 +208,36 @@ fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, 
         }
     }
 
+    else if (expectedType is FunctionType) {
+        if (outputType is FunctionType) {
+            val substitutions = HashMap<GenericTypeParameter, OutputType>()
+            outputType.outputFunction.parameters.forEachIndexed { index, parameter ->
+                val (typesMatch, substitution) = typesMatch(parameter.type, expectedType.outputFunction.parameters[index].type)
+                if (!typesMatch) {
+                    return Pair(false, hashMapOf())
+                }
+                substitution.forEach { (genericTypeParameter, outputType) ->
+                    if (substitutions[genericTypeParameter] != null && substitutions[genericTypeParameter] != outputType) {
+                        return Pair(false, hashMapOf())
+                    } else {
+                        substitutions[genericTypeParameter] = outputType
+                    }
+                }
+            }
+            return Pair(true, substitutions)
+        }
+
+        if (outputType is EarlyLambda) {
+            return Pair(outputType.parametersSize == expectedType.outputFunction.parameters.size, hashMapOf())
+        }
+    }
+
     else if (expectedType is ArrayType) {
         if (outputType is ArrayType) {
             val typesMatch = typesMatch(outputType.itemsType, expectedType.itemsType)
             return Pair(typesMatch.first && outputType.size == expectedType.size, typesMatch.second)
         }
-    }
-
-    else if (expectedType is ClassType) {
+    } else if (expectedType is ClassType) {
         if (outputType is ClassType) {
             return Pair(outputType.outputClass == expectedType.outputClass, hashMapOf())
         }

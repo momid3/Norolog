@@ -1,6 +1,7 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.*
+import com.momid.compiler.output.Function
 import com.momid.compiler.terminal.blue
 import com.momid.parser.expression.*
 import com.momid.parser.not
@@ -10,45 +11,40 @@ val classType by lazy {
 }
 
 val referenceType: MultiExpression by lazy {
-    !"ref" + space + anything["actualType"]
+    !"ref" + space + outputTypeOOO["actualType"]
 }
 
 val arrayType: MultiExpression by lazy {
-    !"[" + spaces + wanting(anything["actualType"], !",") + !"," + spaces + number["size"] + spaces + !"]"
+    !"[" + spaces + wanting(outputTypeOOO["actualType"], !",") + !"," + spaces + number["size"] + spaces + !"]"
 }
 
 val functionTypeParameters: CustomExpressionValueic by lazy {
-    oneOrZero(
-        inline(
-            wanting(anything["parameterOutputType"], !",")
-                    + some0(one(!"," + spaces + wanting(anything["parameterOutputType"], !",")))
-        )
-    )
+    oneOrZero(splitByNW(one(spaces + outputTypeOOO["parameterOutputType"] + spaces), ","))
 }
 
 val functionType by lazy {
     insideOf('(', ')') {
-        functionTypeParameters["functionTypeParameters"]
-    } + spaces + !"->" + spaces + anything["functionReturnType"]
+        functionTypeParameters
+    }["functionTypeParameters"] + spaces + !"->" + spaces + outputTypeOOO["functionReturnType"]
 }
 
 val genericTypeParameters: CustomExpressionValueic by lazy {
-    splitByNW(one(spaces + outputTypeO["typeParameterOutputType"] + spaces), ",")
+    splitByNW(one(spaces + outputTypeOOO["typeParameterOutputType"] + spaces), ",")
 }
 
 val genericClassType by lazy {
     className["className"] + spaces + insideOf('<', '>') {
-        genericTypeParameters["genericTypes"]
-    }
+        genericTypeParameters
+    }["genericTypes"]
 }
 
 val outputTypeO by lazy {
-    spaces + anyOf(classType, referenceType, functionType, genericClassType, arrayType)["outputType"] + spaces
+    outputTypeOOO
 }
 
 
 fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentGeneration): Result<OutputType> {
-    with(this.expressionResult["outputType"]) {
+    with(this.expressionResult) {
         content.isOf(classType) {
             val className = it["className"].tokens()
             val resolvedOutputType = resolveOutputType(className, currentGeneration) ?:
@@ -58,7 +54,7 @@ fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentG
 
         content.isOf(referenceType) {
             val actualType = it["actualType"]
-            val actualOutputType = continueWithOne(actualType, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
+            val actualOutputType = continueWithOne(actualType, outputTypeOOO) { handleOutputType(currentGeneration) }.okOrReport {
                 if (it is NoExpressionResultsError) {
                     println("expected type, found" + tokens.slice(it.range.first until it.range.last))
                 }
@@ -69,10 +65,24 @@ fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentG
             return Ok(referenceOutputType)
         }
 
+        content.isOf(functionType) {
+            val parameters = it["functionTypeParameters"].continuing?.continuing?.asMulti()?.map {
+                val parameterType = continueWithOne(it, outputTypeOOO) { handleOutputType(currentGeneration) }.okOrReport {
+                    return it.to()
+                }
+                parameterType
+            }.orEmpty()
+            val returnType = continueWithOne(it["functionReturnType"], outputTypeOOO) { handleOutputType(currentGeneration) }.okOrReport {
+                return it.to()
+            }
+            val function = Function("", parameters.map { FunctionParameter("", it) }, returnType, IntRange.EMPTY)
+            return Ok(FunctionType(function, null))
+        }
+
         content.isOf(arrayType) {
             println("arrayType")
             val actualType = it["actualType"]
-            val actualOutputType = continueWithOne(actualType, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
+            val actualOutputType = continueWithOne(actualType, outputTypeOOO) { handleOutputType(currentGeneration) }.okOrReport {
                 return it.to()
             }
             val size = it["size"].tokens.toInt()
@@ -90,7 +100,7 @@ fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentG
 
             val typeParametersOutputType = it["genericTypes"].continuing?.asMulti()?.map {
                 val typeParameter = it
-                val parameterOutputType = continueWithOne(typeParameter, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
+                val parameterOutputType = continueWithOne(typeParameter, outputTypeOOO) { handleOutputType(currentGeneration) }.okOrReport {
                     println(it.error)
                     return it.to()
                 }
@@ -140,6 +150,23 @@ fun isUnsubstitutedType(outputType: OutputType): Boolean {
 fun isUnsubstitutedGenericClassType(genericClass: GenericClass): Boolean {
     return genericClass.typeParameters.any {
         it.substitutionType == null || isUnsubstitutedType(it.substitutionType!!)
+    }
+}
+
+val outputTypeOOO = CustomExpressionValueic() { tokens, startIndex, endIndex, thisExpression ->
+    return@CustomExpressionValueic outputType(tokens, startIndex, endIndex, thisExpression)
+}
+
+fun outputType(tokens: List<Char>, startIndex: Int, endIndex: Int, thisExpression: CustomExpressionValueic): ExpressionResult? {
+    val evaluation = evaluateExpressionValueic(classType, startIndex, tokens, endIndex) ?:
+    evaluateExpressionValueic(referenceType, startIndex, tokens, endIndex) ?:
+    evaluateExpressionValueic(functionType, startIndex, tokens, endIndex) ?:
+    evaluateExpressionValueic(genericClassType, startIndex, tokens, endIndex) ?:
+    evaluateExpressionValueic(arrayType, startIndex, tokens, endIndex)
+    if (evaluation != null) {
+        return ContentExpressionResult(ExpressionResult(thisExpression, evaluation.range, evaluation.nextTokenIndex), evaluation)
+    } else {
+        return null
     }
 }
 

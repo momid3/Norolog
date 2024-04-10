@@ -236,6 +236,10 @@ val OutputType.text: String
                 "[" + this.itemsType.text + ", " + this.size + "]"
             }
 
+            is NorType -> {
+                "Nor"
+            }
+
             else -> {
                 "this type is not allowed to be converted to text yet"
             }

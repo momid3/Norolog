@@ -136,7 +136,7 @@ class FunctionDeclarationParsing(
 )
 
 fun oneOrZero(expression: Expression): CustomExpressionValueic {
-    return CustomExpressionValueic { tokens, startIndex, endIndex ->
+    return CustomExpressionValueic { tokens, startIndex, endIndex, thisExpression ->
         val evaluation = evaluateExpressionValueic(expression, startIndex, tokens, endIndex)
         if (evaluation == null) {
             return@CustomExpressionValueic ContinueExpressionResult(ExpressionResult(expression, startIndex..startIndex), null)
@@ -147,7 +147,7 @@ fun oneOrZero(expression: Expression): CustomExpressionValueic {
 }
 
 fun oneOrZero(expression: Expression, name: String): CustomExpressionValueic {
-    return CustomExpressionValueic { tokens, startIndex, endIndex ->
+    return CustomExpressionValueic { tokens, startIndex, endIndex, thisExpression ->
         val evaluation = evaluateExpressionValueic(expression, startIndex, tokens, endIndex)
         if (evaluation == null) {
             return@CustomExpressionValueic ContinueExpressionResult(ExpressionResult(expression, startIndex..startIndex), null)
@@ -158,7 +158,7 @@ fun oneOrZero(expression: Expression, name: String): CustomExpressionValueic {
 }
 
 fun one(expression: Expression): CustomExpressionValueic {
-    return CustomExpressionValueic { tokens, startIndex, endIndex ->
+    return CustomExpressionValueic { tokens, startIndex, endIndex, thisExpression ->
         val evaluation = evaluateExpressionValueic(expression, startIndex, tokens, endIndex) ?: return@CustomExpressionValueic null
         var namedExpressionResult: ExpressionResult? = null
         if (evaluation is MultiExpressionResult) {

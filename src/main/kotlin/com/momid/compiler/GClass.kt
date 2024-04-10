@@ -19,10 +19,10 @@ val typeParameters =
 
 val gClass =
     !"class" + space + oneOrZero(insideOf('<', '>') {
-        typeParameters["typeParameters"]
+        typeParameters
     }["typeParameters"], "typeParameters")["typeParameters"] + spaces + className["className"] + insideOf('(', ')') {
-        classDeclarationParameters["classDeclarationParameters"]
-    }
+        classDeclarationParameters
+    }["classDeclarationParameters"]
 
 fun ExpressionResultsHandlerContext.handleClassDeclarationParsing(): Result<ClassPE> {
     with(this.expressionResult) {

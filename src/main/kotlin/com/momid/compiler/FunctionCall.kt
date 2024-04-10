@@ -11,8 +11,8 @@ val functionCallParameters by lazy {
 
 val functionCall by lazy {
     functionName["functionName"] + insideOf('(', ')') {
-        functionCallParameters["functionParameters"]
-    } + spaces
+        functionCallParameters
+    }["functionParameters"] + spaces
 }
 
 fun ExpressionResultsHandlerContext.handleFunctionCallParsing(): Result<FunctionCallParsingO> {
@@ -121,6 +121,28 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
 
                 if (function == listSetFunction) {
                     return handleListSetFunction(functionCall, currentGeneration)
+                }
+
+                functionCall.parameters.forEachIndexed { index, parameter ->
+                    if (parameter.outputType is EarlyLambda) {
+                        val (lambdaEvaluation, lambdaOutputType) = continueWithOne(parameter.parsing.expressionResult, lambda) { handleLambda(currentGeneration, function.parameters[index]) }.okOrReport {
+                            return it.to()
+                        }
+
+                        if (function.parameters[index].type !is FunctionType) {
+                            return Error("type mismatch. expected " + function.parameters[index].type.text + " found " + lambdaOutputType.text, this.parsing.range)
+                        }
+
+                        val lambdaReturnType = (lambdaOutputType as FunctionType).outputFunction.returnType
+                        val functionParameterLambdaReturnType = (function.parameters[index].type as FunctionType).outputFunction.returnType
+
+                        val (typesMatch, substitutions) = typesMatch(lambdaReturnType, functionParameterLambdaReturnType)
+                        if (!typesMatch) {
+                            return Error("lambda should return " + functionParameterLambdaReturnType.text + " but returns " + lambdaReturnType.text, this.parsing.range)
+                        }
+
+                        functionCall.parameters[index].cEvaluation = lambdaEvaluation
+                    }
                 }
 
                 if (function is GenericFunction) {

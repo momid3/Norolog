@@ -38,7 +38,7 @@ class CurrentGeneration {
             currentScope = currentScope.upperScope!!
             return true
         } else {
-            return false
+            throw (Throwable("should not be root"))
         }
     }
 

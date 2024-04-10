@@ -4,7 +4,7 @@ import com.momid.parser.expression.*
 import com.momid.parser.not
 
 fun splitBy(expression: Expression, splitBy: String): CustomExpressionValueic {
-    return CustomExpressionValueic { tokens, startIndex, endIndex ->
+    return CustomExpressionValueic { tokens, startIndex, endIndex, thisExpression ->
         var nextTokenIndex = startIndex
         val subExpressionResults = ArrayList<ExpressionResult>()
         val splitExpression = ExactExpression(splitBy)
@@ -26,7 +26,7 @@ fun splitBy(expression: Expression, splitBy: String): CustomExpressionValueic {
  * splitBy without "wanting" for each element
  */
 fun splitByNW(expression: Expression, splitBy: String): CustomExpressionValueic {
-    return CustomExpressionValueic { tokens, startIndex, endIndex ->
+    return CustomExpressionValueic { tokens, startIndex, endIndex, thisExpression ->
         var nextTokenIndex = startIndex
         val subExpressionResults = ArrayList<ExpressionResult>()
         val splitExpression = ExactExpression(splitBy)

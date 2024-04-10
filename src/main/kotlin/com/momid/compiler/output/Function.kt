@@ -1,6 +1,8 @@
 package com.momid.compiler.output
 
+import com.momid.compiler.CurrentGeneration
 import com.momid.compiler.forEveryIndexed
+import com.momid.compiler.resolveType
 
 /***
  * class representing the definition of a function.
@@ -104,4 +106,16 @@ fun genericFunctionTypesMatch(givenFunctionType: OutputType, functionType: Outpu
     } else {
         return givenFunctionType == functionType
     }
+}
+
+/***
+ * converts the function signature into a c function.
+ */
+fun cFunction(function: Function, currentGeneration: CurrentGeneration): CFunction {
+    return CFunction(
+        function.name,
+        function.parameters.map { CFunctionParameter(it.name, resolveType(it.type, currentGeneration)) },
+        resolveType(function.returnType, currentGeneration),
+        ""
+    )
 }

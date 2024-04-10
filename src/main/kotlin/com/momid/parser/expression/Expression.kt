@@ -43,7 +43,7 @@ class NotExpression(val expression: Expression): Expression()
 
 class CustomExpression(val condition: (tokens: List<Char>, startIndex: Int, endIndex: Int) -> Int): Expression()
 
-class CustomExpressionValueic(val condition: (tokens: List<Char>, startIndex: Int, endIndex: Int) -> ExpressionResult?): Expression()
+class CustomExpressionValueic(val condition: (tokens: List<Char>, startIndex: Int, endIndex: Int, thisExpression: CustomExpressionValueic) -> ExpressionResult?): Expression()
 
 interface Condition {
 
@@ -332,7 +332,7 @@ fun evaluateExpression(customExpression: CustomExpression, startIndex: Int, toke
 }
 
 fun evaluateExpressionValueic(customExpression: CustomExpressionValueic, startIndex: Int, tokens: List<Char>, endIndex: Int = tokens.size): ExpressionResult? {
-    val expressionResult = customExpression.condition(tokens, startIndex, endIndex)
+    val expressionResult = customExpression.condition(tokens, startIndex, endIndex, customExpression)
     return expressionResult
 }
 

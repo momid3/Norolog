@@ -53,7 +53,7 @@ val number by lazy {
 }
 
 val atomicExp by lazy {
-    anyOf(builtinValues, number, cf, infoAccess, stringLiteral, arrayInitialization, variableNameO)["atomic"] + not(!".")
+    anyOf(builtinValues, number, cf, lambda, infoAccess, stringLiteral, arrayInitialization, variableNameO)["atomic"] + not(!".")
 }
 
 val operator by lazy {
@@ -96,6 +96,7 @@ fun ExpressionResultsHandlerContext.resolveVariable(currentGeneration: CurrentGe
     var scope = currentGeneration.currentScope
     var foundVariable: VariableInformation? = null
     while (true) {
+        println("here")
         scope.variables.forEach {
             if (it.outputName == variableName) {
                 foundVariable = it
@@ -103,6 +104,7 @@ fun ExpressionResultsHandlerContext.resolveVariable(currentGeneration: CurrentGe
             }
         }
         if (scope.upperScope != null) {
+            println("not null")
             scope = scope.upperScope!!
         } else {
             break
@@ -138,7 +140,7 @@ fun resolveVariable(variableName: String, currentGeneration: CurrentGeneration):
  *
  * Pair.last: the type of the value of the expression
  */
-fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
+fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: CurrentGeneration, place: Any? = null): Result<Pair<String, OutputType>> {
         this.expressionResult.isOf(complexExpression) {
             var type: OutputType? = null
             var output = ""
@@ -192,6 +194,24 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                                 val text = it.tokens()
                                 type = ClassType(outputString)
                                 output += text
+                            }
+
+                            it["atomic"].content.isOf(lambda) {
+                                println("lambda")
+                                if (place is FunctionParameter) {
+                                    println("not early lambda")
+                                    val (evaluation, outputType) = continueStraight(it) { handleLambda(currentGeneration, place) }.okOrReport {
+                                        return it.to()
+                                    }
+                                    type = outputType
+                                    output += evaluation
+                                } else {
+                                    val earlyLambda = continueStraight(it) { handleEarlyLambda(currentGeneration) }.okOrReport {
+                                        return it.to()
+                                    }
+                                    type = earlyLambda
+                                    output += ""
+                                }
                             }
 
                             it["atomic"].content.isOf(arrayInitialization) {

@@ -129,6 +129,9 @@ fun resolveType(outputType: OutputType, currentGeneration: CurrentGeneration): T
             return CReferenceType(resolveType(outputType.actualType, currentGeneration))
         } else if (outputType is ArrayType) {
             return CArrayType(resolveType(outputType.itemsType, currentGeneration), outputType.size)
+        } else if (outputType is FunctionType) {
+            val cFunction = outputType.cFunction ?: cFunction(outputType.outputFunction, currentGeneration)
+            return CFunctionReferenceType(cFunction)
         } else if (outputType is NorType) {
             return Type.Void
         } else {
@@ -191,21 +194,33 @@ private fun cTypeAndVariableNameBase(type: Type, variableName: String, currentTa
         Type.Int -> {
             return Pair(type.name, currentTail)
         }
+
         Type.Boolean -> {
             return Pair(type.name, currentTail)
         }
+
         Type.Void -> {
             return Pair(type.name, currentTail)
         }
+
         is CReferenceType -> {
             val shouldHaveParentheses = type.actualType
             val modifiedTail = "(" + "*" + currentTail + ")"
             return cTypeAndVariableNameBase(type.actualType, variableName, modifiedTail)
         }
+
         is CArrayType -> {
             val modifiedTail = currentTail + "[" + type.size + "]"
             return cTypeAndVariableNameBase(type.itemsType, variableName, modifiedTail)
         }
+
+        is CFunctionReferenceType -> {
+            val modifiedTail = "(" + "*" + currentTail + ")" + "(" + type.cFunction.parameters.joinToString(", ") {
+                cTypeName(it.type)
+            } + ")"
+            return cTypeAndVariableNameBase(type.cFunction.returnType, variableName, modifiedTail)
+        }
+
         else -> {
             return Pair("struct " + type.name, currentTail)
         }
