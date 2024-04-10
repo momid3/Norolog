@@ -3,6 +3,7 @@ package com.momid.compiler
 import com.momid.compiler.output.Class
 import com.momid.compiler.output.Function
 import com.momid.compiler.output.OutputType
+import com.momid.compiler.output.text
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -22,9 +23,10 @@ fun ExpressionResultsHandlerContext.handleReturnStatement(currentGeneration: Cur
 
         if (currentGeneration.currentScope.scopeContext is FunctionContext) {
             val functionReturnType = (currentGeneration.currentScope.scopeContext as FunctionContext).function.returnType
-            if (outputType != functionReturnType) {
+            val typesMatch = typesMatch(outputType, functionReturnType).first || typesMatch(functionReturnType, outputType).first
+            if (!typesMatch) {
                 println("return type of function is " + functionReturnType + " but found " + outputType)
-                return Error("return type of function is " + functionReturnType + "but found " + outputType, this.range)
+                return Error("return type of function is " + functionReturnType.text + "but found " + outputType.text, this.range)
             }
         }
 

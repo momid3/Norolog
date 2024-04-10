@@ -96,7 +96,6 @@ fun ExpressionResultsHandlerContext.resolveVariable(currentGeneration: CurrentGe
     var scope = currentGeneration.currentScope
     var foundVariable: VariableInformation? = null
     while (true) {
-        println("here")
         scope.variables.forEach {
             if (it.outputName == variableName) {
                 foundVariable = it
@@ -104,7 +103,6 @@ fun ExpressionResultsHandlerContext.resolveVariable(currentGeneration: CurrentGe
             }
         }
         if (scope.upperScope != null) {
-            println("not null")
             scope = scope.upperScope!!
         } else {
             break
@@ -284,7 +282,11 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
             if (type == null) {
                 return Error("could not determine type of this expression: " + it.tokens(), it.range)
             } else {
-                return Ok(Pair(output, type!!))
+                if (type is TypeParameterType && (type as TypeParameterType).genericTypeParameter.substitutionType != null) {
+                    return Ok(Pair(output, (type as TypeParameterType).genericTypeParameter.substitutionType!!))
+                } else {
+                    return Ok(Pair(output, type!!))
+                }
             }
         }
     return Error("", IntRange.EMPTY)

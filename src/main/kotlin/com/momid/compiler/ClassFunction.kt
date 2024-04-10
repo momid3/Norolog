@@ -431,10 +431,31 @@ fun ExpressionResultsHandlerContext.checkIfFunctionAlreadyExists(function: Funct
 
 fun main() {
     val currentGeneration = CurrentGeneration()
-    val text = ("fun <T> Keep<T>.genericFunction() {\n" +
-            "    print(\"the parameter is\");\n" +
-            "    print(this.keepValue);\n" +
-            "}").toList()
+    val text = ("fun <T> T.also(block: (T) -> Nor): T {\n" +
+            "    block.invoke(this);\n" +
+            "    return this\n" +
+            "}\n" +
+            "\n" +
+            "val keep = ref(Keep(3));\n" +
+            "\n" +
+            "val someArrayList = ArrayList([3, 3]);\n" +
+            "\n" +
+            "val change = 3;\n" +
+            "\n" +
+            "show(change, { showParameter #\n" +
+            "    print(showParameter);\n" +
+            "    return 3\n" +
+            "});\n" +
+            "\n" +
+            "change.also({ it #\n" +
+            "    print(it);\n" +
+            "});\n" +
+            "\n" +
+            "print(\"change is \");\n" +
+            "\n" +
+            "print(change);\n" +
+            "\n" +
+            "print(\"showing\");").toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(classFunction))
     finder.start(text).forEach {

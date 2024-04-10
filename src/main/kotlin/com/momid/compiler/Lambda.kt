@@ -82,7 +82,7 @@ fun ExpressionResultsHandlerContext.handleLambda(currentGeneration: CurrentGener
 
         val cFunction = CFunction(lambdaFunctionName, functionParameters.map {
             CFunctionParameter(it.name, resolveType(it.type, currentGeneration))
-        }, resolveType(parameterExpectedLambda.outputFunction.returnType, currentGeneration), lambdaCCode)
+        }, resolveType(returnType, currentGeneration), lambdaCCode)
 
         currentGeneration.functionDeclarationsGeneratedSource += cFunction(cFunction.name, cFunction.parameters.map {
             cTypeAndVariableName(it.type, it.name)

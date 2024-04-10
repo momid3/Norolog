@@ -305,7 +305,7 @@ fun ExpressionResultsHandlerContext.handlePrintFunction(functionCall: FunctionCa
                     }
 
                     else -> {
-                        return Error("this variable type could not be printed: " + parameterType, this@handlePrintFunction.expressionResult.range)
+                        return Error("this variable type could not be printed: " + parameterType.text, this@handlePrintFunction.expressionResult.range)
                     }
                 }
             }

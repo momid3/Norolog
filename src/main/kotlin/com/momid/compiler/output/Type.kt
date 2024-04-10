@@ -5,7 +5,7 @@ import com.momid.parser.expression.Parsing
 open class OutputType(var specifier: String = "") {
 }
 
-val norType = NorType()
+val norType = ClassType(outputNorType)
 val outputIntType = ClassType(outputInt)
 val outputStringType = ClassType(outputString)
 val outputBooleanType = ClassType(outputBoolean)

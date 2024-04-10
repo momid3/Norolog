@@ -224,6 +224,19 @@ fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, 
                     }
                 }
             }
+            outputType.outputFunction.returnType.apply {
+                val (typesMatch, substitution) = typesMatch(this, expectedType.outputFunction.returnType)
+                if (!typesMatch) {
+                    return Pair(false, hashMapOf())
+                }
+                substitution.forEach { (genericTypeParameter, outputType) ->
+                    if (substitutions[genericTypeParameter] != null && substitutions[genericTypeParameter] != outputType) {
+                        return Pair(false, hashMapOf())
+                    } else {
+                        substitutions[genericTypeParameter] = outputType
+                    }
+                }
+            }
             return Pair(true, substitutions)
         }
 

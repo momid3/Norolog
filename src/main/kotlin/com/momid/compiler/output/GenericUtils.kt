@@ -62,7 +62,7 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
                     cFunctionParameters[index].type,
                     "",
                     functionParameter.name,
-                    actualOutputType(functionParameter.type),
+                    functionParameter.type,
                     functionParameter
                 )
                 functionScope.variables.add(variableInformation)
@@ -91,7 +91,7 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
                     }, currentGeneration),
                     "",
                     "this",
-                    actualOutputType(genericFunction.function.receiverType)
+                    genericFunction.function.receiverType
                 )
             )
 
@@ -149,7 +149,7 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
                     cFunctionParameters[index].type,
                     "",
                     functionParameter.name,
-                    actualOutputType(functionParameter.type),
+                    functionParameter.type,
                     functionParameter
                 )
                 functionScope.variables.add(variableInformation)

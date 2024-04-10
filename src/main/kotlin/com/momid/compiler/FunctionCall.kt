@@ -1,6 +1,5 @@
 package com.momid.compiler
 
-import com.momid.compiler.discover.discoverFunction
 import com.momid.compiler.output.*
 import com.momid.compiler.standard_library.*
 import com.momid.parser.expression.*
@@ -89,15 +88,15 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
                 }
 
                 if (resolvedBaseFunctions.isEmpty()) {
-                    discoverFunction(functionCall, currentGeneration)
-                    resolvedFunctions = findMatchingFunctions(functionCall, currentGeneration)
-                    resolvedBaseFunctions = resolvedFunctions.filter {
-                        if (it.first is GenericFunction) {
-                            (it.first as GenericFunction).unsubstituted
-                        } else {
-                            true
-                        }
-                    }
+//                    discoverFunction(functionCall, currentGeneration)
+//                    resolvedFunctions = findMatchingFunctions(functionCall, currentGeneration)
+//                    resolvedBaseFunctions = resolvedFunctions.filter {
+//                        if (it.first is GenericFunction) {
+//                            (it.first as GenericFunction).unsubstituted
+//                        } else {
+//                            true
+//                        }
+//                    }
                 }
 
                 if (resolvedBaseFunctions.isEmpty()) {
@@ -129,28 +128,6 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
                     return handleLambdaInvokeFunction(functionCall, currentGeneration)
                 }
 
-                functionCall.parameters.forEachIndexed { index, parameter ->
-                    if (parameter.outputType is EarlyLambda) {
-                        val (lambdaEvaluation, lambdaOutputType) = continueWithOne(parameter.parsing.expressionResult, lambda) { handleLambda(currentGeneration, function.parameters[index]) }.okOrReport {
-                            return it.to()
-                        }
-
-                        if (function.parameters[index].type !is FunctionType) {
-                            return Error("type mismatch. expected " + function.parameters[index].type.text + " found " + lambdaOutputType.text, this.parsing.range)
-                        }
-
-                        val lambdaReturnType = (lambdaOutputType as FunctionType).outputFunction.returnType
-                        val functionParameterLambdaReturnType = (function.parameters[index].type as FunctionType).outputFunction.returnType
-
-                        val (typesMatch, substitutions) = typesMatch(lambdaReturnType, functionParameterLambdaReturnType)
-                        if (!typesMatch) {
-                            return Error("lambda should return " + functionParameterLambdaReturnType.text + " but returns " + lambdaReturnType.text, this.parsing.range)
-                        }
-
-                        functionCall.parameters[index].cEvaluation = lambdaEvaluation
-                    }
-                }
-
                 if (function is GenericFunction) {
                     if (function.unsubstituted) {
                         function = function.clone()
@@ -177,6 +154,28 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
                         }
                     }
 
+                    functionCall.parameters.forEachIndexed { index, parameter ->
+                        if (parameter.outputType is EarlyLambda) {
+                            val (lambdaEvaluation, lambdaOutputType) = continueWithOne(parameter.parsing.expressionResult, lambda) { handleLambda(currentGeneration, function.parameters[index]) }.okOrReport {
+                                return it.to()
+                            }
+
+                            if (function.parameters[index].type !is FunctionType) {
+                                return Error("type mismatch. expected " + function.parameters[index].type.text + " found " + lambdaOutputType.text, this.parsing.range)
+                            }
+
+                            val lambdaReturnType = (lambdaOutputType as FunctionType).outputFunction.returnType
+                            val functionParameterLambdaReturnType = (function.parameters[index].type as FunctionType).outputFunction.returnType
+
+                            val (typesMatch, substitutions) = typesMatch(lambdaReturnType, functionParameterLambdaReturnType)
+                            if (!typesMatch) {
+                                return Error("lambda should return " + functionParameterLambdaReturnType.text + " but returns " + lambdaReturnType.text, this.parsing.range)
+                            }
+
+                            functionCall.parameters[index].cEvaluation = lambdaEvaluation
+                        }
+                    }
+
                     val resolvedCFunction = createGenericFunctionIfNotExists(currentGeneration, function).okOrReport {
                         return it.to()
                     }
@@ -198,6 +197,28 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
                         )
                     )
                 } else {
+                    functionCall.parameters.forEachIndexed { index, parameter ->
+                        if (parameter.outputType is EarlyLambda) {
+                            val (lambdaEvaluation, lambdaOutputType) = continueWithOne(parameter.parsing.expressionResult, lambda) { handleLambda(currentGeneration, function.parameters[index]) }.okOrReport {
+                                return it.to()
+                            }
+
+                            if (function.parameters[index].type !is FunctionType) {
+                                return Error("type mismatch. expected " + function.parameters[index].type.text + " found " + lambdaOutputType.text, this.parsing.range)
+                            }
+
+                            val lambdaReturnType = (lambdaOutputType as FunctionType).outputFunction.returnType
+                            val functionParameterLambdaReturnType = (function.parameters[index].type as FunctionType).outputFunction.returnType
+
+                            val (typesMatch, substitutions) = typesMatch(lambdaReturnType, functionParameterLambdaReturnType)
+                            if (!typesMatch) {
+                                return Error("lambda should return " + functionParameterLambdaReturnType.text + " but returns " + lambdaReturnType.text, this.parsing.range)
+                            }
+
+                            functionCall.parameters[index].cEvaluation = lambdaEvaluation
+                        }
+                    }
+
                     if (cFunction == null) {
                         throw (Throwable("function is not a generic function and so c function should not have been null"))
                     }

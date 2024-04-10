@@ -94,7 +94,7 @@ fun cloneOutputType(outputType: OutputType, typeParameters: List<GenericTypePara
                     Function(
                         function.name,
                         function.parameters.map { FunctionParameter(it.name, cloneOutputType(it.type, typeParameters)) },
-                        cloneOutputType(function.returnType),
+                        cloneOutputType(function.returnType, typeParameters),
                         function.bodyRange,
                         function.discover
                     )
@@ -106,7 +106,7 @@ fun cloneOutputType(outputType: OutputType, typeParameters: List<GenericTypePara
                 Function(
                     function.name,
                     function.parameters.map { FunctionParameter(it.name, cloneOutputType(it.type, typeParameters)) },
-                    cloneOutputType(function.returnType),
+                    cloneOutputType(function.returnType, typeParameters),
                     function.bodyRange,
                     function.discover
                 ),
@@ -145,6 +145,7 @@ val outputInt = Class("Int", arrayListOf())
 val outputString = Class("String", arrayListOf())
 val outputNothing = Class("Nothing", arrayListOf())
 val outputBoolean = Class("Boolean", listOf())
+val outputNorType = Class("Nor", arrayListOf())
 
 val listClass = GenericClass("List", listOf(ClassVariable("size", outputIntType)), "norolog", mutableListOf(GenericTypeParameter("T")))
 
