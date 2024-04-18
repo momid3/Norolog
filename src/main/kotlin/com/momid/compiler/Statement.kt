@@ -1,9 +1,7 @@
 package com.momid.compiler
 
-import com.momid.compiler.output.ReferenceType
-import com.momid.compiler.output.Type
-import com.momid.compiler.output.VariableInformation
-import com.momid.compiler.output.createVariableName
+import com.momid.compiler.output.*
+import com.momid.compiler.terminal.blue
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -59,6 +57,9 @@ fun ExpressionResultsHandlerContext.handleVariableDeclaration(currentGeneration:
                     expressionType
                 )
             )
+
+            println(blue(expressionType.text))
+            println(blue(resolveClass((expressionType as ClassType).outputClass, currentGeneration).name))
 
             val cTypeAndVariableName = cTypeAndVariableName(expressionType, variableName, currentGeneration)
             output = cTypeAndVariableName + " = " + evaluation.ok.first + ";" + "\n"

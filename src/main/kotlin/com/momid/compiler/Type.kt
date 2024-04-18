@@ -1,5 +1,7 @@
 package com.momid.compiler
 
+import com.momid.compiler.discover.GivenClass
+import com.momid.compiler.discover.discoverClass
 import com.momid.compiler.output.*
 import com.momid.compiler.output.Function
 import com.momid.compiler.terminal.blue
@@ -95,8 +97,17 @@ fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentG
             val className = it["className"]
             val classNameText = it["className"].tokens()
 
-            val outputType = ClassType(resolveType(classNameText, currentGeneration) ?:
-            return Error("unresolved class: " + className, it["className"].range))
+            var resolvedClass = resolveType(classNameText, currentGeneration)
+            if (resolvedClass == null) {
+                val discoveredClass = discoverClass(GivenClass(classNameText, ""), currentGeneration)
+                if (discoveredClass.isNotEmpty()) {
+                    resolvedClass = discoveredClass[0]
+                } else {
+                    return Error("unresolved class " + classNameText, it["className"].range)
+                }
+            }
+
+            val outputType = ClassType(resolvedClass)
 
             val typeParametersOutputType = it["genericTypes"].continuing?.asMulti()?.map {
                 val typeParameter = it

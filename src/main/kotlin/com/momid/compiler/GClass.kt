@@ -49,7 +49,7 @@ fun ExpressionResultsHandlerContext.handleClassDeclarationParsing(): Result<Clas
     }
 }
 
-fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: CurrentGeneration): Result<Boolean> {
+fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: CurrentGeneration, discover: Boolean = false): Result<Class> {
     val classDeclarationPE = continueStraight(this.expressionResult) { handleClassDeclarationParsing() }.okOrReport {
         return it.to()
     }
@@ -65,6 +65,19 @@ fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: Cu
         Class(classDeclarationPE.name.tokens, classParameters)
     }
 
+    outputClass.signature = true
+    outputClass.discover = true
+
+    val discovered = checkIfClassAlreadyExists(outputClass, currentGeneration).okOrReport {
+        return it.to()
+    }
+
+    if (discovered != null) {
+        return Ok(discovered)
+    }
+
+    currentGeneration.classesInformation.classes[outputClass] = null
+
     if (isGenericClass) {
         classDeclarationPE.typeVariables.forEach {
             classTypeVariables.add(GenericTypeParameter(it.name.tokens, null))
@@ -76,8 +89,6 @@ fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: Cu
     currentGeneration.createScope(classScope)
 
     if (isGenericClass) {
-        currentGeneration.classesInformation.classes[outputClass] = null
-
         classDeclarationPE.parameters.forEach {
             val name = it.name.tokens
             val outputType = continueWithOne(it.outputTYpe.expressionResult, outputTypeO) { handleOutputType(currentGeneration) }.okOrReport {
@@ -107,7 +118,9 @@ fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: Cu
 
     currentGeneration.goOutOfScope()
 
-    return Ok(true)
+    outputClass.signature = false
+
+    return Ok(outputClass)
 }
 
 class ClassTypeVariablePE(val name: Parsing)
@@ -115,6 +128,33 @@ class ClassTypeVariablePE(val name: Parsing)
 class ClassParameterPE(val name: Parsing, val outputTYpe: Parsing)
 
 class ClassPE(val name: Parsing, val parameters: List<ClassParameterPE>, val typeVariables: List<ClassTypeVariablePE>)
+
+fun printAllClasses(currentGeneration: CurrentGeneration) {
+    currentGeneration.classesInformation.classes.entries.forEach {
+        if (it.key is GenericClass) {
+            println(ClassType(it.key).text + " " + it.value?.name + " unsubstituted:" + (it.key as GenericClass).unsubstituted)
+        } else {
+            println(it.key.name + " " + it.value?.name)
+        }
+    }
+}
+
+fun ExpressionResultsHandlerContext.checkIfClassAlreadyExists(klass: Class, currentGeneration: CurrentGeneration): Result<Class?> {
+    val existingClass = currentGeneration.classesInformation.classes.entries.find {
+        val currentFunction = it.key
+        (it.key == klass).also {
+            println("expected class " + klass.name + " current class " + currentFunction.name + " " + it)
+        }
+    }
+    if (existingClass != null && !existingClass.key.discover) {
+        return Error("class is already declared " + this.expressionResult.tokens, this.expressionResult.range)
+    }
+    if (existingClass?.key?.discover == true) {
+        return Ok(existingClass.key)
+    } else {
+        return Ok(null)
+    }
+}
 
 fun main() {
     val currentGeneration = CurrentGeneration()

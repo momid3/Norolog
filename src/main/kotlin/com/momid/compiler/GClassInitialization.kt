@@ -1,5 +1,7 @@
 package com.momid.compiler
 
+import com.momid.compiler.discover.GivenClass
+import com.momid.compiler.discover.discoverClass
 import com.momid.compiler.output.*
 import com.momid.compiler.standard_library.handleBuiltInClassInitialization
 import com.momid.parser.expression.*
@@ -47,8 +49,18 @@ fun ExpressionResultsHandlerContext.handleCI(currentGeneration: CurrentGeneratio
     with(ciParsing) {
         println("ci " + this@handleCI.expressionResult.tokens)
         val className = this.className.tokens
-        val resolvedClass = resolveType(className, currentGeneration) ?:
-        return Error("unresolved class: " + className, this.className.range)
+        var resolvedClass = resolveType(className, currentGeneration)
+
+        if (resolvedClass == null) {
+            val discoveredClass = discoverClass(GivenClass(this.className.tokens, ""), currentGeneration)
+            if (discoveredClass.isNotEmpty()) {
+                resolvedClass = discoveredClass[0]
+            }
+        }
+
+        if (resolvedClass == null) {
+            return Error("unresolved class: " + className, this.className.range)
+        }
 
         val existingTypeParameterMappings = HashMap<GenericTypeParameter, OutputType>()
 

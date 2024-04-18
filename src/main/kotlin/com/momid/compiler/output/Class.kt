@@ -2,7 +2,7 @@ package com.momid.compiler.output
 
 import com.momid.compiler.forEveryIndexed
 
-open class Class(val name: String, var variables: List<ClassVariable>, val declarationPackage: String = "") {
+open class Class(val name: String, var variables: List<ClassVariable>, val declarationPackage: String = "", var discover: Boolean = false, var signature: Boolean = false) {
 
     override fun equals(other: Any?): Boolean {
         return other is Class && other.name == this.name && other.declarationPackage == this.declarationPackage

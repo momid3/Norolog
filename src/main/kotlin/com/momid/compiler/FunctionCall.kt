@@ -1,5 +1,6 @@
 package com.momid.compiler
 
+import com.momid.compiler.discover.discoverFunction
 import com.momid.compiler.output.*
 import com.momid.compiler.standard_library.*
 import com.momid.parser.expression.*
@@ -88,15 +89,15 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
                 }
 
                 if (resolvedBaseFunctions.isEmpty()) {
-//                    discoverFunction(functionCall, currentGeneration)
-//                    resolvedFunctions = findMatchingFunctions(functionCall, currentGeneration)
-//                    resolvedBaseFunctions = resolvedFunctions.filter {
-//                        if (it.first is GenericFunction) {
-//                            (it.first as GenericFunction).unsubstituted
-//                        } else {
-//                            true
-//                        }
-//                    }
+                    discoverFunction(functionCall, currentGeneration)
+                    resolvedFunctions = findMatchingFunctions(functionCall, currentGeneration)
+                    resolvedBaseFunctions = resolvedFunctions.filter {
+                        if (it.first is GenericFunction) {
+                            (it.first as GenericFunction).unsubstituted
+                        } else {
+                            true
+                        }
+                    }
                 }
 
                 if (resolvedBaseFunctions.isEmpty()) {
