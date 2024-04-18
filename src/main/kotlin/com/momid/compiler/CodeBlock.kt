@@ -16,7 +16,8 @@ val statements = listOf(
     gClass,
     returnStatement,
     assignment,
-    classFunction
+    classFunction,
+    cExpression
 )
 
 val statementsExp =
@@ -123,6 +124,16 @@ fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentG
                 content.isOf(propertyAccessStatement) {
                     continueStraight(it) {
                         handlePropertyAccessStatement(currentGeneration)
+                    }.handle({
+                        currentGeneration.errors.add(it)
+                    }, {
+
+                    })
+                }
+
+                content.isOf(cExpression) {
+                    continueStraight(it) {
+                        handleCExpression(currentGeneration)
                     }.handle({
                         currentGeneration.errors.add(it)
                     }, {
