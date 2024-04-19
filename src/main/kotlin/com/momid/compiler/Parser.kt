@@ -53,7 +53,7 @@ val number by lazy {
 }
 
 val atomicExp by lazy {
-    anyOf(builtinValues, number, cf, cExpression, lambda, infoAccess, stringLiteral, arrayInitialization, variableNameO)["atomic"] + not(!".")
+    anyOf(builtinValues, number, cf, cExpression, lambda, infoAccess, stringLiteral, arrayInitialization, variableNameO)["atomic"]
 }
 
 val operator by lazy {
@@ -62,10 +62,9 @@ val operator by lazy {
 
 val simpleExpression: RecurringSomeExpression by lazy {
     some(inlineContent(anyOf(
-        inlineToOne(spaces + arrayAccess["arrayAccess"] + spaces),
+        inlineToOne(spaces + propertyAccess["propertyAccess"] + spaces),
         inlineToOne(spaces + atomicExp["atomicExp"] + spaces),
-        inlineToOne(spaces + operator["operator"] + spaces),
-        inlineToOne(spaces + propertyAccess["propertyAccess"] + spaces)
+        inlineToOne(spaces + operator["operator"] + spaces)
     )))
 }
 
@@ -150,7 +149,7 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                     it.forEach {
                         it.isOf(atomicExp) {
 
-                            it["atomic"].content.isOf(cf) {
+                            it.content.isOf(cf) {
                                 val evaluatedFunction = continueWithOne(it, cf) { handleCF(currentGeneration) }
                                 if (evaluatedFunction is Ok) {
                                     type = evaluatedFunction.ok.second
@@ -162,7 +161,7 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                                 }
                             }
 
-                            it["atomic"].content.isOf(variableNameO) {
+                            it.content.isOf(variableNameO) {
                                 print("variable:", it)
                                 val outputVariable = continueStraight(it) {
                                     resolveVariable (currentGeneration)
@@ -181,20 +180,20 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                                 }
                             }
 
-                            it["atomic"].content.isOf(number) {
+                            it.content.isOf(number) {
                                 println("is number " + it.correspondingTokensText(tokens))
                                 type = ClassType(outputInt)
                                 output += it.correspondingTokensText(tokens)
                             }
 
-                            it["atomic"].content.isOf(stringLiteral) {
+                            it.content.isOf(stringLiteral) {
                                 println("is string literal: " + it.tokens())
                                 val text = it.tokens()
                                 type = ClassType(outputString)
                                 output += text
                             }
 
-                            it["atomic"].content.isOf(cExpression) {
+                            it.content.isOf(cExpression) {
                                 println("c expression")
                                 val (evaluation, outputType) = continueStraight(it) { handleCExpression(currentGeneration) }.okOrReport {
                                     return it.to()
@@ -203,7 +202,7 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                                 output += evaluation
                             }
 
-                            it["atomic"].content.isOf(lambda) {
+                            it.content.isOf(lambda) {
                                 println("lambda")
                                 if (place is FunctionParameter) {
                                     println("not early lambda")
@@ -221,7 +220,7 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                                 }
                             }
 
-                            it["atomic"].content.isOf(arrayInitialization) {
+                            it.content.isOf(arrayInitialization) {
                                 val (evaluation, outputType) = continueStraight(it) { handleArrayInitialization(currentGeneration) }.okOrReport {
                                     return it.to()
                                 }
@@ -229,7 +228,7 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                                 output += evaluation
                             }
 
-                            it["atomic"].content.isOf(builtinValues) {
+                            it.content.isOf(builtinValues) {
                                 it.content.isOf(trueValue) {
                                     type = outputBooleanType
                                     output += "true"
@@ -241,7 +240,7 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                                 }
                             }
 
-                            it["atomic"].content.isOf(infoAccess) {
+                            it.content.isOf(infoAccess) {
                                 val (evaluation, outputType) = continueStraight(it) { handleInfoAccess(currentGeneration) }.okOrReport {
                                     return it.to()
                                 }
@@ -257,14 +256,6 @@ fun ExpressionResultsHandlerContext.handleComplexExpression(currentGeneration: C
                             }
                             type = propertyAccessEvaluation.second
                             output += propertyAccessEvaluation.first
-                        }
-
-                        it.isOf(arrayAccess) {
-                            val (evaluation, outputType) = continueStraight(it) { handleArrayAccess(currentGeneration) }.okOrReport {
-                                return it.to()
-                            }
-                            type = outputType
-                            output += evaluation
                         }
 
                         it.isOf("operator") {

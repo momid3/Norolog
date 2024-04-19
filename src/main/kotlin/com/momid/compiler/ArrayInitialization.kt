@@ -5,16 +5,15 @@ import com.momid.compiler.output.OutputType
 import com.momid.parser.expression.*
 
 val arrayInitialization by lazy {
-    insideOf('[', ']') {
+    insideOfShould('[', ']') {
         arrayInitializationInside
     }
 }
 
 fun ExpressionResultsHandlerContext.handleArrayInitialization(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
+    println("array initialization " + this.expressionResult.tokens)
     with(this.expressionResult) {
-        val inside = this.continuing {
-            return Error("expecting arrayInitialization found " + it.tokens, it.range)
-        }
+        val inside = this.content
         val itemsValue = inside["itemsValue"]
         val size = inside["size"]
         val (evaluation, outputType) = continueWithOne(itemsValue, complexExpression) { handleComplexExpression(currentGeneration) }.okOrReport {

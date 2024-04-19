@@ -252,7 +252,7 @@ class FunctionCallEvaluating(val name: Parsing, val parameters: List<Evaluation>
 
 fun main() {
     val currentGeneration = CurrentGeneration()
-    val text = "someFunction(anotherFunction(someParameter0, someParameter1, someParameter3), parameter1, parameter3)".toList()
+    val text = "someFunction(some[0])".toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(functionCall))
     finder.start(text).forEach {

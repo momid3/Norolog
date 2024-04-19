@@ -4,108 +4,163 @@ import com.momid.compiler.output.*
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
-val propertyAccessFirstElement by lazy {
-    anyOf(anyOf(variableNameO, number, cf, stringLiteral)["atomic"], simpleExpressionInParentheses["expressionInParentheses"])
-}
-
-val propertyAccessVariable by lazy {
-    anyOf(variableNameO, functionCall)
-}
-
-val propertyAccessElement by lazy {
-    ignoreParentheses(condition { it != '.'  && it != ')' && it != ' ' && it != ';'})
-}
-
-// Todo replace ignoreParentheses with something else because ignoreParentheses has bugs and has to be removed from anywhere it is
 val propertyAccess by lazy {
-    spaces + propertyAccessFirstElement["firstExpression"] + inline(some(spaces + !"." + spaces + propertyAccessElement["element"])["otherElements"]) + spaces
+    propertyAccessO
 }
 
 fun ExpressionResultsHandlerContext.handlePropertyAccess(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
-    this.expressionResult.isOf(propertyAccess) {
+    with(this.expressionResult) {
+        val propertyAccess = this.asMulti()
         var output = ""
-        println("is property access: " + it.tokens())
-        val firstElement = it["firstExpression"]
-        println("first element: " + firstElement.tokens())
+        println("is property access: " + this.tokens())
+        val firstExpression = propertyAccess[0]
+        println("first element: " + firstExpression.tokens)
 
-        val firstElementEvaluation = continueWithOne(firstElement, complexExpression) { handleComplexExpression(currentGeneration) }.okOrReport {
+        val (evaluation, outputType) = continueWithOne(firstExpression, complexExpression) {
+            handleComplexExpression(
+                currentGeneration
+            )
+        }.okOrReport {
             if (it is NoExpressionResultsError) {
-                println("expected expression. found: " + firstElement.tokens())
-                return Error("expected expression. found: " + firstElement.tokens(), firstElement.range)
+                println("expected expression. found: " + firstExpression.tokens)
+                return Error("expected expression. found: " + firstExpression.tokens, firstExpression.range)
             }
             println(it.error)
             return it.to()
         }
 
-        val firstElementValue = firstElementEvaluation.first
-        val firstElementType = firstElementEvaluation.second
+        println("first element: " + this["firstExpression"].tokens + " of type " + outputType.text)
 
-        println("first element: " + it["firstExpression"].tokens + " of type " + firstElementType.text)
+        var currentType = outputType
+        output += evaluation
 
-        var currentType = firstElementType
-        output += firstElementValue
+        for (index in 1 until propertyAccess.size) {
+            val nextExpression = propertyAccess[index]
+            println("other element: " + nextExpression.tokens)
 
-        it["otherElements"].forEach {
-            println("other element: " + it.tokens())
+            nextExpression.isOf(variableAccess) {
+                println("is variable: " + it.tokens)
 
-            require(it, propertyAccessVariable, {
-                println("expecting variable or function call. found: " + it.tokens())
-                return Error("expecting variable or function call. found: " + it.tokens(), it.range)
-            }) {
-                it.content.isOf(variableNameO) {
-                    println("is variable: " + it.tokens())
+                val accessVariableName = it.tokens
 
-                    val accessVariableName = it.tokens()
-
-                    if (currentType is ReferenceType) {
-                        if (accessVariableName == "value") {
-                            val (evaluation, outputType) = continueStraight(it) { handleReferenceAccess(output, currentType, currentGeneration) }.okOrReport {
-                                println(it.error)
-                                return it.to()
-                            }
-                            currentType = outputType
-                            output = "(" + evaluation + ")"
-                            return@forEach
-                        } else {
-                            return Error("its not currently possible to access from reference types", it.range)
+                if (currentType is ReferenceType) {
+                    if (accessVariableName == "value") {
+                        val (evaluation, outputType) = continueStraight(it) { handleReferenceAccess(output, currentType, currentGeneration) }.okOrReport {
+                            println(it.error)
+                            return it.to()
                         }
-                    }
-
-                    if (currentType is ClassType) {
-                        val classType = currentType as ClassType
-
-                        val accessVariableIndex =
-                            classType.outputClass.variables.indexOfFirst { it.name == accessVariableName }.apply {
-                                if (this == -1) {
-                                    return Error("unknown property: " + accessVariableName, it.range)
-                                }
-                            }
-                        val cAccessVariable = resolveClass(classType.outputClass, currentGeneration).variables[accessVariableIndex]
-                        currentType = classType.outputClass.variables[accessVariableIndex].type
-                        if (currentType is TypeParameterType) {
-                            currentType = (currentType as TypeParameterType).genericTypeParameter.substitutionType!!
-                        }
-                        output += "." + cAccessVariable.name
+                        currentType = outputType
+                        output = "(" + evaluation + ")"
+                        return@isOf
+                    } else {
+                        return Error("its not currently possible to access from reference types", it.range)
                     }
                 }
 
-                it.content.isOf(functionCall) {
-                    println("is function call: " + it.tokens())
+                if (currentType is ClassType) {
+                    val classType = currentType as ClassType
 
-                    val functionReceiver = Eval(output, currentType)
-
-                    val (evaluation, outputType) = continueWithOne(it, functionCall) { handleFunctionCall(currentGeneration, functionReceiver) }.okOrReport {
-                        return it.to()
+                    val accessVariableIndex =
+                        classType.outputClass.variables.indexOfFirst { it.name == accessVariableName }.apply {
+                            if (this == -1) {
+                                return Error("unknown property: " + accessVariableName, it.range)
+                            }
+                        }
+                    val cAccessVariable =
+                        resolveClass(classType.outputClass, currentGeneration).variables[accessVariableIndex]
+                    currentType = classType.outputClass.variables[accessVariableIndex].type
+                    if (currentType is TypeParameterType) {
+                        currentType = (currentType as TypeParameterType).genericTypeParameter.substitutionType!!
                     }
-
-                    currentType = outputType
-                    output = evaluation
+                    output += "." + cAccessVariable.name
                 }
+            }
+
+            nextExpression.isOf(functionCall) {
+                println("is function call: " + it.tokens())
+
+                val functionReceiver = Eval(output, currentType)
+
+                val (evaluation, outputType) = continueWithOne(it, functionCall) {
+                    handleFunctionCall(currentGeneration, functionReceiver)
+                }.okOrReport {
+                    return it.to()
+                }
+
+                currentType = outputType
+                output = evaluation
+            }
+
+            nextExpression.isOf(arrayAccessItem) {
+                println("array access")
+                val arrayIndex = it.continuing {
+                    return Error("expecting array access index found " + it.tokens, it.range)
+                }
+
+                val arrayAccessParsing = ArrayAccessParsing(
+                    ExpressionResult(Expression(), firstExpression.range.first..propertyAccess[index - 1].nextTokenIndex, propertyAccess[index - 1].nextTokenIndex).parsing,
+                    arrayIndex.parsing,
+                    ExpressionResult(Expression(), firstExpression.range.first..propertyAccess[index].nextTokenIndex, propertyAccess[index].nextTokenIndex).parsing
+                )
+
+                val (evaluation, outputType) = handleArrayAccess(arrayAccessParsing, currentGeneration).okOrReport {
+                    return it.to()
+                }
+
+                currentType = outputType
+                output = evaluation
             }
         }
         return Ok(Pair(output, currentType))
     }
-    return Error("is not property", this.expressionResult.range)
+}
+
+val variableAccess =
+    one(!"." + className["propertyName"])
+
+val arrayAccessItem =
+    insideOf('[', ']') {
+        complexExpression
+    }
+
+val propertyAccessO = CustomExpressionValueic() { tokens, startIndex, endIndex, thisExpression ->
+    val expressionResults = ArrayList<ExpressionResult>()
+    val firstExpression = evaluateExpressionValueic(
+        anyOf(atomicExp, simpleExpressionInParentheses)["firstExpression"],
+        startIndex,
+        tokens,
+        endIndex
+    ) ?: return@CustomExpressionValueic null
+    expressionResults.add(firstExpression)
+    var currentIndex = firstExpression.nextTokenIndex
+    var isFirstExpression = true
+    while (true) {
+        val nextExpression = evaluateExpressionValueic(one(!"." + functionCall["functionCall"]), currentIndex, tokens, endIndex)
+            ?: evaluateExpressionValueic(variableAccess["propertyAccess"], currentIndex, tokens, endIndex)
+            ?: evaluateExpressionValueic(arrayAccessItem["arrayAccess"], currentIndex, tokens, endIndex)
+            ?: if (isFirstExpression) {
+                return@CustomExpressionValueic null
+            } else {
+                break
+            }
+
+        isFirstExpression = false
+
+        expressionResults.add(nextExpression)
+
+        currentIndex = nextExpression.nextTokenIndex
+        if (currentIndex >= endIndex) {
+            break
+        }
+    }
+
+    return@CustomExpressionValueic MultiExpressionResult(
+        ExpressionResult(
+            thisExpression,
+            startIndex..currentIndex,
+            currentIndex
+        ), expressionResults
+    )
 }
 
 inline fun <T> Result<T>.okOrReport(report: (error: Error<T>) -> Unit): T {
@@ -119,7 +174,7 @@ inline fun <T> Result<T>.okOrReport(report: (error: Error<T>) -> Unit): T {
 
 fun main() {
     val currentGeneration = CurrentGeneration()
-    val text = "someVariable.anotherVariable.someFunction()".toList()
+    val text = "some.other()".toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(propertyAccess))
     finder.start(text).forEach {
