@@ -17,7 +17,7 @@ val referenceType: MultiExpression by lazy {
 }
 
 val arrayType: MultiExpression by lazy {
-    !"[" + spaces + wanting(outputTypeOOO["actualType"], !",") + !"," + spaces + number["size"] + spaces + !"]"
+    !"[" + spaces + outputTypeOOO["actualType"] + !"," + spaces + number["size"] + spaces + !"]"
 }
 
 val functionTypeParameters: CustomExpressionValueic by lazy {
