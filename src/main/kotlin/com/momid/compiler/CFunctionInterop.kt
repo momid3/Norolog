@@ -1,6 +1,7 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.OutputType
+import com.momid.compiler.output.Scope
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -32,12 +33,22 @@ fun ExpressionResultsHandlerContext.handleCExpression(currentGeneration: Current
         val parameters = this["cExpressionParameters"].continuing {
             return Error("expecting c expression found " + it.tokens, it.range)
         }.asMulti()
-        val cExpression = parameters[0].tokens
+        val cExpression = parameters[0]
         val outputType = continueWithOne(parameters[1], one(spaces + outputTypeO["outputType"] + spaces)) { handleOutputType(currentGeneration) }.okOrReport {
             return it.to()
         }
 
-        return Ok(Pair(cExpression, outputType))
+        val scope = Scope()
+        scope.scopeContext = CExpressionContext()
+        val cExpressionScope = currentGeneration.createScope(scope)
+
+        val cExpressionText = handlePossibleNorologVariableInC(currentGeneration, cExpression.tokens).okOrReport {
+            return it.to()
+        }
+
+        currentGeneration.goOutOfScope()
+
+        return Ok(Pair(cExpressionText, outputType))
     }
 }
 

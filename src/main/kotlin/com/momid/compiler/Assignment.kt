@@ -4,7 +4,7 @@ import com.momid.parser.expression.*
 import com.momid.parser.not
 
 val assignment =
-    anyOf(arrayAccess, atomicExp, propertyAccess)["variable"] + spaces + !"=" + spaces + wanting(complexExpression["value"], !"\n") + spaces
+    anyOf(atomicExp, propertyAccess)["variable"] + spaces + !"=" + spaces + wanting(complexExpression["value"], !"\n") + spaces
 
 fun ExpressionResultsHandlerContext.handleAssignment(currentGeneration: CurrentGeneration): Result<Boolean> {
     with(this.expressionResult) {

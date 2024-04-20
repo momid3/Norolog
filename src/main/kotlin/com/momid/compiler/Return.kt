@@ -49,3 +49,5 @@ class ForLoopContext(): Context()
 class LoopContext(): Context()
 
 class IfContext(): Context()
+
+class CExpressionContext(): Context()
