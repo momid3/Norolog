@@ -17,7 +17,8 @@ val statements = listOf(
     returnStatement,
     assignment,
     classFunction,
-    cExpression
+    cExpression,
+    cCodeBlock
 )
 
 val statementsExp =
@@ -134,6 +135,16 @@ fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentG
                 content.isOf(cExpression) {
                     continueStraight(it) {
                         handleCExpression(currentGeneration)
+                    }.handle({
+                        currentGeneration.errors.add(it)
+                    }, {
+
+                    })
+                }
+
+                content.isOf(cCodeBlock) {
+                    continueStraight(it) {
+                        handleCCodeBlock(currentGeneration)
                     }.handle({
                         currentGeneration.errors.add(it)
                     }, {

@@ -8,11 +8,6 @@ val norologVariableInC =
 
 fun handlePossibleNorologVariableInC(currentGeneration: CurrentGeneration, cExpressionText: String): Result<String> {
 
-    val currentContext = currentGeneration.currentScope.scopeContext
-    if (currentContext !is CExpressionContext) {
-        throw (Throwable("should have been in a c expression context"))
-    }
-
     val textPieces = ArrayList<Pair<String, Boolean>>()
 
     val finder = ExpressionFinder()
