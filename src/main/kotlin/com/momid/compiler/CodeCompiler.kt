@@ -62,9 +62,11 @@ fun compileFromSource(rootDirectory: String, mainFilePackage: String) {
     readFilesRecursively(rootDirectory, mainFilePackage) { isMainFile, fileContent ->
         val codeText = fileContent
         val compiledCode = compile(codeText)
-        println(compiledCode)
-        createSource(compiledCode)
-        runGeneratedSource()
+        if (isMainFile) {
+            println(compiledCode)
+            createSource(compiledCode)
+            runGeneratedSource()
+        }
     }
 }
 

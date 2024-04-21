@@ -66,7 +66,7 @@ fun ExpressionResultsHandlerContext.handleClassDeclaration(currentGeneration: Cu
     }
 
     outputClass.signature = true
-    outputClass.discover = true
+    outputClass.discover = discover
 
     val discovered = checkIfClassAlreadyExists(outputClass, currentGeneration).okOrReport {
         return it.to()
