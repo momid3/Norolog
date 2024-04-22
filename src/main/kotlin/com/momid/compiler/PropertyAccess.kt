@@ -116,7 +116,7 @@ fun ExpressionResultsHandlerContext.handlePropertyAccess(currentGeneration: Curr
 }
 
 val variableAccess =
-    one(!"." + className["propertyName"])
+    className["propertyName"]
 
 val arrayAccessItem =
     insideOf('[', ']') {
@@ -136,7 +136,7 @@ val propertyAccessO = CustomExpressionValueic() { tokens, startIndex, endIndex, 
     var isFirstExpression = true
     while (true) {
         val nextExpression = evaluateExpressionValueic(one(!"." + functionCall["functionCall"]), currentIndex, tokens, endIndex)
-            ?: evaluateExpressionValueic(variableAccess["propertyAccess"], currentIndex, tokens, endIndex)
+            ?: evaluateExpressionValueic(one(!"." + variableAccess["propertyAccess"]), currentIndex, tokens, endIndex)
             ?: evaluateExpressionValueic(arrayAccessItem["arrayAccess"], currentIndex, tokens, endIndex)
             ?: if (isFirstExpression) {
                 return@CustomExpressionValueic null

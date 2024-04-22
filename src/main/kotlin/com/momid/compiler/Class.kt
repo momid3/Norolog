@@ -206,8 +206,12 @@ private fun cTypeAndVariableNameBase(type: Type, variableName: String, currentTa
         }
 
         is CReferenceType -> {
-            val shouldHaveParentheses = type.actualType
-            val modifiedTail = "(" + "*" + currentTail + ")"
+            val shouldHaveParentheses = !isSimpleType(type.actualType)
+            val modifiedTail = if (shouldHaveParentheses) {
+                "(" + "*" + currentTail + ")"
+            } else {
+                "*" + currentTail
+            }
             return cTypeAndVariableNameBase(type.actualType, variableName, modifiedTail)
         }
 
@@ -227,6 +231,10 @@ private fun cTypeAndVariableNameBase(type: Type, variableName: String, currentTa
             return Pair("struct " + type.name, currentTail)
         }
     }
+}
+
+fun isSimpleType(type: Type): Boolean {
+    return !(type is CReferenceType || type is CArrayType || type is CFunctionReferenceType)
 }
 
 fun cTypeAndVariableName(outputType: OutputType, variableName: String, currentGeneration: CurrentGeneration): String {

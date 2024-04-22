@@ -66,6 +66,11 @@ class CurrentGeneration {
         return "function" + currentCFunctionNameNumber
     }
 
+    fun createCFunctionName(name: String): String {
+        currentCFunctionNameNumber += 1
+        return name + currentCFunctionNameNumber
+    }
+
     private fun addVariable(name: String, cName: String, outputType: OutputType) {
         currentScope.variables += VariableInformation(cName, resolveType(outputType, this), 0, name, outputType)
     }

@@ -30,7 +30,7 @@ fun createGenericClassIfNotExists(currentGeneration: CurrentGeneration, genericC
 
 fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGeneration: CurrentGeneration, genericFunction: GenericFunction): Result<CFunction> {
     val alreadyExists = currentGeneration.functionsInformation.functionsInformation.entries.find {
-        it.key == genericFunction
+        genericFunction.equals(it.key)
     }?.value != null
 
     val cFunctionParameters = ArrayList<CFunctionParameter>()
@@ -46,12 +46,12 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
 //    }!!.key as GenericFunction).typeParameters[0].substitutionType)
 
     if (alreadyExists) {
-        println("already")
+        println("already for " + genericFunction.name)
         cFunction = currentGeneration.functionsInformation.functionsInformation.entries.find {
-            it.key == genericFunction
+            genericFunction.equals(it.key)
         }!!.value!!
     } else {
-        println("not already")
+        println("not already " + genericFunction.name)
         if (genericFunction.function is ClassFunction) {
             val functionScope = Scope()
             functionScope.scopeContext = FunctionContext(genericFunction)
@@ -105,7 +105,7 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
                 return it.to()
             }
             cFunction = CFunction(
-                currentGeneration.createCFunctionName(),
+                currentGeneration.createCFunctionName(genericFunction.name),
                 cFunctionParameters.apply {
                     this.add(
                         0,
@@ -136,7 +136,7 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
                         cTypeAndVariableName(parameter.type, parameter.name)
                     }
                 },
-                cTypeName(cFunction.returnType),
+                cFunction.returnType,
                 cFunction.codeText.trim()
             ) + "\n"
         } else {
@@ -164,7 +164,7 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
                 return it.to()
             }
             cFunction = CFunction(
-                currentGeneration.createCFunctionName(),
+                currentGeneration.createCFunctionName(genericFunction.name),
                 cFunctionParameters,
                 resolveType(genericFunction.returnType, currentGeneration),
                 cFunctionCode
@@ -182,7 +182,7 @@ fun ExpressionResultsHandlerContext.createGenericFunctionIfNotExists(currentGene
                         cTypeAndVariableName(parameter.type, parameter.name)
                     }
                 },
-                cTypeName(cFunction.returnType),
+                cFunction.returnType,
                 cFunction.codeText.trim()
             ) + "\n"
         }
@@ -293,4 +293,6 @@ fun main() {
     println("cloned type parameter " + clonedOtherClass.typeParameters[0].substitutionType!!.specifier)
 
     println(typesMatch)
+
+    println("outputting")
 }

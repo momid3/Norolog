@@ -19,7 +19,6 @@ fun compile(codeText: String): String {
         this.classesInformation.classes[Class(outputString.name, arrayListOf())] = CStruct(Type.CharArray.name, arrayListOf())
         this.classesInformation.classes[Class(outputNorType.name, arrayListOf())] = CStruct(Type.Void.name, arrayListOf())
         this.classesInformation.classes[listClass] = null
-        this.classesInformation.classes[window] = CStruct("SDL_Window", listOf())
         this.classesInformation.classes[renderer] = CStruct("SDL_Renderer", listOf())
     }
 

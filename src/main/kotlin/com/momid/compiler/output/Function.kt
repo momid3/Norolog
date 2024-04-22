@@ -19,12 +19,16 @@ open class Function(
     val discover: Boolean = false
 ) {
     override fun equals(other: Any?): Boolean {
-        return other is Function && this.name == other.name && this.parameters.forEveryIndexed { index, parameter ->
-            parameter.type == other.parameters[index].type
-        } && this.returnType == other.returnType && if (this is ClassFunction) {
-            other is ClassFunction && this.receiverType == other.function
+        if (other is GenericFunction) {
+            return other.equals(this)
         } else {
-            true
+            return other is Function && this.name == other.name && this.parameters.forEveryIndexed { index, parameter ->
+                parameter.type == other.parameters[index].type
+            } && this.returnType == other.returnType && if (this is ClassFunction) {
+                other is ClassFunction && this.receiverType == other.function
+            } else {
+                true
+            }
         }
     }
 
@@ -118,4 +122,17 @@ fun cFunction(function: Function, currentGeneration: CurrentGeneration): CFuncti
         resolveType(function.returnType, currentGeneration),
         ""
     )
+}
+
+fun main() {
+    val genericTypeParameter = GenericTypeParameter("T", outputBooleanType)
+    val outputType = TypeParameterType(genericTypeParameter)
+    val function = GenericFunction(
+        listOf(genericTypeParameter),
+        Function("someFunction", listOf(FunctionParameter("someParameter", outputType)), outputIntType, IntRange.EMPTY))
+    val clonedFunction = function.clone()
+    println("before change " + function.typeParameters[0].substitutionType)
+    function.typeParameters[0].substitutionType = outputIntType
+    println("after change " + function.typeParameters[0].substitutionType)
+    println(clonedFunction.typeParameters[0].substitutionType)
 }

@@ -234,10 +234,6 @@ fun findMatchingFunctions(
     currentGeneration: CurrentGeneration
 ): List<Pair<Function, CFunction?>> {
     return currentGeneration.functionsInformation.functionsInformation.filter { (functionDeclaration, cFunctionDeclaration) ->
-        println("functions are ")
-        currentGeneration.functionsInformation.functionsInformation.forEach {
-            println(it.key.name + " is generic " + (it.key is GenericFunction))
-        }
         val clonedFunction = if (functionDeclaration is GenericFunction) {
             functionDeclaration.clone()
         } else {
@@ -253,8 +249,21 @@ fun findMatchingFunctions(
                     } else {
                         parameter.outputType == functionDeclaration.parameters[index].type
                     }
-                } && if (functionDeclaration is ClassFunction) {
-                    function.receiver != null && function.receiver!!.outputType == functionDeclaration.receiverType
+                } && if (function.receiver != null) {
+//                    function.receiver != null && function.receiver!!.outputType == functionDeclaration.receiverType
+            val clonedFunctionReceiver = if (clonedFunction is GenericFunction) {
+                (clonedFunction.function as? ClassFunction)?.receiverType
+            } else {
+                (clonedFunction as? ClassFunction)?.receiverType
+            }
+            if (clonedFunctionReceiver != null) {
+                println("receivers match for  \n" + function.name.tokens + " " + function.receiver?.outputType?.text + " and " + clonedFunction.name + " " + clonedFunctionReceiver.text + " is ")
+                val (typesMatch, substitutions) = typesMatch(function.receiver!!.outputType, clonedFunctionReceiver)
+                println(typesMatch)
+                typesMatch
+            } else {
+                false
+            }
                 } else {
                     true
                 }

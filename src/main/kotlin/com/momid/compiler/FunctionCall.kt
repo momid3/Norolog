@@ -64,12 +64,10 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
         val functionCallEvaluation = when (functionName) {
             "ref" -> continueStraight(this.parsing.expressionResult) { handleReferenceFunction(functionCall, currentGeneration) }
             "print" -> continueStraight(this.parsing.expressionResult) { handlePrintFunction(functionCall, currentGeneration) }
-            "sleep" -> continueStraight(this.parsing.expressionResult) { handleSleep(functionCall,  currentGeneration) }
             "initGraphics" -> continueStraight(this.parsing.expressionResult) { handleGraphicsInit(functionCall, currentGeneration) }
             "createWindow" -> continueStraight(this.parsing.expressionResult) { handleCreateWindow(functionCall, currentGeneration) }
             "createRenderer" -> continueStraight(this.parsing.expressionResult) { handleCreateRenderer(functionCall, currentGeneration) }
             "drawLine" -> continueStraight(this.parsing.expressionResult) { handleDrawLine(functionCall, currentGeneration) }
-            "update" -> continueStraight(this.parsing.expressionResult) { handleUpdate(functionCall, currentGeneration) }
             else -> {
 //                val (function, cFunction) = resolveFunction(functionCall, currentGeneration)
 //                    ?: return Error("unresolved function: " + functionCall.name.tokens, this.parsing.range)
@@ -89,7 +87,9 @@ fun ExpressionResultsHandlerContext.handleFunctionCall(currentGeneration: Curren
                 }
 
                 if (resolvedBaseFunctions.isEmpty()) {
-                    discoverFunction(functionCall, currentGeneration)
+                    discoverFunction(functionCall, currentGeneration).also {
+                        println("discovered functions " + functionCall.name.tokens + " is " + it)
+                    }
                     resolvedFunctions = findMatchingFunctions(functionCall, currentGeneration)
                     resolvedBaseFunctions = resolvedFunctions.filter {
                         if (it.first is GenericFunction) {

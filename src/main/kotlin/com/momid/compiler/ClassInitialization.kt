@@ -12,7 +12,7 @@ import com.momid.parser.not
 class CI()
 
 val className by lazy {
-    condition { it.isLetter() } + some0(condition { it.isLetterOrDigit() })
+    condition { it.isLetter() } + some0(condition { it.isLetterOrDigit() || it == '_' })
 }
 
 val ciVariableExp by lazy {

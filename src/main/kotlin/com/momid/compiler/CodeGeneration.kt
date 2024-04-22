@@ -1,5 +1,7 @@
 package com.momid.compiler
 
+import com.momid.compiler.output.Type
+
 fun wholeProgram(programText: String, classDeclarations: String, functionDeclarations: String): String {
     return "#include <stdio.h>\n" +
             "#include <unistd.h>\n" +
@@ -20,9 +22,9 @@ fun wholeProgram(programText: String, classDeclarations: String, functionDeclara
 }
 
 fun forLoop(indexName: String, rangeStart: String, rangeEnd: String, codeBlock: String): String {
-    return "for (int " + indexName + " = " + rangeStart + "; " + indexName + " < " + rangeEnd + "; " + indexName + " += 1)" + " {" +
-            codeBlock +
-            "}"
+    return "for (int " + indexName + " = " + rangeStart + "; " + indexName + " < " + rangeEnd + "; " + indexName + " += 1)" + " {" + "\n" +
+            indent(codeBlock.trim()) +
+            "\n" + "}"
 }
 
 fun cStruct(name: String, variables: List<Pair<String, String>>): String {
@@ -61,11 +63,6 @@ fun variableDeclaration(variableName: String, variableType: String, variableValu
 
 fun pointerDereference(pointerVariableName: String): String {
     return "*" + "(" + pointerVariableName + ")"
-}
-
-fun cFunction(name: String, parameters: List<Pair<String, String>>, returnType: String, functionBody: String): String {
-    return returnType + " " + name + "(" + parameters.joinToString(", ") { it.second + " " + it.first } + ")" +
-            " {" + "\n" + functionBody + "\n" + "}"
 }
 
 fun cFunctionCall(name: String, parameters: List<String>): String {
@@ -120,6 +117,13 @@ fun memoryAllocate(referenceTypeAndVariableName: String, typeName: String, refer
 @JvmName("cFunction1")
 fun cFunction(name: String, parametersNat: List<String>, returnType: String, functionBody: String): String {
     return returnType + " " + name + "(" + parametersNat.joinToString(", ") + ")" +
+            " {" + "\n" + indent(functionBody) + "\n" + "}"
+}
+
+fun cFunction(name: String, parametersNat: List<String>, returnType: Type, functionBody: String): String {
+    val parameters = parametersNat.joinToString(", ")
+    val functionNat = cTypeAndVariableName(returnType, name + "(" + parameters + ")")
+    return functionNat +
             " {" + "\n" + indent(functionBody) + "\n" + "}"
 }
 

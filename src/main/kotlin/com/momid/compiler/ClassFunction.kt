@@ -110,7 +110,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                 functionScope.scopeContext = FunctionContext(function)
 
                 val cFunction = CFunction(
-                    function.name,
+                    currentGeneration.createCFunctionName(function.name),
                     (function.parameters.map {
                         if (it.isReferenceParameter) {
                             CFunctionParameter(it.name, CReferenceType(resolveType(it.type, currentGeneration)))
@@ -175,7 +175,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     cFunction.parameters.map {
                         cTypeAndVariableName(it.type, it.name)
                     },
-                    cTypeName(cFunction.returnType),
+                    cFunction.returnType,
                     cFunction.codeText.trim()
                 ) + "\n"
 
@@ -215,7 +215,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                 functionScope.scopeContext = FunctionContext(function)
 
                 val cFunction = CFunction(
-                    function.name,
+                    currentGeneration.createCFunctionName(function.name),
                     (function.parameters.map {
                         if (it.isReferenceParameter) {
                             CFunctionParameter(it.name, CReferenceType(resolveType(it.type, currentGeneration)))
@@ -265,7 +265,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     cFunction.parameters.map {
                         cTypeAndVariableName(it.type, it.name)
                     },
-                    cTypeName(cFunction.returnType),
+                    cFunction.returnType,
                     cFunction.codeText.trim()
                 ) + "\n"
 

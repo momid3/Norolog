@@ -86,7 +86,7 @@ fun ExpressionResultsHandlerContext.handleLambda(currentGeneration: CurrentGener
 
         currentGeneration.functionDeclarationsGeneratedSource += cFunction(cFunction.name, cFunction.parameters.map {
             cTypeAndVariableName(it.type, it.name)
-        }, cTypeName(cFunction.returnType), cFunction.codeText)
+        }, cFunction.returnType, cFunction.codeText)
 
         return Ok(Pair(lambdaFunctionName, FunctionType(function, cFunction)))
     }

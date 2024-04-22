@@ -13,6 +13,7 @@ val rootDirectory = "C:\\Users\\moham\\Desktop\\compilation\\MomidCompilation"
 val mainFilePackage = "source"
 
 fun discoverFunction(function: FunctionCallEvaluating, currentGeneration: CurrentGeneration): List<Function> {
+    println("discovering function " + function.name.tokens)
     val foundFunctions = ArrayList<Function>()
     readFilesRecursively(rootDirectory, mainFilePackage) { isMainFile, fileContent ->
         val codeText = fileContent
@@ -34,6 +35,7 @@ fun discoverFunction(function: FunctionCallEvaluating, currentGeneration: Curren
                             ) {
                             println(blue("discovered function matches with expected function call " + function.name.tokens))
                             val resolvedFunction = handleClassFunction(currentGeneration, true).okOrReport {
+                                printError(it.error)
                                 return@handleExpressionResult it.to()
                             }
                             foundFunctions.add(resolvedFunction)
@@ -44,15 +46,15 @@ fun discoverFunction(function: FunctionCallEvaluating, currentGeneration: Curren
             }
         }
 
-        currentGeneration.errors.apply {
-            if (this.isNotEmpty()) {
-                println("program contains errors: ")
-                println()
-                this.forEach {
-                    printError(it.error + ": " + codeText.slice(it.range.first until it.range.last))
-                }
-            }
-        }
+//        currentGeneration.errors.apply {
+//            if (this.isNotEmpty()) {
+//                println("program contains errors: ")
+//                println()
+//                this.forEach {
+//                    printError(it.error + ": " + codeText.slice(it.range.first until it.range.last))
+//                }
+//            }
+//        }
     }
     return foundFunctions
 }
@@ -88,15 +90,15 @@ fun discoverClass(klass: GivenClass, currentGeneration: CurrentGeneration): List
             }
         }
 
-        currentGeneration.errors.apply {
-            if (this.isNotEmpty()) {
-                println("program contains errors: ")
-                println()
-                this.forEach {
-                    printError(it.error + ": " + codeText.slice(it.range.first until it.range.last))
-                }
-            }
-        }
+//        currentGeneration.errors.apply {
+//            if (this.isNotEmpty()) {
+//                println("program contains errors: ")
+//                println()
+//                this.forEach {
+//                    printError(it.error + ": " + codeText.slice(it.range.first until it.range.last))
+//                }
+//            }
+//        }
     }
 
     foundFunctions.addAll(discoverCClassMapping(klass, currentGeneration))
@@ -133,15 +135,15 @@ fun discoverCClassMapping(klass: GivenClass, currentGeneration: CurrentGeneratio
             }
         }
 
-        currentGeneration.errors.apply {
-            if (this.isNotEmpty()) {
-                println("program contains errors: ")
-                println()
-                this.forEach {
-                    printError(it.error + ": " + codeText.slice(it.range.first until it.range.last))
-                }
-            }
-        }
+//        currentGeneration.errors.apply {
+//            if (this.isNotEmpty()) {
+//                println("program contains errors: ")
+//                println()
+//                this.forEach {
+//                    printError(it.error + ": " + codeText.slice(it.range.first until it.range.last))
+//                }
+//            }
+//        }
     }
     return foundFunctions
 }

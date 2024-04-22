@@ -29,7 +29,7 @@ class ClassVariable(val name: String, val type: OutputType) {
 class GenericTypeParameter(var name: String, var substitutionType: OutputType? = null) {
 
     fun clone(): GenericTypeParameter {
-        return GenericTypeParameter(this.name, null)
+        return GenericTypeParameter(this.name, this.substitutionType)
     }
 }
 
@@ -147,7 +147,7 @@ val outputNothing = Class("Nothing", arrayListOf())
 val outputBoolean = Class("Boolean", listOf())
 val outputNorType = Class("Nor", arrayListOf())
 
-val listClass = GenericClass("List", listOf(ClassVariable("size", outputIntType)), "norolog", mutableListOf(GenericTypeParameter("T")))
+val listClass = GenericClass("List", listOf(ClassVariable("size", ClassType(outputInt))), "norolog", mutableListOf(GenericTypeParameter("T")))
 
 val window = Class("Window", listOf(), "norolog.graphics")
 val renderer = Class("Renderer", listOf(), "norolog.graphics")

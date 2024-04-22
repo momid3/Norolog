@@ -48,9 +48,17 @@ val outputTypeO by lazy {
 fun ExpressionResultsHandlerContext.handleOutputType(currentGeneration: CurrentGeneration): Result<OutputType> {
     with(this.expressionResult) {
         content.isOf(classType) {
-            val className = it["className"].tokens()
-            val resolvedOutputType = resolveOutputType(className, currentGeneration) ?:
-            return Error("unresolved class: " + className, it["className"].range)
+            val className = it["className"].tokens
+            var resolvedOutputType = resolveOutputType(className, currentGeneration)
+
+            if (resolvedOutputType == null) {
+                val discoveredClass = discoverClass(GivenClass(className, ""), currentGeneration)
+                if (discoveredClass.isNotEmpty()) {
+                    resolvedOutputType = ClassType(discoveredClass[0])
+                } else {
+                    return Error("unresolved class " + resolvedOutputType, it["className"].range)
+                }
+            }
             return Ok(resolvedOutputType)
         }
 

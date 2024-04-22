@@ -7,12 +7,10 @@ import com.momid.parser.not
 val forStatement =
     spaced {
         !"for" + insideOf('(', ')') {
-            spaced {
-                (wanting(variableNameO["variableName"], !"in") + !"in"
-                        + wanting(complexExpression["rangeStart"], !"until") + !"until"
-                        + wanting(complexExpression["rangeEnd"]))
-            }["forRange"]
-        } + (insideOf("forInside", '{', '}'))["forInside"]
+                spaces + wanting(variableNameO["variableName"], !"in") + !"in" + spaces +
+                        spaces + wanting(complexExpression["rangeStart"], !"until") + !"until" + spaces +
+                        spaces + wanting(complexExpression["rangeEnd"]) + spaces
+        }["forRange"] + (insideOf("forInside", '{', '}'))["forInside"]
     }
 
 fun ExpressionResultsHandlerContext.handleForLoop(currentGeneration: CurrentGeneration): Result<String> {
