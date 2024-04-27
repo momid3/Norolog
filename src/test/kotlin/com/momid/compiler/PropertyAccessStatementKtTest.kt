@@ -8,7 +8,7 @@ class PropertyAccessStatementKtTest {
 
     @Test
     fun propertyAccessStatement() {
-        val currentGeneration = CurrentGeneration()
+        val currentGeneration = CurrentGeneration("", FilePackage("", ""))
         val text = "keep.change(333) ;".toList()
         val finder = ExpressionFinder()
         finder.registerExpressions(listOf(propertyAccessStatement))

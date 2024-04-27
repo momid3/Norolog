@@ -2,6 +2,7 @@ package com.momid.compiler
 
 import com.momid.compiler.output.OutputType
 import com.momid.compiler.output.Scope
+import com.momid.compiler.packaging.FilePackage
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -53,7 +54,7 @@ fun ExpressionResultsHandlerContext.handleCExpression(currentGeneration: Current
 }
 
 fun main() {
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     val text = "#(3, Int)".toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(cExpression))

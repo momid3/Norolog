@@ -2,6 +2,7 @@ package com.momid.compiler
 
 import com.momid.compiler.discover.discoverFunction
 import com.momid.compiler.output.*
+import com.momid.compiler.packaging.FilePackage
 import com.momid.compiler.standard_library.*
 import com.momid.parser.expression.*
 
@@ -251,7 +252,7 @@ class FunctionCallParsingO(val functionName: Parsing, val functionParameters: Li
 class FunctionCallEvaluating(val name: Parsing, val parameters: List<Evaluation>, var receiver: Eval?, val parsing: Parsing)
 
 fun main() {
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     val text = "someFunction(some[0])".toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(functionCall))

@@ -1,6 +1,7 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.*
+import com.momid.compiler.packaging.FilePackage
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -173,7 +174,7 @@ inline fun <T> Result<T>.okOrReport(report: (error: Error<T>) -> Unit): T {
 }
 
 fun main() {
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     val text = "some.other()".toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(propertyAccess))

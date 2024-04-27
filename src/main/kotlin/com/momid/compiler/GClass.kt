@@ -1,6 +1,7 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.*
+import com.momid.compiler.packaging.FilePackage
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -157,7 +158,7 @@ fun ExpressionResultsHandlerContext.checkIfClassAlreadyExists(klass: Class, curr
 }
 
 fun main() {
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     val text = "class <T> someClass(someParameter: T)".toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(gClass))

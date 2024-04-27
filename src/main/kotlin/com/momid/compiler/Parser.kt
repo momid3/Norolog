@@ -1,6 +1,7 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.*
+import com.momid.compiler.packaging.FilePackage
 import com.momid.parser.expression.*
 import com.momid.parser.isOf
 import com.momid.parser.not
@@ -82,7 +83,7 @@ val complexExpression by lazy {
 
 
 private fun handleExpressionResults(expressionFinder: ExpressionFinder, expressionResults: List<ExpressionResult>, tokens: List<Char>) {
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     expressionResults.forEach {
         handleExpressionResult(expressionFinder, it, tokens) {
             handleComplexExpression(currentGeneration)

@@ -3,6 +3,7 @@ package com.momid.compiler
 import com.momid.compiler.output.Class
 import com.momid.compiler.output.ClassType
 import com.momid.compiler.output.OutputType
+import com.momid.compiler.packaging.FilePackage
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -103,7 +104,7 @@ fun validateCIParameterTypes(ciClass: Class, ciParameters: List<OutputType>): Bo
 }
 
 fun main() {
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     val text = "SomeClass(3, 3, 3)".toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(classInitialization))

@@ -2,6 +2,7 @@ package com.momid.compiler
 
 import com.momid.compiler.output.CStruct
 import com.momid.compiler.output.Class
+import com.momid.compiler.packaging.FilePackage
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -33,7 +34,7 @@ fun ExpressionResultsHandlerContext.handleCClassMapping(currentGeneration: Curre
 }
 
 fun main() {
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     val text = "class someClass = otherClass;".toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(cClassMapping))

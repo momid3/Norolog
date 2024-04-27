@@ -1,5 +1,7 @@
 package com.momid.compiler
 
+import com.momid.compiler.packaging.FilePackage
+
 fun main(args: Array<String>) {
 
 //    println("")
@@ -10,8 +12,9 @@ fun main(args: Array<String>) {
 //
 //    runGeneratedSource()
 
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     val codeText = readMomidFileContents(args[0])
-    val compiledCode = compile(codeText)
+    val compiledCode = compile(codeText, currentGeneration, FilePackage("", ""))
     println(compiledCode)
     createSource(compiledCode)
     runGeneratedSource()

@@ -1,5 +1,6 @@
 package com.momid.compiler
 
+import com.momid.compiler.packaging.FilePackage
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -47,7 +48,7 @@ fun splitByNW(expression: Expression, splitBy: String): CustomExpressionValueic 
 fun main() {
     val expression =
         splitBy(className["o"] + !":" + className, ",")
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     val text = "hi:hello,ooo:ooo,ooooooo:oooooooo".toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(expression))
@@ -63,7 +64,7 @@ fun main() {
 
 //    val expression =
 //        wanting(!"hello", !",")
-//    val currentGeneration = CurrentGeneration()
+//    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
 //    val text = "hello,oooooo".toList()
 //    val finder = ExpressionFinder()
 //    finder.registerExpressions(listOf(expression))

@@ -2,6 +2,7 @@ package com.momid.compiler.output
 
 import com.momid.compiler.CurrentGeneration
 import com.momid.compiler.forEveryIndexed
+import com.momid.compiler.packaging.FilePackage
 import com.momid.compiler.resolveType
 
 /***
@@ -16,6 +17,7 @@ open class Function(
     var parameters: List<FunctionParameter>,
     var returnType: OutputType,
     val bodyRange: IntRange,
+    val declarationPackage: FilePackage = FilePackage("", ""),
     val discover: Boolean = false
 ) {
     override fun equals(other: Any?): Boolean {

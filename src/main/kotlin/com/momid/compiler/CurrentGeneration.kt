@@ -1,12 +1,14 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.*
+import com.momid.compiler.packaging.FilePackage
 import com.momid.parser.expression.Error
 
-class CurrentGeneration {
+class CurrentGeneration(val rootDirectory: String, val mainFilePackage: FilePackage) {
 
     var rootScope: Scope = Scope()
     var currentScope: Scope = rootScope
+    var mainFunctionGeneratedSource = ""
     var generatedSource = ""
     var globalDefinitionsGeneratedSource = ""
     var functionDeclarationsGeneratedSource = ""

@@ -2,6 +2,7 @@ package com.momid.compiler
 
 import com.momid.compiler.output.*
 import com.momid.compiler.output.Function
+import com.momid.compiler.packaging.FilePackage
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -56,13 +57,29 @@ fun ExpressionResultsHandlerContext.handleClassFunctionParsing(): Result<ClassFu
     }
 }
 
-fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: CurrentGeneration, discover: Boolean = false): Result<Function> {
+fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: CurrentGeneration, discover: Boolean = false, filePackage: FilePackage): Result<Function> {
     val classFunctionParsing = handleClassFunctionParsing().okOrReport {
         return it.to()
     }
 
     with(classFunctionParsing) {
         val isGeneric = typeParameters.isNotEmpty()
+
+        if (
+            filePackage.directoryPackage == currentGeneration.mainFilePackage.directoryPackage &&
+            filePackage.fileName == currentGeneration.mainFilePackage.fileName &&
+            this.name.tokens == "main"
+            ) {
+            val functionInside = this.functionInside.expressionResult
+            val function = Function("main", listOf(), norType, functionInside.range, filePackage)
+            val functionScope = Scope()
+            functionScope.scopeContext = FunctionContext(function)
+            val cEvaluation = continueStraight(functionInside) { handleCodeBlock(currentGeneration, functionScope) }.okOrReport {
+                return it.to()
+            }
+            currentGeneration.mainFunctionGeneratedSource = cEvaluation
+            return Ok(function)
+        }
 
         if (!isGeneric) {
             if (this.receiverType != null) {
@@ -102,6 +119,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                         functionParameters,
                         returnType,
                         functionInside.range,
+                        filePackage,
                         discover
                     )
                 )
@@ -208,6 +226,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     functionParameters,
                     returnType,
                     functionInside.range,
+                    filePackage,
                     discover
                 )
 
@@ -281,6 +300,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                         listOf(),
                         norType,
                         functionInside.range,
+                        filePackage,
                         discover
                     )
                 )
@@ -348,6 +368,7 @@ fun ExpressionResultsHandlerContext.handleClassFunction(currentGeneration: Curre
                     listOf(),
                     norType,
                     functionInside.range,
+                    filePackage,
                     discover
                 )
                 val genericFunction = GenericFunction(
@@ -430,7 +451,7 @@ fun ExpressionResultsHandlerContext.checkIfFunctionAlreadyExists(function: Funct
 }
 
 fun main() {
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     val text = ("fun <T> T.also(block: (T) -> Nor): T {\n" +
             "    block.invoke(this);\n" +
             "    return this\n" +
@@ -461,7 +482,7 @@ fun main() {
     finder.start(text).forEach {
         handleExpressionResult(finder, it, text) {
             println("found " + it.tokens)
-            handleClassFunction(currentGeneration)
+            handleClassFunction(currentGeneration, false, FilePackage("", ""))
         }
     }
 }

@@ -34,8 +34,8 @@ fun readFilesRecursively(rootPath: String, onEachFileContent: (fileContent: Stri
  */
 fun readFilesRecursively(
     rootPath: String,
-    mainFilePackage: String,
-    onEachFileContent: (isMainFile: Boolean, fileContent: String) -> Unit
+    mainFilePackage: FilePackage,
+    onEachFileContent: (isMainFile: Boolean, filePackage: FilePackage, fileContent: String) -> Unit
 ) {
 
     val rootDirectory = File(rootPath)
@@ -44,19 +44,30 @@ fun readFilesRecursively(
         throw (Throwable("invalid root path"))
     }
 
-    val mainFile = fileFromPackage(rootDirectory, mainFilePackage) ?: throw (Throwable("provided package does not contain the main file or the package is malformed"))
+    val mainFileDirectory = if (mainFilePackage.directoryPackage.isEmpty()) {
+        ""
+    } else {
+        mainFilePackage.directoryPackage + ""
+    }
 
-    fun readFiles(directory: File) {
+    val mainFile = fileFromPackage(rootDirectory, mainFileDirectory + mainFilePackage.fileName) ?: throw (Throwable("provided package does not contain the main file or the package is malformed"))
+
+    fun readFiles(directory: File, currentPackage: String = "") {
         val files = directory.listFiles()
 
         if (files != null) {
             for (file in files) {
                 if (file.isDirectory) {
-                    readFiles(file)
+                    val filePackage = if (currentPackage.isEmpty()) {
+                        ""
+                    } else {
+                        currentPackage + "."
+                    }
+                    readFiles(file, filePackage + file.name)
                 } else {
                     val fileContent = file.readText()
                     val isMainFile = file == mainFile
-                    onEachFileContent(isMainFile, fileContent)
+                    onEachFileContent(isMainFile, FilePackage(currentPackage, file.nameWithoutExtension), fileContent)
                 }
             }
         }
@@ -82,3 +93,5 @@ fun fileFromPackage(rootFile: File, packageName: String): File? {
     }
     return currentFile
 }
+
+class FilePackage(val directoryPackage: String, val fileName: String)

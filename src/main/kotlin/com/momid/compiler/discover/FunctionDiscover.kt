@@ -4,18 +4,19 @@ import com.momid.compiler.*
 import com.momid.compiler.output.Class
 import com.momid.compiler.output.Function
 import com.momid.compiler.output.GenericClass
+import com.momid.compiler.packaging.FilePackage
 import com.momid.compiler.packaging.readFilesRecursively
 import com.momid.compiler.terminal.blue
 import com.momid.compiler.terminal.printError
 import com.momid.parser.expression.*
 
 val rootDirectory = "C:\\Users\\moham\\Desktop\\compilation\\MomidCompilation"
-val mainFilePackage = "source"
+val mainFilePackage = FilePackage("", "source")
 
 fun discoverFunction(function: FunctionCallEvaluating, currentGeneration: CurrentGeneration): List<Function> {
     println("discovering function " + function.name.tokens)
     val foundFunctions = ArrayList<Function>()
-    readFilesRecursively(rootDirectory, mainFilePackage) { isMainFile, fileContent ->
+    readFilesRecursively(rootDirectory, mainFilePackage) { isMainFile, filePackage, fileContent ->
         val codeText = fileContent
         val text = codeText.toList()
         val finder = ExpressionFinder()
@@ -34,7 +35,7 @@ fun discoverFunction(function: FunctionCallEvaluating, currentGeneration: Curren
                             (this.receiverType == null) == (function.receiver == null)
                             ) {
                             println(blue("discovered function matches with expected function call " + function.name.tokens))
-                            val resolvedFunction = handleClassFunction(currentGeneration, true).okOrReport {
+                            val resolvedFunction = handleClassFunction(currentGeneration, true, filePackage).okOrReport {
                                 printError(it.error)
                                 return@handleExpressionResult it.to()
                             }
@@ -61,7 +62,7 @@ fun discoverFunction(function: FunctionCallEvaluating, currentGeneration: Curren
 
 fun discoverClass(klass: GivenClass, currentGeneration: CurrentGeneration): List<Class> {
     val foundFunctions = ArrayList<Class>()
-    readFilesRecursively(rootDirectory, mainFilePackage) { isMainFile, fileContent ->
+    readFilesRecursively(rootDirectory, mainFilePackage) { isMainFile, filePackage, fileContent ->
         val codeText = fileContent
         val text = codeText.toList()
         val finder = ExpressionFinder()
@@ -108,7 +109,7 @@ fun discoverClass(klass: GivenClass, currentGeneration: CurrentGeneration): List
 
 fun discoverCClassMapping(klass: GivenClass, currentGeneration: CurrentGeneration): List<Class> {
     val foundFunctions = ArrayList<Class>()
-    readFilesRecursively(rootDirectory, mainFilePackage) { isMainFile, fileContent ->
+    readFilesRecursively(rootDirectory, mainFilePackage) { isMainFile, filePackage, fileContent ->
         val codeText = fileContent
         val text = codeText.toList()
         val finder = ExpressionFinder()
@@ -146,6 +147,10 @@ fun discoverCClassMapping(klass: GivenClass, currentGeneration: CurrentGeneratio
 //        }
     }
     return foundFunctions
+}
+
+fun handleMainFunction(currentGeneration: CurrentGeneration) {
+
 }
 
 /***

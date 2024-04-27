@@ -2,6 +2,7 @@ package com.momid.compiler
 
 import com.momid.compiler.output.*
 import com.momid.compiler.output.Function
+import com.momid.compiler.packaging.FilePackage
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -332,7 +333,7 @@ fun main() {
 //    finder.registerExpressions(listOf(function))
 //    val expressionResults = finder.start(text)
 
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     val text = "((theVal.someVariable + 7));".toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(ignoreParentheses(condition { it != ',' && it != ')' })))

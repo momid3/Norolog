@@ -309,7 +309,7 @@ class ClassVariableS(val name: String, val type: String)
 class ClassVariableEvaluation(val name: String, val type: OutputType)
 
 fun main() {
-//    val currentGeneration = CurrentGeneration()
+//    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
 //    val text = "class SomeClass { someVariable: SomeType, anotherVariable: AnotherType, someOtherVariable: SomeOtherType }".toList()
 //    val finder = ExpressionFinder()
 //    finder.registerExpressions(listOf(klass))

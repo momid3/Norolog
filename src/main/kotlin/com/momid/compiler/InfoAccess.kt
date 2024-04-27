@@ -3,6 +3,7 @@ package com.momid.compiler
 import com.momid.compiler.output.InfoParameter
 import com.momid.compiler.output.OutputType
 import com.momid.compiler.output.createVariableName
+import com.momid.compiler.packaging.FilePackage
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -65,7 +66,7 @@ fun ExpressionResultsHandlerContext.handleInfoAccess(currentGeneration: CurrentG
 }
 
 fun main() {
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     val text = "someFunction(anotherFunction(someParameter0, someParameter1, someParameter3), parameter1, parameter3)".toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(info))

@@ -4,6 +4,7 @@ import com.momid.compiler.discover.GivenClass
 import com.momid.compiler.discover.discoverClass
 import com.momid.compiler.output.*
 import com.momid.compiler.output.Function
+import com.momid.compiler.packaging.FilePackage
 import com.momid.compiler.terminal.blue
 import com.momid.parser.expression.*
 import com.momid.parser.not
@@ -190,7 +191,7 @@ fun outputType(tokens: List<Char>, startIndex: Int, endIndex: Int, thisExpressio
 }
 
 fun main() {
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     val text = "SomeClass<Int, Int>".toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(outputTypeO))

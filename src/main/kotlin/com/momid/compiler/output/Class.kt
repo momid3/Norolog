@@ -96,6 +96,7 @@ fun cloneOutputType(outputType: OutputType, typeParameters: List<GenericTypePara
                         function.parameters.map { FunctionParameter(it.name, cloneOutputType(it.type, typeParameters)) },
                         cloneOutputType(function.returnType, typeParameters),
                         function.bodyRange,
+                        function.declarationPackage,
                         function.discover
                     )
                 ),
@@ -108,6 +109,7 @@ fun cloneOutputType(outputType: OutputType, typeParameters: List<GenericTypePara
                     function.parameters.map { FunctionParameter(it.name, cloneOutputType(it.type, typeParameters)) },
                     cloneOutputType(function.returnType, typeParameters),
                     function.bodyRange,
+                    function.declarationPackage,
                     function.discover
                 ),
                 outputType.cFunction

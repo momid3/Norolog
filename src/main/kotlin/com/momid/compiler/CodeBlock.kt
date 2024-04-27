@@ -3,6 +3,7 @@ package com.momid.compiler
 import com.momid.compiler.output.OutputType
 import com.momid.compiler.output.Scope
 import com.momid.compiler.output.norType
+import com.momid.compiler.packaging.FilePackage
 import com.momid.parser.expression.*
 
 val text = "print(3 + 7 + 37)".toList()
@@ -25,7 +26,7 @@ val statements = listOf(
 val statementsExp =
     some(spaces + anyOf(*statements.toTypedArray())["statement"] + spaces)
 
-fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentGeneration): Result<Pair<String, OutputType>> {
+fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentGeneration, filePackage: FilePackage = FilePackage("", "")): Result<Pair<String, OutputType>> {
     var outputType: OutputType = norType
     this.expressionResult.isOf(statementsExp) {
         it.forEach {
@@ -105,7 +106,7 @@ fun ExpressionResultsHandlerContext.handleStatements(currentGeneration: CurrentG
 
                 content.isOf(classFunction) {
                     continueStraight(it) {
-                        handleClassFunction(currentGeneration)
+                        handleClassFunction(currentGeneration, false, filePackage)
                     }.handle({
                         currentGeneration.errors.add(it)
                     }, {
@@ -205,7 +206,7 @@ fun main() {
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(statementsExp))
 
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     finder.start(text).forEach {
         handleExpressionResult(finder, it, text) {
             handleStatements(currentGeneration)

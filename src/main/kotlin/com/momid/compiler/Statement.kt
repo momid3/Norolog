@@ -4,6 +4,7 @@ import com.momid.compiler.output.ReferenceType
 import com.momid.compiler.output.Type
 import com.momid.compiler.output.VariableInformation
 import com.momid.compiler.output.createVariableName
+import com.momid.compiler.packaging.FilePackage
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -94,7 +95,7 @@ fun main() {
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(functionCallStatement))
 
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     finder.start(text).forEach {
         handleExpressionResult(finder, it, text) {
             handleFunctionCallStatement(currentGeneration)

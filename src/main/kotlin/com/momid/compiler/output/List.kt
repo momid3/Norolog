@@ -1,6 +1,7 @@
 package com.momid.compiler.output
 
 import com.momid.compiler.*
+import com.momid.compiler.packaging.FilePackage
 import com.momid.compiler.standard_library.continueGiven
 
 class ListClass(listClass: GenericClass): GenericClass(
@@ -33,7 +34,7 @@ fun listSetFunction(currentGeneration: CurrentGeneration) {
         listSetFunctionText,
         classFunction
     ) {
-        handleClassFunction(currentGeneration)
+        handleClassFunction(currentGeneration, false, FilePackage("", ""))
     }.okOrReport {
         throw (Throwable("list set function has issues " + it.error))
     } as GenericFunction

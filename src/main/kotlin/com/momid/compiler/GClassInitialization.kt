@@ -3,6 +3,7 @@ package com.momid.compiler
 import com.momid.compiler.discover.GivenClass
 import com.momid.compiler.discover.discoverClass
 import com.momid.compiler.output.*
+import com.momid.compiler.packaging.FilePackage
 import com.momid.compiler.standard_library.handleBuiltInClassInitialization
 import com.momid.parser.expression.*
 
@@ -276,7 +277,7 @@ fun typesMatch(outputType: OutputType, expectedType: OutputType): Pair<Boolean, 
 }
 
 fun main() {
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     val text = ("List<Int>(0);").toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(ci))

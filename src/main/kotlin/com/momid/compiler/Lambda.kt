@@ -2,6 +2,7 @@ package com.momid.compiler
 
 import com.momid.compiler.output.*
 import com.momid.compiler.output.Function
+import com.momid.compiler.packaging.FilePackage
 import com.momid.parser.expression.*
 import com.momid.parser.not
 
@@ -116,7 +117,7 @@ class LambdaParsing(
 )
 
 fun main() {
-    val currentGeneration = CurrentGeneration()
+    val currentGeneration = CurrentGeneration("", FilePackage("", ""))
     val text = ("{ showParameter #\n" +
             "    return 3\n" +
             "}").toList()

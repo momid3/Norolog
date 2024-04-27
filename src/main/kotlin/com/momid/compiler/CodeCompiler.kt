@@ -1,6 +1,7 @@
 package com.momid.compiler
 
 import com.momid.compiler.output.*
+import com.momid.compiler.packaging.FilePackage
 import com.momid.compiler.packaging.readFilesRecursively
 import com.momid.compiler.terminal.printError
 import com.momid.parser.expression.ExpressionFinder
@@ -9,24 +10,14 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 
-fun compile(codeText: String): String {
+fun compile(codeText: String, currentGeneration: CurrentGeneration, filePackage: FilePackage): String {
     val text = codeText.toList()
     val finder = ExpressionFinder()
     finder.registerExpressions(listOf(statementsExp))
 
-    val currentGeneration = CurrentGeneration().apply {
-        this.classesInformation.classes[Class(outputInt.name, arrayListOf())] = CStruct(Type.Int.name, arrayListOf())
-        this.classesInformation.classes[Class(outputString.name, arrayListOf())] = CStruct(Type.CharArray.name, arrayListOf())
-        this.classesInformation.classes[Class(outputNorType.name, arrayListOf())] = CStruct(Type.Void.name, arrayListOf())
-        this.classesInformation.classes[listClass] = null
-        this.classesInformation.classes[renderer] = CStruct("SDL_Renderer", listOf())
-    }
-
-    listSetFunction(currentGeneration)
-
     finder.start(text).forEach {
         handleExpressionResult(finder, it, text) {
-            handleStatements(currentGeneration)
+            handleStatements(currentGeneration, filePackage)
         }
     }
 
@@ -43,30 +34,45 @@ fun compile(codeText: String): String {
 //    println(currentGeneration.generatedSource)
 
     return wholeProgram(
-        currentGeneration.currentScope.generatedSource,
+        currentGeneration.mainFunctionGeneratedSource,
         currentGeneration.globalDefinitionsGeneratedSource,
         currentGeneration.functionDeclarationsGeneratedSource
     )
 }
 
-fun compileFromSource() {
+fun compileFromSource(currentGeneration: CurrentGeneration) {
     val codeText = readResourceFileContents("source.momid")
-    val compiledCode = compile(codeText)
+    val compiledCode = compile(codeText, currentGeneration, FilePackage("", ""))
     println(compiledCode)
     createSource(compiledCode)
     runGeneratedSource()
 }
 
-fun compileFromSource(rootDirectory: String, mainFilePackage: String) {
-    readFilesRecursively(rootDirectory, mainFilePackage) { isMainFile, fileContent ->
-        val codeText = fileContent
-        val compiledCode = compile(codeText)
-        if (isMainFile) {
-            println(compiledCode)
-            createSource(compiledCode)
-            runGeneratedSource()
-        }
+fun compileFromSource(rootDirectory: String, mainFilePackage: FilePackage) {
+    val currentGeneration = CurrentGeneration(rootDirectory, mainFilePackage).apply {
+        this.classesInformation.classes[Class(outputInt.name, arrayListOf())] = CStruct(Type.Int.name, arrayListOf())
+        this.classesInformation.classes[Class(outputString.name, arrayListOf())] = CStruct(Type.CharArray.name, arrayListOf())
+        this.classesInformation.classes[Class(outputNorType.name, arrayListOf())] = CStruct(Type.Void.name, arrayListOf())
+        this.classesInformation.classes[listClass] = null
+        this.classesInformation.classes[renderer] = CStruct("SDL_Renderer", listOf())
     }
+
+    listSetFunction(currentGeneration)
+
+    readFilesRecursively(rootDirectory, mainFilePackage) { isMainFile, filePackage, fileContent ->
+        val codeText = fileContent
+        compile(codeText, currentGeneration, filePackage)
+    }
+
+    val compiledCode = wholeProgram(
+        currentGeneration.mainFunctionGeneratedSource,
+        currentGeneration.globalDefinitionsGeneratedSource,
+        currentGeneration.functionDeclarationsGeneratedSource
+    )
+
+    println(compiledCode)
+    createSource(compiledCode)
+    runGeneratedSource()
 }
 
 fun readMomidFileContents(filePath: String): String {
@@ -88,5 +94,5 @@ fun readResourceFileContents(fileName: String): String {
 
 fun main() {
 //    compileFromSource()
-    compileFromSource("C:\\Users\\moham\\Desktop\\compilation\\MomidCompilation", "source")
+    compileFromSource("C:\\Users\\moham\\Desktop\\compilation\\MomidCompilation", FilePackage("", "source"))
 }
