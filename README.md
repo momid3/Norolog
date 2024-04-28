@@ -3,7 +3,7 @@ Compiler for an interesting programming langauge.
 
 What Is Norolog:
 
-the word norolog is a combination of neuro + logic. it was originally meant to be a DSL specifically for neuro-symbolic logical applications (as name suggests). but i figured out for it to be fast i want it to provide enough low level functionality. so for now, it's a systems programming language.
+the word norolog is a combination of neuro + logic. it was originally meant to be a DSL specifically for neuro-symbolic logical applications (as the name suggests). but i figured out for it to be fast i want it to provide enough low level functionality. so for now, it's a systems programming language.
 
 specifications:
 
