@@ -52,7 +52,7 @@ fun main() {
 
     for (w in 0 until 700) {
         for(h in 0 until 700) {
-            val pixelValue = sqrt(w * w)+(#h * h);
+            val pixelValue = sqrt(w * w)+(h * h);
             window.setColor(pixelValue, pixelValue, pixelValue, 255);
             window.pixel(w, h);
         }
