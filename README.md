@@ -7,10 +7,10 @@ the word norolog is a combination of neuro + logic. it was originally meant to b
 
 specifications:
 
-type system: norolog is statically typed.
-backend: it binds to C as backend.
-memory management: norolog will not have a GC. it will have a system to handle memory management at compile time. similar to rust, but with none of the rust borrowing rules.
-other features: genrics, functional programming (lambdas and closure), methods, type inference, extension functions, working with references directly (but safely), nullability- mutability-errorability of types.
+- type system: norolog is statically typed.
+- backend: it binds to C as backend.
+- memory management: norolog will not have a GC. it will have a system to handle memory management at compile time. similar to rust, but with none of the rust borrowing rules.
+- other features: genrics, functional programming (lambdas and closure), methods, type inference, extension functions, working with references directly (but safely), nullability- mutability-errorability of types.
 GPU programming: norolog provides first-class support for general purpose gpu programming. currently via Nvidia's CUDA. (it's partly implemented but is in the working!)
 
 here is what norolog looks like:
