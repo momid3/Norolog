@@ -3,17 +3,17 @@ Compiler for an interesting programming langauge.
 
 What Is Norolog:
 
-the word norolog is a combination of neuro + logic. it was originally meant to be a DSL specifically for neuro-symbolic logical applications (as the name suggests). but i figured out for it to be fast i want it to provide enough low level functionality. so for now, it's a systems programming language.
+The word norolog is a combination of neuro + logic. It was originally meant to be a DSL specifically for neuro-symbolic logical applications (as the name suggests). But i figured out for it to be fast i want it to provide enough low level functionality. So for now, it's a systems programming language.
 
-specifications:
+Specifications:
 
-- type system: norolog is statically typed.
-- backend: it binds to C as backend.
-- memory management: norolog will not have a GC. it will have a system to handle memory management at compile time. similar to rust, but with none of the rust borrowing rules.
-- other features: genrics, functional programming (lambdas and closure), methods, type inference, extension functions, working with references directly (but safely), nullability- mutability-errorability of types.
-GPU programming: norolog provides first-class support for general purpose gpu programming. currently via Nvidia's CUDA. (it's partly implemented but is in the working!)
+- Type System: Norolog is statically typed.
+- Backend: It binds to C as backend.
+- Memory Management: Norolog will not have a GC. it will have a system to handle memory management at compile time. similar to rust, but with none of the rust borrowing rules.
+- Other: Generics, functional programming (lambdas and closure), methods, type inference, extension functions, working with references directly (but safely), nullability- mutability-errorability of types.
+- GPU Programming: Norolog provides first-class support for general-purpose gpu-programming. currently via Nvidia's CUDA. (it's partly implemented but is in the working!)
 
-here is what norolog looks like:
+Here is what norolog looks like:
 
 ```kotlin
 class <W> ArrayList(items: [[W, 3], 3])
